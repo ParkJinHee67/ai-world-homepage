@@ -1,0 +1,834 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { db, mapPortfolioItem } from '../supabaseClient';
+import PortfolioCard from '../components/PortfolioCard';
+import { MessageSquare, Star, Sparkles } from 'lucide-react';
+
+function CloudWordCanvas() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId;
+    let width = (canvas.width = canvas.parentElement.offsetWidth);
+    let height = (canvas.height = canvas.parentElement.offsetHeight);
+    let cx = width / 2;
+    let cy = height / 2;
+
+    const handleResize = () => {
+      if (canvas && canvas.parentElement) {
+        width = canvas.width = canvas.parentElement.offsetWidth;
+        height = canvas.height = canvas.parentElement.offsetHeight;
+        cx = width / 2;
+        cy = height / 2;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    const wordsList = [
+      '톱니바꿈', 'AI', 'LLM', 'Agent', 'Prompt', 'Automation', 'Flow', 
+      'Cognitive', 'Neural', 'Smart', 'Workflow', 'Data', 'Logic', 'AGI', 
+      'Future', 'Vision', 'Generative', 'Chat', 'Bot', 'Assistant'
+    ];
+
+    // Combine floating words and neural network bokeh dots
+    const numParticles = 45;
+    const particles = Array.from({ length: numParticles }, (_, i) => {
+      const isText = i < 12; 
+      const word = isText ? wordsList[i % wordsList.length] : null;
+      const size = isText ? (13 + Math.random() * 5) : 0;
+      const radius = isText ? 2.5 : (2 + Math.random() * 5); // bokeh size
+      
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius,
+        isText,
+        text: word,
+        size,
+        alpha: isText ? (0.7 + Math.random() * 0.2) : (0.05 + Math.random() * 0.2),
+        color: i % 3 === 0 
+          ? '99, 102, 241' 
+          : (i % 3 === 1 ? '168, 85, 247' : '244, 63, 94'),
+      };
+    });
+
+    let mouse = { x: -1000, y: -1000 };
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    };
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    };
+    canvas.parentElement.addEventListener('mousemove', handleMouseMove);
+    canvas.parentElement.addEventListener('mouseleave', handleMouseLeave);
+
+    let rotationAngle = 0;
+
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      rotationAngle += 0.0025; // Rotate slowly
+
+      // 1. Calculate elastic gear center point based on mouse hover
+      let mouseOffset = { x: 0, y: 0 };
+      if (mouse.x > -1000) {
+        const dx = mouse.x - cx;
+        const dy = mouse.y - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 220) {
+          const force = (220 - dist) / 220 * 24; // Elastic shift up to 24px
+          mouseOffset.x = (dx / dist) * force;
+          mouseOffset.y = (dy / dist) * force;
+        }
+      }
+
+      const gearCx = cx + mouseOffset.x;
+      const gearCy = cy + mouseOffset.y;
+
+      // 2. Generate gear nodes
+      const gearNodes = [];
+      // Hub (center)
+      gearNodes.push({ x: gearCx, y: gearCy, isHub: true });
+
+      // Inner ring (6 nodes, radius 55)
+      const numInner = 6;
+      for (let i = 0; i < numInner; i++) {
+        const a = rotationAngle + (i * Math.PI * 2) / numInner;
+        gearNodes.push({
+          x: gearCx + Math.cos(a) * 55,
+          y: gearCy + Math.sin(a) * 55,
+          isInner: true,
+          index: i
+        });
+      }
+
+      // Outer ring (12 nodes, radius 105)
+      const numOuter = 12;
+      for (let i = 0; i < numOuter; i++) {
+        const a = -rotationAngle * 0.8 + (i * Math.PI * 2) / numOuter; // reverse rotation
+        gearNodes.push({
+          x: gearCx + Math.cos(a) * 105,
+          y: gearCy + Math.sin(a) * 105,
+          isOuter: true,
+          index: i
+        });
+      }
+
+      // Gear teeth (6 teeth, 2 nodes each, radius 130)
+      const numTeeth = 6;
+      for (let i = 0; i < numTeeth; i++) {
+        const baseAngle = rotationAngle + (i * Math.PI * 2) / numTeeth;
+        const a1 = baseAngle - 0.14;
+        const a2 = baseAngle + 0.14;
+        gearNodes.push({
+          x: gearCx + Math.cos(a1) * 130,
+          y: gearCy + Math.sin(a1) * 130,
+          isTooth: true,
+          toothIndex: i,
+          part: 1
+        });
+        gearNodes.push({
+          x: gearCx + Math.cos(a2) * 130,
+          y: gearCy + Math.sin(a2) * 130,
+          isTooth: true,
+          toothIndex: i,
+          part: 2
+        });
+      }
+
+      // 3. Draw gear connections
+      ctx.lineWidth = 0.8;
+      ctx.shadowBlur = 4;
+
+      // Hub to Inner
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+      ctx.shadowColor = 'rgba(99, 102, 241, 0.3)';
+      for (let i = 1; i <= 6; i++) {
+        ctx.beginPath();
+        ctx.moveTo(gearNodes[0].x, gearNodes[0].y);
+        ctx.lineTo(gearNodes[i].x, gearNodes[i].y);
+        ctx.stroke();
+      }
+
+      // Inner circle outline
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
+      ctx.shadowColor = 'rgba(168, 85, 247, 0.4)';
+      ctx.beginPath();
+      ctx.moveTo(gearNodes[1].x, gearNodes[1].y);
+      for (let i = 2; i <= 6; i++) {
+        ctx.lineTo(gearNodes[i].x, gearNodes[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Inner to Outer spoke lines
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.15)';
+      for (let i = 0; i < 6; i++) {
+        const innerNode = gearNodes[1 + i];
+        const outerNode1 = gearNodes[7 + (i * 2) % 12];
+        const outerNode2 = gearNodes[7 + (i * 2 + 1) % 12];
+
+        ctx.beginPath();
+        ctx.moveTo(innerNode.x, innerNode.y);
+        ctx.lineTo(outerNode1.x, outerNode1.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(innerNode.x, innerNode.y);
+        ctx.lineTo(outerNode2.x, outerNode2.y);
+        ctx.stroke();
+      }
+
+      // Outer circle outline with gear teeth inserted
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+      ctx.shadowColor = 'rgba(244, 63, 94, 0.4)';
+      for (let i = 0; i < 6; i++) {
+        const oIdx1 = 7 + i * 2;
+        const oIdx2 = 7 + i * 2 + 1;
+        const tIdx1 = 19 + i * 2;
+        const tIdx2 = 19 + i * 2 + 1;
+
+        // Connect outer node 1 to tooth 1
+        ctx.beginPath();
+        ctx.moveTo(gearNodes[oIdx1].x, gearNodes[oIdx1].y);
+        ctx.lineTo(gearNodes[tIdx1].x, gearNodes[tIdx1].y);
+        ctx.stroke();
+
+        // Connect tooth 1 to tooth 2
+        ctx.beginPath();
+        ctx.moveTo(gearNodes[tIdx1].x, gearNodes[tIdx1].y);
+        ctx.lineTo(gearNodes[tIdx2].x, gearNodes[tIdx2].y);
+        ctx.stroke();
+
+        // Connect tooth 2 to outer node 2
+        ctx.beginPath();
+        ctx.moveTo(gearNodes[tIdx2].x, gearNodes[tIdx2].y);
+        ctx.lineTo(gearNodes[oIdx2].x, gearNodes[oIdx2].y);
+        ctx.stroke();
+
+        // Connect outer node 2 of tooth i to outer node 1 of tooth i+1
+        const nextOIdx = 7 + (i * 2 + 2) % 12;
+        ctx.beginPath();
+        ctx.moveTo(gearNodes[oIdx2].x, gearNodes[oIdx2].y);
+        ctx.lineTo(gearNodes[nextOIdx].x, gearNodes[nextOIdx].y);
+        ctx.stroke();
+      }
+
+      ctx.shadowBlur = 0;
+
+      // 4. Draw connections between floating background particles
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const p1 = particles[i];
+          const p2 = particles[j];
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 100) {
+            const alpha = (100 - dist) / 100 * 0.08;
+            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // 5. Connect floating particles dynamically to nearest gear nodes
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        let closestNode = null;
+        let minDist = 85;
+
+        gearNodes.forEach((gn) => {
+          const dx = p.x - gn.x;
+          const dy = p.y - gn.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < minDist) {
+            minDist = dist;
+            closestNode = gn;
+          }
+        });
+
+        if (closestNode) {
+          const alpha = (85 - minDist) / 85 * 0.14;
+          ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(closestNode.x, closestNode.y);
+          ctx.stroke();
+        }
+      }
+
+      // 6. Connect mouse cursor to nearby particles
+      if (mouse.x > -1000) {
+        ctx.lineWidth = 0.7;
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 130) {
+            const alpha = (130 - dist) / 130 * 0.12;
+            ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // 7. Update and draw floating particles (bokeh + keywords)
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Mouse repulsion
+        if (mouse.x > -1000) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 130) {
+            const force = (130 - dist) / 130;
+            p.x += (dx / dist) * force * 1.2;
+            p.y += (dy / dist) * force * 1.2;
+          }
+        }
+
+        // Boundary checks
+        if (p.x < 0) { p.x = 0; p.vx *= -1; }
+        if (p.x > width) { p.x = width; p.vx *= -1; }
+        if (p.y < 0) { p.y = 0; p.vy *= -1; }
+        if (p.y > height) { p.y = height; p.vy *= -1; }
+
+        ctx.save();
+        if (p.isText) {
+          // Draw small anchor node
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.color}, 0.5)`;
+          ctx.fill();
+
+          // Draw floating keyword (white text for maximum contrast against dark backgrounds)
+          ctx.font = `600 ${p.size}px var(--font-body)`;
+          ctx.fillStyle = `rgba(241, 245, 249, ${p.alpha})`;
+          ctx.shadowColor = `rgba(${p.color}, 0.75)`;
+          ctx.shadowBlur = 8;
+          ctx.fillText(p.text, p.x + 8, p.y + 4);
+        } else {
+          // Draw bokeh circle
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
+
+          if (p.radius > 3.5) {
+            ctx.shadowColor = `rgba(${p.color}, 0.5)`;
+            ctx.shadowBlur = p.radius * 1.8;
+          }
+          ctx.fill();
+        }
+        ctx.restore();
+      });
+
+      // 8. Draw gear nodes on top
+      gearNodes.forEach((n) => {
+        ctx.beginPath();
+        if (n.isHub) {
+          ctx.arc(n.x, n.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.9)';
+          ctx.shadowColor = 'rgba(99, 102, 241, 0.9)';
+          ctx.shadowBlur = 15;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+        } else {
+          const size = n.isInner ? 3 : (n.isOuter ? 4.5 : 3.5);
+          ctx.arc(n.x, n.y, size, 0, Math.PI * 2);
+
+          if (n.isInner) {
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.85)';
+            ctx.shadowColor = 'rgba(168, 85, 247, 0.85)';
+          } else if (n.isOuter) {
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.85)';
+            ctx.shadowColor = 'rgba(99, 102, 241, 0.85)';
+          } else {
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.85)';
+            ctx.shadowColor = 'rgba(244, 63, 94, 0.85)';
+          }
+          ctx.shadowBlur = 8;
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+      });
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
+      if (canvas && canvas.parentElement) {
+        canvas.parentElement.removeEventListener('mousemove', handleMouseMove);
+        canvas.parentElement.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} style={{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+    zIndex: 0,
+  }} />;
+}
+
+export default function Home() {
+  const [filter, setFilter] = useState('All');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('id');
+  const [highlightCardId, setHighlightCardId] = useState(null);
+
+  // Fetch portfolio items
+  useEffect(() => {
+    async function loadPortfolio() {
+      try {
+        const { data, error } = await db.getPortfolio();
+        if (error) throw error;
+        if (data) {
+          setItems(data.map(mapPortfolioItem));
+        }
+      } catch (e) {
+        console.error('Failed to load portfolio:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPortfolio();
+  }, []);
+
+  // Handle smooth scroll to highlighted card
+  useEffect(() => {
+    if (!loading && highlightId) {
+      setHighlightCardId(highlightId);
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`card-${highlightId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 400);
+
+      const clearTimer = setTimeout(() => {
+        setHighlightCardId(null);
+      }, 3000);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [loading, highlightId]);
+
+  // Filter items (shows all categories on Home page)
+  const displayItems = useMemo(() => {
+    if (filter === 'All') return items;
+    return items.filter(item => item.category === filter);
+  }, [filter, items]);
+
+  return (
+    <div style={styles.container}>
+      {/* Hero Section */}
+      <section style={styles.heroSection}>
+        <div style={styles.glowBlob} />
+        <div className="container-max" style={styles.heroInner}>
+          {/* Left Column: Brand Text & Actions */}
+          <div style={styles.heroLeft}>
+            <div style={styles.heroBadge}>
+              <Sparkles size={14} color="var(--accent-indigo)" />
+              <span>PORTFOLIO & INSIGHTS</span>
+            </div>
+            <h1 style={styles.heroTitle}>
+              톱니바꿈<span style={styles.heroGradient}>AI월드</span>
+            </h1>
+            <p style={styles.heroDesc}>
+              실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여<br className="desktop-br" />
+              업무의 한계를 넓혀보세요.
+            </p>
+            <div style={styles.heroActions}>
+              <button 
+                onClick={() => {
+                  const el = document.getElementById('featured-projects');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="hero-action-btn primary"
+                style={styles.btnPrimary}
+              >
+                <span>프로젝트 탐색</span>
+              </button>
+              <a
+                href="https://open.kakao.com/o/si1c9OAi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hero-action-btn secondary"
+                style={styles.btnSecondary}
+              >
+                <span>프로그램 문의</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Right Column: Dynamic Neural Gear Constellation Canvas */}
+          <div style={styles.heroRight}>
+            <div style={styles.canvasContainer}>
+              <CloudWordCanvas />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Projects Grid Section */}
+      <section id="featured-projects" className="container-max" style={styles.gridSection}>
+        <div style={styles.gridHeader}>
+          <h2 style={styles.gridTitle}>
+            <Star size={20} color="var(--accent-amber)" style={{ marginRight: '8px' }} />
+            Featured Projects
+          </h2>
+          
+          <div style={styles.filtersWrapper}>
+            <a
+              href="https://open.kakao.com/o/si1c9OAi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="kakao-inquiry-btn"
+              style={styles.kakaoInquiry}
+            >
+              <MessageSquare size={14} fill="currentColor" />
+              <span>프로그램 문의</span>
+            </a>
+
+            <div style={styles.filterBtns}>
+              {['All', 'AI Recommend', 'App', 'Insight'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  style={{
+                    ...styles.filterBtn,
+                    ...(filter === cat ? styles.filterBtnActive : {})
+                  }}
+                >
+                  {cat === 'All' ? '전체보기' : (cat === 'AI Recommend' ? '영상제작' : (cat === 'App' ? '홈페이지' : '인사이트'))}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Loading Spinner */}
+        {loading ? (
+          <div style={styles.loaderContainer}>
+            <div className="spinner" />
+          </div>
+        ) : (
+          <div className="grid-container">
+            {displayItems.map((item, idx) => (
+              <PortfolioCard 
+                key={item.id} 
+                item={item} 
+                index={idx}
+                isHighlighted={highlightCardId === item.id}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loading && displayItems.length === 0 && (
+          <div style={styles.emptyContainer}>
+            등록된 프로젝트가 없습니다.
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    width: '100%',
+    paddingBottom: '80px',
+  },
+  heroSection: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'hidden',
+    padding: '100px 0 60px 0',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  glowBlob: {
+    position: 'absolute',
+    top: '-20%',
+    right: '-10%',
+    width: '50%',
+    height: '80%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
+    filter: 'blur(100px)',
+    pointerEvents: 'none',
+    zIndex: 1,
+  },
+  heroInner: {
+    display: 'grid',
+    gridTemplateColumns: '1.15fr 0.85fr',
+    alignItems: 'center',
+    gap: '48px',
+    zIndex: 10,
+    width: '100%',
+  },
+  heroLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    textAlign: 'left',
+  },
+  heroBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '6px 16px',
+    borderRadius: '100px',
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    color: '#cbd5e1',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    fontFamily: 'var(--font-title)',
+    letterSpacing: '0.1em',
+    marginBottom: '24px',
+  },
+  heroTitle: {
+    fontSize: '4.2rem',
+    fontWeight: 900,
+    color: 'var(--text-primary)',
+    lineHeight: 1.1,
+    letterSpacing: '-0.04em',
+    marginBottom: '24px',
+  },
+  heroGradient: {
+    background: 'linear-gradient(135deg, var(--accent-indigo) 0%, var(--accent-purple) 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginLeft: '12px',
+  },
+  heroDesc: {
+    fontSize: '1.1rem',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.7,
+    maxWidth: '650px',
+    marginBottom: '36px',
+    fontWeight: 400,
+  },
+  heroActions: {
+    display: 'flex',
+    gap: '16px',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  btnPrimary: {
+    background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-purple))',
+    color: '#ffffff',
+    border: 'none',
+    padding: '14px 28px',
+    borderRadius: '12px',
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: '0 4px 20px rgba(99, 102, 241, 0.25)',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  },
+  btnSecondary: {
+    background: 'rgba(255, 255, 255, 0.03)',
+    color: 'var(--text-primary)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    padding: '13px 28px',
+    borderRadius: '12px',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'background 0.2s ease, border-color 0.2s ease',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroRight: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  canvasContainer: {
+    position: 'relative',
+    width: '100%',
+    height: '460px',
+    background: 'radial-gradient(circle at center, rgba(14, 12, 25, 0.45) 0%, rgba(3, 2, 7, 0) 70%)',
+    borderRadius: '24px',
+    border: '1px solid rgba(255, 255, 255, 0.04)',
+    overflow: 'hidden',
+    boxShadow: 'inset 0 0 40px rgba(99, 102, 241, 0.04)',
+  },
+  gridSection: {
+    marginTop: '20px',
+  },
+  gridHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '40px',
+    flexWrap: 'wrap',
+    gap: '24px',
+  },
+  gridTitle: {
+    fontSize: '1.8rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  filtersWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  kakaoInquiry: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    backgroundColor: '#FEE500',
+    color: '#191919',
+    padding: '8px 16px',
+    borderRadius: '30px',
+    fontSize: '0.8rem',
+    fontWeight: 850,
+    boxShadow: '0 4px 10px rgba(254, 229, 0, 0.12)',
+    transition: 'transform 0.2s ease, background 0.2s ease',
+  },
+  filterBtns: {
+    display: 'flex',
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    padding: '4px',
+    borderRadius: '100px',
+  },
+  filterBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-secondary)',
+    padding: '6px 18px',
+    borderRadius: '100px',
+    fontSize: '0.85rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+  },
+  filterBtnActive: {
+    background: 'rgba(255, 255, 255, 0.07)',
+    color: 'var(--text-primary)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+  },
+  loaderContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '300px',
+    width: '100%',
+  },
+  emptyContainer: {
+    padding: '100px 0',
+    textAlign: 'center',
+    color: 'var(--text-muted)',
+    fontSize: '0.95rem',
+  },
+};
+
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .kakao-inquiry-btn:hover {
+      transform: translateY(-1px);
+      background-color: #fdd835 !important;
+    }
+    .hero-action-btn {
+      transition: all 0.2s ease !important;
+    }
+    .hero-action-btn:hover {
+      transform: translateY(-2px);
+    }
+    .hero-action-btn.primary:hover {
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
+    }
+    .hero-action-btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+    @media (max-width: 992px) {
+      div[style*="heroInner"] {
+        grid-template-columns: 1fr !important;
+        gap: 40px !important;
+        text-align: center !important;
+      }
+      div[style*="heroLeft"] {
+        align-items: center !important;
+        text-align: center !important;
+      }
+      div[style*="heroActions"] {
+        justify-content: center !important;
+      }
+      div[style*="canvasContainer"] {
+        height: 380px !important;
+      }
+    }
+    @media (max-width: 768px) {
+      .desktop-br { display: none !important; }
+      h1[style*="heroTitle"] {
+        font-size: 2.8rem !important;
+      }
+      p[style*="heroDesc"] {
+        font-size: 0.95rem !important;
+        margin-bottom: 24px !important;
+      }
+      div[style*="gridHeader"] {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+      }
+      div[style*="filtersWrapper"] {
+        width: 100% !important;
+        justify-content: space-between !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
