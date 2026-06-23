@@ -219,8 +219,8 @@ export default function AINews() {
       {/* Header */}
       <section className="container-max" style={styles.headerSection}>
         <div style={styles.headerInner}>
-          <h1 style={styles.title}>Daily AI News</h1>
-          <p style={styles.subtitle}>
+          <h1 className="news-title" style={styles.title}>Daily AI News</h1>
+          <p className="news-subtitle" style={styles.subtitle}>
             인공지능 모델 및 플랫폼 트렌드를 실시간 수집 및 요약하여 전달합니다.<br className="desktop-br" />
             카드를 클릭하시면 상세 분석 리포트를 확인하실 수 있습니다.
           </p>
@@ -287,7 +287,7 @@ export default function AINews() {
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div style={styles.paginationContainer}>
-                <div style={styles.desktopPagination}>
+                <div className="news-desktop-pagination" style={styles.desktopPagination}>
                   <button
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
@@ -336,7 +336,7 @@ export default function AINews() {
                   </button>
                 </div>
 
-                <div style={styles.mobilePagination}>
+                <div className="news-mobile-pagination" style={styles.mobilePagination}>
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
@@ -372,7 +372,7 @@ export default function AINews() {
       {/* Details Popup Modal */}
       {selectedNews && (
         <div style={styles.popupOverlay} onClick={() => setSelectedNews(null)}>
-          <div style={styles.popupContent} onClick={(e) => e.stopPropagation()}>
+          <div className="news-popup-content" style={styles.popupContent} onClick={(e) => e.stopPropagation()}>
             {/* Close Button */}
             <button onClick={() => setSelectedNews(null)} style={styles.popupCloseBtn}>
               <X size={18} />
@@ -402,7 +402,7 @@ export default function AINews() {
             </div>
 
             {/* Title */}
-            <h2 style={styles.popupTitle}>{selectedNews.title}</h2>
+            <h2 className="news-popup-title" style={styles.popupTitle}>{selectedNews.title}</h2>
 
             {/* Markdown Scrollable Body */}
             <div style={styles.popupBody}>
@@ -431,6 +431,7 @@ export default function AINews() {
               <div style={styles.popupFooterActions}>
                 <button
                   onClick={(e) => handleCopyLink(e, selectedNews.id)}
+                  className={`news-popup-action-btn ${copiedId === selectedNews.id ? 'copied' : ''}`}
                   style={{
                     ...styles.popupActionBtn,
                     ...(copiedId === selectedNews.id ? styles.popupActionBtnCopied : {})
@@ -448,7 +449,7 @@ export default function AINews() {
                     </>
                   )}
                 </button>
-                <button onClick={() => setSelectedNews(null)} style={styles.popupCloseActionBtn}>
+                <button onClick={() => setSelectedNews(null)} className="news-popup-close-action-btn" style={styles.popupCloseActionBtn}>
                   닫기
                 </button>
                 {selectedNews.sourceUrl && (
@@ -456,6 +457,7 @@ export default function AINews() {
                     href={selectedNews.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="news-popup-source-action-btn"
                     style={styles.popupSourceActionBtn}
                   >
                     <span>원문 출처 바로가기</span>
@@ -927,15 +929,15 @@ if (typeof document !== 'undefined') {
       background: rgba(255, 255, 255, 0.07) !important;
       border-color: rgba(255, 255, 255, 0.15) !important;
     }
-    a[style*="popupSourceActionBtn"]:hover {
+    .news-popup-source-action-btn:hover {
       background-color: #e11d48 !important;
       transform: translateY(-1px);
     }
-    button[style*="popupCloseActionBtn"]:hover {
+    .news-popup-close-action-btn:hover {
       background-color: rgba(255, 255, 255, 0.08) !important;
       color: white !important;
     }
-    button[style*="popupActionBtn"]:hover:not([style*="popupActionBtnCopied"]) {
+    .news-popup-action-btn:hover:not(.copied) {
       background-color: rgba(255, 255, 255, 0.08) !important;
       color: white !important;
     }
@@ -943,23 +945,23 @@ if (typeof document !== 'undefined') {
       color: var(--accent-rose) !important;
     }
     @media (max-width: 768px) {
-      h1[style*="title"] {
+      .news-title {
         font-size: 2.5rem !important;
       }
-      p[style*="subtitle"] {
+      .news-subtitle {
         font-size: 0.95rem !important;
       }
-      div[style*="desktopPagination"] {
+      .news-desktop-pagination {
         display: none !important;
       }
-      div[style*="mobilePagination"] {
+      .news-mobile-pagination {
         display: flex !important;
       }
-      div[style*="popupContent"] {
+      .news-popup-content {
         padding: 16px !important;
         max-height: 95vh !important;
       }
-      h2[style*="popupTitle"] {
+      .news-popup-title {
         font-size: 1.25rem !important;
       }
     }

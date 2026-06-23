@@ -466,21 +466,21 @@ export default function Home() {
       {/* Hero Section */}
       <section style={styles.heroSection}>
         <div style={styles.glowBlob} />
-        <div className="container-max" style={styles.heroInner}>
+        <div className="container-max hero-inner" style={styles.heroInner}>
           {/* Left Column: Brand Text & Actions */}
-          <div style={styles.heroLeft}>
+          <div className="hero-left" style={styles.heroLeft}>
             <div style={styles.heroBadge}>
               <Sparkles size={14} color="var(--accent-indigo)" />
               <span>PORTFOLIO & INSIGHTS</span>
             </div>
-            <h1 style={styles.heroTitle}>
+            <h1 className="hero-title" style={styles.heroTitle}>
               톱니바꿈<span style={styles.heroGradient}>AI월드</span>
             </h1>
-            <p style={styles.heroDesc}>
+            <p className="hero-desc" style={styles.heroDesc}>
               실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여<br className="desktop-br" />
               업무의 한계를 넓혀보세요.
             </p>
-            <div style={styles.heroActions}>
+            <div className="hero-actions" style={styles.heroActions}>
               <button 
                 onClick={() => {
                   const el = document.getElementById('featured-projects');
@@ -505,7 +505,7 @@ export default function Home() {
 
           {/* Right Column: Dynamic Neural Gear Constellation Canvas */}
           <div style={styles.heroRight}>
-            <div style={styles.canvasContainer}>
+            <div className="canvas-container" style={styles.canvasContainer}>
               <CloudWordCanvas />
             </div>
           </div>
@@ -514,13 +514,13 @@ export default function Home() {
 
       {/* Featured Projects Grid Section */}
       <section id="featured-projects" className="container-max" style={styles.gridSection}>
-        <div style={styles.gridHeader}>
+        <div className="grid-header" style={styles.gridHeader}>
           <h2 style={styles.gridTitle}>
             <Star size={20} color="var(--accent-amber)" style={{ marginRight: '8px' }} />
             Featured Projects
           </h2>
           
-          <div style={styles.filtersWrapper}>
+          <div className="filters-wrapper" style={styles.filtersWrapper}>
             <a
               href="https://open.kakao.com/o/si1c9OAi"
               target="_blank"
@@ -816,36 +816,36 @@ if (typeof document !== 'undefined') {
       border-color: rgba(255, 255, 255, 0.15) !important;
     }
     @media (max-width: 992px) {
-      div[style*="heroInner"] {
+      .hero-inner {
         grid-template-columns: 1fr !important;
         gap: 40px !important;
         text-align: center !important;
       }
-      div[style*="heroLeft"] {
+      .hero-left {
         align-items: center !important;
         text-align: center !important;
       }
-      div[style*="heroActions"] {
+      .hero-actions {
         justify-content: center !important;
       }
-      div[style*="canvasContainer"] {
+      .canvas-container {
         height: 380px !important;
       }
     }
     @media (max-width: 768px) {
       .desktop-br { display: none !important; }
-      h1[style*="heroTitle"] {
+      .hero-title {
         font-size: 2.8rem !important;
       }
-      p[style*="heroDesc"] {
+      .hero-desc {
         font-size: 0.95rem !important;
         margin-bottom: 24px !important;
       }
-      div[style*="gridHeader"] {
+      .grid-header {
         flex-direction: column !important;
         align-items: flex-start !important;
       }
-      div[style*="filtersWrapper"] {
+      .filters-wrapper {
         width: 100% !important;
         justify-content: space-between !important;
       }

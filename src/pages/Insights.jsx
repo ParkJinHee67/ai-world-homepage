@@ -58,8 +58,8 @@ export default function Insights() {
           <div style={styles.iconContainer}>
             <Lightbulb size={24} color="var(--accent-amber)" />
           </div>
-          <h1 style={styles.title}>AI Insights</h1>
-          <p style={styles.subtitle}>
+          <h1 className="insights-title" style={styles.title}>AI Insights</h1>
+          <p className="insights-subtitle" style={styles.subtitle}>
             인공지능 트렌드, 프롬프트 엔지니어링 팁, 그리고 AI 자동화 구축 전략을 심도 있게 탐구합니다.
           </p>
         </div>
@@ -147,10 +147,10 @@ if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `
     @media (max-width: 768px) {
-      h1[style*="title"] {
+      .insights-title {
         font-size: 2.5rem !important;
       }
-      p[style*="subtitle"] {
+      .insights-subtitle {
         font-size: 0.95rem !important;
       }
     }

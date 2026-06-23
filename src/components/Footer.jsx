@@ -4,7 +4,7 @@ import { MessageSquare, Heart } from 'lucide-react';
 export default function Footer() {
   return (
     <footer style={styles.footerContainer}>
-      <div className="container-max" style={styles.footerInner}>
+      <div className="container-max footer-inner" style={styles.footerInner}>
         <div style={styles.left}>
           <p style={styles.copyright}>
             © {new Date().getFullYear()} 톱니바꿈 AI월드. All rights reserved.
@@ -14,11 +14,12 @@ export default function Footer() {
           </p>
         </div>
 
-        <div style={styles.right}>
+        <div className="footer-right" style={styles.right}>
           <a
             href="https://open.kakao.com/o/si1c9OAi"
             target="_blank"
             rel="noopener noreferrer"
+            className="footer-kakao-btn"
             style={styles.kakaoBtn}
           >
             <MessageSquare size={16} fill="currentColor" />
@@ -97,16 +98,16 @@ const styles = {
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `
-    a[style*="kakaoBtn"]:hover {
+    .footer-kakao-btn:hover {
       transform: translateY(-2px);
       background-color: #fdd835 !important;
     }
     @media (max-width: 768px) {
-      footer div[style*="footerInner"] {
+      footer .footer-inner {
         flex-direction: column !important;
         align-items: flex-start !important;
       }
-      footer div[style*="right"] {
+      footer .footer-right {
         align-items: flex-start !important;
       }
     }

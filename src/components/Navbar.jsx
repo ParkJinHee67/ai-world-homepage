@@ -28,7 +28,7 @@ export default function Navbar() {
         </NavLink>
 
         {/* Desktop Nav Links */}
-        <div style={styles.desktopLinks}>
+        <div className="nav-desktop-links" style={styles.desktopLinks}>
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -46,7 +46,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Hamburger Button */}
-        <button onClick={toggleMenu} style={styles.hamburger}>
+        <button onClick={toggleMenu} className="nav-hamburger" style={styles.hamburger}>
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
@@ -156,10 +156,10 @@ if (typeof document !== 'undefined') {
       flex-shrink: 0;
     }
     @media (max-width: 768px) {
-      div[style*="desktopLinks"] {
+      .nav-desktop-links {
         display: none !important;
       }
-      button[style*="hamburger"] {
+      .nav-hamburger {
         display: block !important;
       }
     }

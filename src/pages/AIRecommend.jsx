@@ -58,8 +58,8 @@ export default function AIRecommend() {
           <div style={styles.iconContainer}>
             <Video size={24} color="var(--accent-emerald)" />
           </div>
-          <h1 style={styles.title}>영상제작 포트폴리오</h1>
-          <p style={styles.subtitle}>
+          <h1 className="recommend-title" style={styles.title}>영상제작 포트폴리오</h1>
+          <p className="recommend-subtitle" style={styles.subtitle}>
             유튜브 롱폼/쇼츠, 인트로, 브랜드 홍보 영상 등 AI 자동화 편집 기술이 가미된 풍부한 비디오 제작 포트폴리오입니다.
           </p>
         </div>
@@ -147,10 +147,10 @@ if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `
     @media (max-width: 768px) {
-      h1[style*="title"] {
+      .recommend-title {
         font-size: 2.5rem !important;
       }
-      p[style*="subtitle"] {
+      .recommend-subtitle {
         font-size: 0.95rem !important;
       }
     }
