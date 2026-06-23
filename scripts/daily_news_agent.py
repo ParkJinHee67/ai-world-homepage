@@ -92,7 +92,7 @@ Your response MUST be a valid JSON object matching this schema (do NOT wrap it i
         res = requests.post(api_url, json=payload, timeout=20)
         if res.status_code == 200:
             result = res.json()
-            text_response = result["contents"][0]["parts"][0]["text"]
+            text_response = result["candidates"][0]["content"]["parts"][0]["text"]
             
             # Parse JSON response
             import json
