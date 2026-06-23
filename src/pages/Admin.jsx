@@ -568,6 +568,15 @@ def register_ai_news(title, summary_points, article_url):
                   >
                     AI 뉴스 관리
                   </button>
+                  <button 
+                    onClick={() => setCurrentTab('manual')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'manual' ? styles.tabBtnActiveManual : {})
+                    }}
+                  >
+                    운영 매뉴얼
+                  </button>
                 </div>
 
                 <button onClick={handleLogout} style={styles.logoutBtn}>
@@ -575,12 +584,13 @@ def register_ai_news(title, summary_points, article_url):
                   <span>로그아웃</span>
                 </button>
 
-                {currentTab === 'portfolio' ? (
+                {currentTab === 'portfolio' && (
                   <button onClick={() => openPortfolioModal()} style={styles.createBtn}>
                     <Plus size={16} />
                     <span>새 포트폴리오 등록</span>
                   </button>
-                ) : (
+                )}
+                {currentTab === 'news' && (
                   <button onClick={() => openNewsModal()} style={styles.createBtnNews}>
                     <Plus size={16} />
                     <span>새 AI 뉴스 등록</span>
@@ -840,6 +850,60 @@ def register_ai_news(title, summary_points, article_url):
     requests.post(url, json=payload, headers=headers)`}
                         </pre>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 3: Operator Manual View */}
+                {currentTab === 'manual' && (
+                  <div style={styles.manualContainer} className="glass-panel">
+                    <h2 style={styles.manualTitle}>톱니바꿈월드 운영 매뉴얼</h2>
+                    
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.manualNumber}>1</span> 관리자 로그인 및 세션 관리
+                      </h3>
+                      <p style={styles.manualText}>
+                        - 관리자 계정은 <strong style={{ color: 'var(--accent-indigo)' }}>jhpa670211@gmail.com</strong>, 패스코드는 <strong style={{ color: 'var(--accent-indigo)' }}>jhpa670211</strong>입니다.<br />
+                        - 패스코드로 로그인 시 로그인 세션 플래그가 브라우저의 <code>localStorage</code>에 저장되어, 새로고침하거나 브라우저를 재부팅해도 세션이 안전하게 자동 유지됩니다.<br />
+                        - 로그아웃 버튼을 누르면 이 세션 캐시가 제거됩니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.manualNumber}>2</span> 포트폴리오(앱/인사이트) 관리 및 DND 정렬
+                      </h3>
+                      <p style={styles.manualText}>
+                        - <strong>등록/수정</strong>: 제목, 설명, 카테고리(영상제작, 홈페이지, 인사이트)를 등록합니다.<br />
+                        - <strong>실시간 화면 캡처</strong>: 프로젝트 URL 입력 후 '실시간 웹 보기' 버튼을 클릭하면 해당 웹페이지를 임베디드 창으로 직접 확인하고 <strong>'현재 화면 실시간 캡처 및 등록'</strong> 버튼을 눌러 대표 썸네일로 즉시 자동 캡처할 수 있습니다.<br />
+                        - <strong>Manual 및 Video 링크</strong>: Notion 설명서 주소 및 유튜브 영상 링크(여러 개인 경우 쉼표로 구분)를 연동하면 포털 카드에 매뉴얼 및 비디오 재생 버튼이 자동으로 활성화됩니다.<br />
+                        - <strong>드래그 앤 드롭 정렬 (DND)</strong>: 포트폴리오 필터를 <strong>'전체보기(All)'</strong> 상태로 변경한 후, 리스트 왼쪽의 손잡이 아이콘(<GripVertical size={14} style={{ display: 'inline', margin: '0 2px' }} />)을 잡고 원하는 위치로 드래그하면 순서가 실시간 저장되어 메인 화면에 반영됩니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.manualNumber}>3</span> AI 트렌드 뉴스 자동 수집 및 GitHub Actions
+                      </h3>
+                      <p style={styles.manualText}>
+                        - <strong>수동 등록</strong>: 대시보드에서 직접 헤드라인과 요약, 상세 마크다운 본문을 작성해 AI 뉴스를 발행할 수 있습니다.<br />
+                        - <strong>GitHub Actions 스케줄러 자동화</strong>: 매일 한국 시간 <strong>오전 7:00</strong>에 깃허브에서 파이썬 기동 스크립트(<code>scripts/daily_news_agent.py</code>)가 자동으로 동작합니다.<br />
+                        - <strong>중복 등록 차단</strong>: 구글 뉴스 RSS feed에서 최신 AI 뉴스를 가져오며, 데이터베이스에 이미 등록된 기사인 경우 자동으로 스킵하고 새로운 기사만 요약해 등록합니다.<br />
+                        - <strong>Gemini 2.5 Flash 번역/요약</strong>: 구글 AI API가 영문 뉴스를 매끄러운 한글로 자동 번역하고, 요점 3가지를 <code>📌[1]~[3]</code> 마크다운 팝업 리포트로 요약하여 완벽하게 데이터베이스에 주입합니다.<br />
+                        - <strong>깃허브 보안 키 설정</strong>: 워크플로우 가동을 위해 저장소 Settings ➜ Secrets에 <code>SUPABASE_URL</code>, <code>SUPABASE_KEY</code>, <code>GEMINI_API_KEY</code>를 반드시 입력해 두어야 합니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.manualNumber}>4</span> 로컬 개발 및 빌드 환경 가이드
+                      </h3>
+                      <p style={styles.manualText}>
+                        - <strong>개발 서버 기동</strong>: <code>npm run dev</code> (기본 http://localhost:5173/)<br />
+                        - <strong>배포용 빌드</strong>: <code>npm run build</code> (경량 컴파일 및 <code>dist/</code> 디렉토리 번들링 완성)<br />
+                        - <strong>데이터베이스 스키마</strong>: Supabase SQL Editor를 통해 <code>portfolio_items</code>, <code>ai_news</code>, <code>admin_accounts</code> 테이블이 연결되어 관리됩니다.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1798,6 +1862,58 @@ const styles = {
     fontWeight: 700,
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(244, 63, 94, 0.2)',
+  },
+  tabBtnActiveManual: {
+    background: 'var(--accent-purple)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(168, 85, 247, 0.15)',
+  },
+  manualContainer: {
+    marginTop: '20px',
+    padding: '32px',
+    textAlign: 'left',
+    background: 'rgba(13, 11, 24, 0.55)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+  },
+  manualTitle: {
+    fontSize: '1.6rem',
+    fontWeight: 800,
+    marginBottom: '28px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    paddingBottom: '16px',
+    color: 'var(--text-primary)',
+  },
+  manualSection: {
+    marginBottom: '28px',
+  },
+  manualSubTitle: {
+    fontSize: '1.15rem',
+    fontWeight: 700,
+    marginBottom: '12px',
+    color: 'var(--text-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  manualNumber: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    background: 'rgba(168, 85, 247, 0.15)',
+    color: '#d8b4fe',
+    border: '1px solid rgba(168, 85, 247, 0.3)',
+    fontSize: '0.82rem',
+    fontWeight: 700,
+  },
+  manualText: {
+    fontSize: '0.88rem',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.7,
+    paddingLeft: '34px',
   }
 };
 
