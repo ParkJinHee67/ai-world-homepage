@@ -409,6 +409,7 @@ export default function Home() {
   const [filter, setFilter] = useState('All');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
   const [highlightCardId, setHighlightCardId] = useState(null);
@@ -424,6 +425,7 @@ export default function Home() {
         }
       } catch (e) {
         console.error('Failed to load portfolio:', e);
+        setErrorMsg(e.message || String(e));
       } finally {
         setLoading(false);
       }
@@ -546,6 +548,25 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {errorMsg && (
+          <div style={{
+            padding: '16px',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '8px',
+            color: '#ef4444',
+            marginBottom: '20px',
+            fontFamily: 'var(--font-body)',
+            fontSize: '14px',
+            whiteSpace: 'pre-wrap',
+            textAlign: 'center',
+            zIndex: 10,
+            position: 'relative'
+          }}>
+            <strong>[데이터 로딩 에러]</strong> {errorMsg}
+          </div>
+        )}
 
         {/* Loading Spinner */}
         {loading ? (
