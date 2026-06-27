@@ -42,6 +42,7 @@ export default function Admin() {
   const [resources, setResources] = useState([]);
   const [showResourceModal, setShowResourceModal] = useState(false);
   const [resourceForm, setResourceForm] = useState({ title: '', description: '', fileName: '', fileContent: '', resolution: '', fileSize: '' });
+  const [resourceFile, setResourceFile] = useState(null);
   const [isUploadingResource, setIsUploadingResource] = useState(false);
   const [loading, setLoading] = useState(true);
   
@@ -220,12 +221,14 @@ export default function Admin() {
 
   const openResourceModal = () => {
     setEditingResourceItem(null);
+    setResourceFile(null);
     setResourceForm({ title: '', description: '', fileName: '', fileContent: '', resolution: '', fileSize: '' });
     setShowResourceModal(true);
   };
 
   const openEditResourceModal = async (resource) => {
     setEditingResourceItem(resource);
+    setResourceFile(null);
     setResourceForm({
       id: resource.id,
       title: resource.title || '',
@@ -284,6 +287,8 @@ export default function Admin() {
     const file = e.target.files[0];
     if (!file) return;
 
+    setResourceFile(file);
+
     const sizeStr = file.size > 1024 * 1024 
       ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
       : `${(file.size / 1024).toFixed(0)} KB`;
@@ -308,17 +313,27 @@ export default function Admin() {
 
   const handleResourceSave = async (e) => {
     e.preventDefault();
-    if (!editingResourceItem && !resourceForm.fileContent) {
+    if (!editingResourceItem && !resourceFile && !resourceForm.fileContent) {
       alert("이미지 파일을 선택해 주세요.");
       return;
     }
     setIsUploadingResource(true);
     try {
-      const { error } = await db.saveResource(resourceForm);
+      let finalForm = { ...resourceForm };
+      
+      // If a new file is selected, upload it to storage first
+      if (resourceFile) {
+        const { data: publicUrl, error: uploadError } = await db.uploadResourceFile(resourceFile);
+        if (uploadError) throw uploadError;
+        finalForm.fileContent = publicUrl;
+      }
+      
+      const { error } = await db.saveResource(finalForm);
       if (error) throw error;
       alert(editingResourceItem ? "리소스가 성공적으로 수정되었습니다!" : "리소스가 성공적으로 등록되었습니다!");
       setShowResourceModal(false);
       setEditingResourceItem(null);
+      setResourceFile(null);
       loadDashboardData();
     } catch (err) {
       console.error('Failed to save resource:', err);

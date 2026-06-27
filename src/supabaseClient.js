@@ -557,6 +557,36 @@ export const db = {
     }
   },
 
+  async uploadResourceFile(file) {
+    if (this.isMock) {
+      // In mock mode, we just read as Base64 to show preview in localStorage
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve({ data: e.target.result, error: null });
+        reader.onerror = (err) => resolve({ data: null, error: err });
+        reader.readAsDataURL(file);
+      });
+    }
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`;
+      
+      const { data, error } = await supabase.storage
+        .from('resources')
+        .upload(path, file, { cacheControl: '3600', upsert: true });
+        
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('resources')
+        .getPublicUrl(path);
+        
+      return { data: publicUrl, error: null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
   async saveResource(resourceData) {
     if (this.isMock) {
       const resources = getMockData('mock_resources', []);
