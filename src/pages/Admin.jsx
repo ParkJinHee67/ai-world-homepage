@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, mapPortfolioItem, mapNewsItem } from '../supabaseClient';
 import { 
-  Plus, Pen, Trash2, GripVertical, ShieldAlert, LogOut, Check, Terminal, FileText, Image as ImageIcon, Sparkles, AlertCircle, Copy, Link, Monitor, Database
+  Plus, Pen, Trash2, GripVertical, ShieldAlert, LogOut, Check, Terminal, FileText, Image as ImageIcon, Sparkles, AlertCircle, Copy, Link, Monitor, Database, Loader2
 } from 'lucide-react';
 
 // Client side image compression using Canvas
@@ -38,6 +38,11 @@ export default function Admin() {
   const [adminUser, setAdminUser] = useState(null);
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [showResourceModal, setShowResourceModal] = useState(false);
+  const [resourceForm, setResourceForm] = useState({ title: '', description: '', fileName: '', fileContent: '', resolution: '', fileSize: '' });
+  const [isUploadingResource, setIsUploadingResource] = useState(false);
   const [loading, setLoading] = useState(true);
   
   // Passcode login states
@@ -54,6 +59,7 @@ export default function Admin() {
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [editingPortfolioItem, setEditingPortfolioItem] = useState(null);
   const [editingNewsItem, setEditingNewsItem] = useState(null);
+  const [editingResourceItem, setEditingResourceItem] = useState(null);
   
   // Forms state
   const [portfolioForm, setPortfolioForm] = useState({
@@ -151,14 +157,188 @@ export default function Admin() {
     setLoading(true);
     try {
       const pRes = await db.getPortfolio();
-      const nRes = await db.getNews();
-      
+      if (pRes.error) {
+        console.error('Portfolio load error:', pRes.error);
+        alert(`포트폴리오 로딩 실패: ${pRes.error.message || JSON.stringify(pRes.error)}`);
+      }
       if (pRes.data) setPortfolioItems(pRes.data.map(mapPortfolioItem));
+
+      const nRes = await db.getNews();
+      if (nRes.error) {
+        console.error('News load error:', nRes.error);
+        alert(`뉴스 로딩 실패: ${nRes.error.message || JSON.stringify(nRes.error)}`);
+      }
       if (nRes.data) setNewsItems(nRes.data.map(mapNewsItem));
+
+      const lRes = await db.getLeads();
+      if (lRes.error) {
+        console.error('Leads load error:', lRes.error);
+        alert(`리드 데이터 로딩 실패: ${lRes.error.message || JSON.stringify(lRes.error)}`);
+      }
+      if (lRes.data) setLeads(lRes.data);
+
+      const rRes = await db.getResources();
+      if (rRes.error) {
+        console.error('Resources load error:', rRes.error);
+        alert(`주인공 이미지 리소스 로딩 실패: ${rRes.error.message || JSON.stringify(rRes.error)}`);
+      }
+      if (rRes.data) setResources(rRes.data);
     } catch (e) {
       console.error('Failed to load admin dashboard data:', e);
+      alert(`대시보드 데이터 로딩 중 예외 발생: ${e.message || e}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const exportLeadsToCSV = () => {
+    if (leads.length === 0) {
+      alert("내보낼 마케팅 리드 데이터가 없습니다.");
+      return;
+    }
+    
+    let csvContent = "\uFEFF";
+    csvContent += "신청 일시,이름/닉네임,이메일 주소,요청 리소스\n";
+    
+    leads.forEach(lead => {
+      const date = new Date(lead.created_at || lead.createdAt).toLocaleString('ko-KR').replace(/,/g, '');
+      const name = (lead.name || '').replace(/,/g, '');
+      const email = (lead.email || '').replace(/,/g, '');
+      const requested = (lead.requested_image || lead.requestedImage || '').replace(/,/g, '');
+      csvContent += `${date},${name},${email},${requested}\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `톱니바꿈월드_마케팅_리드_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const openResourceModal = () => {
+    setEditingResourceItem(null);
+    setResourceForm({ title: '', description: '', fileName: '', fileContent: '', resolution: '', fileSize: '' });
+    setShowResourceModal(true);
+  };
+
+  const openEditResourceModal = async (resource) => {
+    setEditingResourceItem(resource);
+    setResourceForm({
+      id: resource.id,
+      title: resource.title || '',
+      description: resource.description || '',
+      fileName: resource.file_name || resource.fileName || '',
+      fileContent: resource.file_content || resource.fileContent || '',
+      resolution: resource.resolution || '',
+      fileSize: resource.file_size || resource.fileSize || ''
+    });
+    setShowResourceModal(true);
+
+    if (!resource.file_content && !resource.fileContent) {
+      try {
+        const { data } = await db.getResourceContent(resource.id);
+        if (data) {
+          setResourceForm(prev => {
+            if (prev.id === resource.id) {
+              return { ...prev, fileContent: data };
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load resource image content for edit:', err);
+      }
+    }
+  };
+
+  const handleResourceDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleResourceDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    
+    const items = [...resources];
+    const draggedItem = items[draggedIndex];
+    items.splice(draggedIndex, 1);
+    items.splice(index, 0, draggedItem);
+    
+    setDraggedIndex(index);
+    setResources(items);
+  };
+
+  const handleResourceDragEnd = async () => {
+    setDraggedIndex(null);
+    const { error } = await db.updateResourcesOrder(resources);
+    if (error) {
+      alert(`순서 저장 실패: ${error.message}`);
+    }
+  };
+
+  const handleResourceFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const sizeStr = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+      : `${(file.size / 1024).toFixed(0)} KB`;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const fileContent = event.target.result;
+      const img = new Image();
+      img.src = fileContent;
+      img.onload = () => {
+        setResourceForm(prev => ({
+          ...prev,
+          fileName: file.name,
+          fileContent: fileContent,
+          fileSize: sizeStr,
+          resolution: `${img.width} x ${img.height}`
+        }));
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResourceSave = async (e) => {
+    e.preventDefault();
+    if (!editingResourceItem && !resourceForm.fileContent) {
+      alert("이미지 파일을 선택해 주세요.");
+      return;
+    }
+    setIsUploadingResource(true);
+    try {
+      const { error } = await db.saveResource(resourceForm);
+      if (error) throw error;
+      alert(editingResourceItem ? "리소스가 성공적으로 수정되었습니다!" : "리소스가 성공적으로 등록되었습니다!");
+      setShowResourceModal(false);
+      setEditingResourceItem(null);
+      loadDashboardData();
+    } catch (err) {
+      console.error('Failed to save resource:', err);
+      alert(`저장 실패: ${err.message || err}`);
+    } finally {
+      setIsUploadingResource(false);
+    }
+  };
+
+  const handleDeleteResource = async (id) => {
+    if (window.confirm("정말로 이 이미지 리소스를 삭제하시겠습니까? 삭제 후에는 되돌릴 수 없습니다.")) {
+      try {
+        const { error } = await db.deleteResource(id);
+        if (error) throw error;
+        alert("삭제 완료되었습니다.");
+        loadDashboardData();
+      } catch (err) {
+        console.error('Failed to delete resource:', err);
+        alert(`삭제 실패: ${err.message || err}`);
+      }
     }
   };
 
@@ -577,6 +757,24 @@ def register_ai_news(title, summary_points, article_url):
                   >
                     운영 매뉴얼
                   </button>
+                  <button 
+                    onClick={() => setCurrentTab('leads')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'leads' ? styles.tabBtnActiveLeads : {})
+                    }}
+                  >
+                    마케팅 잠재고객 (리드)
+                  </button>
+                  <button 
+                    onClick={() => setCurrentTab('resources')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'resources' ? styles.tabBtnActiveResources : {})
+                    }}
+                  >
+                    주인공 이미지 관리
+                  </button>
                 </div>
 
                 <button onClick={handleLogout} style={styles.logoutBtn}>
@@ -907,6 +1105,147 @@ def register_ai_news(title, summary_points, article_url):
                     </div>
                   </div>
                 )}
+
+                {/* Tab 4: Leads View */}
+                {currentTab === 'leads' && (
+                  <div style={styles.leadsContainer} className="glass-panel">
+                    <div style={styles.leadsHeader}>
+                      <h2 style={styles.leadsTitle}>수집된 마케팅 리드 목록</h2>
+                      <button onClick={exportLeadsToCSV} style={styles.exportBtn}>
+                        <FileText size={16} />
+                        <span>CSV로 내보내기 (Excel 호환)</span>
+                      </button>
+                    </div>
+                    <p style={styles.leadsSubtitle}>
+                      주인공 이미지 다운로드 신청 시 수집된 {leads.length}명의 잠재 고객 정보입니다.
+                    </p>
+                    
+                    <div style={styles.tableWrapper}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr>
+                            <th style={styles.th}>신청 일시</th>
+                            <th style={styles.th}>이름 / 닉네임</th>
+                            <th style={styles.th}>이메일 주소</th>
+                            <th style={styles.th}>요청 리소스</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {leads.length > 0 ? (
+                            leads.map((lead) => (
+                              <tr key={lead.id} style={styles.tr}>
+                                <td style={styles.td}>
+                                  {new Date(lead.created_at || lead.createdAt).toLocaleString('ko-KR')}
+                                </td>
+                                <td style={styles.td}>{lead.name}</td>
+                                <td style={styles.td}>{lead.email}</td>
+                                <td style={styles.td}>{lead.requested_image || lead.requestedImage}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="4" style={styles.tdEmpty}>
+                                아직 수집된 잠재 고객 데이터가 없습니다.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 5: Resources View */}
+                {currentTab === 'resources' && (
+                  <div style={styles.leadsContainer} className="glass-panel">
+                    <div style={styles.leadsHeader}>
+                      <h2 style={styles.leadsTitle}>주인공 이미지 리소스 관리</h2>
+                      <button onClick={openResourceModal} style={styles.exportBtn}>
+                        <Plus size={16} />
+                        <span>새 이미지 등록</span>
+                      </button>
+                    </div>
+                    <p style={styles.leadsSubtitle}>
+                      다운로드 페이지에 노출되는 고품질 이미지 리소스를 업로드 및 삭제하는 공간입니다. ({resources.length}개 등록됨)
+                      <br />
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', display: 'inline-block' }}>
+                        💡 드래그 앤 드롭으로 다운로드 페이지의 노출 순서를 자유롭게 조정할 수 있습니다.
+                      </span>
+                    </p>
+                    
+                    <div style={styles.tableWrapper}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={styles.trHead}>
+                            <th style={{ ...styles.th, width: '70px' }}>순서</th>
+                            <th style={styles.th}>썸네일</th>
+                            <th style={styles.th}>제목</th>
+                            <th style={styles.th}>설명</th>
+                            <th style={styles.th}>파일명</th>
+                            <th style={styles.th}>해상도 / 크기</th>
+                            <th style={{ ...styles.th, textAlign: 'center', width: '100px' }}>관리</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {resources.length > 0 ? (
+                            resources.map((res, idx) => (
+                              <tr 
+                                key={res.id} 
+                                draggable
+                                onDragStart={(e) => handleResourceDragStart(e, idx)}
+                                onDragOver={(e) => handleResourceDragOver(e, idx)}
+                                onDragEnd={handleResourceDragEnd}
+                                style={{
+                                  ...styles.trBody,
+                                  ...(draggedIndex === idx ? styles.trBodyDragging : {})
+                                }}
+                                className="admin-table-row"
+                              >
+                                <td style={styles.td}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'grab' }}>
+                                    <GripVertical size={16} color="var(--text-muted)" />
+                                    <span>{idx + 1}</span>
+                                  </div>
+                                </td>
+                                <td style={styles.td}>
+                                  <ResourceThumbnail resourceId={res.id} initialSrc={res.file_content || res.fileContent} />
+                                </td>
+                                <td style={styles.td} style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{res.title}</td>
+                                <td style={styles.td} style={{ maxWidth: '240px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{res.description}</td>
+                                <td style={styles.td}>{res.file_name || res.fileName}</td>
+                                <td style={styles.td}>{res.resolution} / {res.file_size || res.fileSize}</td>
+                                <td style={styles.td} style={{ textAlign: 'center' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                    <button 
+                                      onClick={() => openEditResourceModal(res)} 
+                                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-indigo)', cursor: 'pointer', padding: '4px' }}
+                                      title="수정"
+                                    >
+                                      <Pen size={16} />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDeleteResource(res.id)} 
+                                      style={{ background: 'transparent', border: 'none', color: 'var(--accent-rose)', cursor: 'pointer', padding: '4px' }}
+                                      title="삭제"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="7" style={styles.tdEmpty}>
+                                등록된 주인공 이미지 리소스가 없습니다.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1227,7 +1566,127 @@ def register_ai_news(title, summary_points, article_url):
           </div>
         </div>
       )}
+
+      {/* RESOURCE UPLOAD MODAL */}
+      {showResourceModal && (
+        <div style={styles.modalOverlay} onClick={() => !isUploadingResource && setShowResourceModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2 style={styles.modalTitle}>
+              {editingResourceItem ? '주인공 이미지 리소스 수정' : '새 주인공 이미지 등록'}
+            </h2>
+            
+            <form onSubmit={handleResourceSave} style={styles.form}>
+              <div style={styles.formGroup} style={{ marginBottom: '20px' }}>
+                <label style={styles.label}>
+                  이미지 파일 선택 {!editingResourceItem && <span style={{ color: 'var(--accent-rose)' }}>*</span>}
+                </label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleResourceFileChange}
+                  required={!editingResourceItem}
+                  disabled={isUploadingResource}
+                  style={{ marginBottom: '8px', color: 'var(--text-secondary)' }}
+                />
+                {resourceForm.fileContent && (
+                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                     <img 
+                       src={resourceForm.fileContent} 
+                       alt="Upload Preview" 
+                       style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', objectFit: 'contain' }} 
+                     />
+                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                       해상도: <strong>{resourceForm.resolution}</strong> / 크기: <strong>{resourceForm.fileSize}</strong>
+                     </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={styles.formGroup} style={{ marginBottom: '20px' }}>
+                <label style={styles.label}>이미지 제목 <span style={{ color: 'var(--accent-rose)' }}>*</span></label>
+                <input 
+                  type="text" 
+                  value={resourceForm.title} 
+                  onChange={(e) => setResourceForm(prev => ({ ...prev, title: e.target.value }))} 
+                  placeholder="예: 카카오 세로형 배너"
+                  required
+                  disabled={isUploadingResource}
+                  className="input-field"
+                />
+              </div>
+
+              <div style={styles.formGroup} style={{ marginBottom: '20px' }}>
+                <label style={styles.label}>설명 코멘트</label>
+                <textarea 
+                  value={resourceForm.description} 
+                  onChange={(e) => setResourceForm(prev => ({ ...prev, description: e.target.value }))} 
+                  placeholder="이 리소스의 사용 용도에 대해 한두 줄 설명해 주세요."
+                  rows={3}
+                  style={{ resize: 'none' }}
+                  disabled={isUploadingResource}
+                  className="input-field"
+                />
+              </div>
+
+              <div style={styles.formActions}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowResourceModal(false)} 
+                  style={styles.cancelBtn}
+                  disabled={isUploadingResource}
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  style={styles.saveBtn}
+                  disabled={isUploadingResource}
+                >
+                  {isUploadingResource ? '업로드 중...' : (editingResourceItem ? '수정 완료' : '등록 완료')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function ResourceThumbnail({ resourceId, initialSrc }) {
+  const [src, setSrc] = useState(initialSrc || '');
+  const [loading, setLoading] = useState(!src);
+
+  useEffect(() => {
+    if (!src) {
+      async function load() {
+        try {
+          const { data } = await db.getResourceContent(resourceId);
+          if (data) setSrc(data);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoading(false);
+        }
+      }
+      load();
+    }
+  }, [resourceId, src]);
+
+  if (loading) {
+    return (
+      <div style={{ width: '60px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+        <Loader2 size={12} className="spin-loader" style={{ color: 'var(--accent-indigo)' }} />
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={src || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop'} 
+      alt="Thumbnail" 
+      style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }} 
+    />
   );
 }
 
@@ -1867,6 +2326,85 @@ const styles = {
     background: 'var(--accent-purple)',
     color: 'white',
     boxShadow: '0 4px 12px rgba(168, 85, 247, 0.15)',
+  },
+  tabBtnActiveLeads: {
+    background: 'var(--accent-indigo)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
+  },
+  tabBtnActiveResources: {
+    background: 'var(--accent-rose)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(244, 63, 94, 0.15)',
+  },
+  leadsContainer: {
+    marginTop: '20px',
+    padding: '32px',
+    textAlign: 'left',
+    background: 'rgba(13, 11, 24, 0.55)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+  },
+  leadsHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+  leadsTitle: {
+    fontSize: '1.6rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+  },
+  leadsSubtitle: {
+    fontSize: '0.9rem',
+    color: 'var(--text-secondary)',
+    marginBottom: '24px',
+  },
+  exportBtn: {
+    background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-purple))',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '9px 18px',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+  },
+  tableWrapper: {
+    width: '100%',
+    overflowX: 'auto',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '0.9rem',
+  },
+  th: {
+    padding: '12px 16px',
+    textAlign: 'left',
+    borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+    color: 'var(--text-primary)',
+    fontWeight: 600,
+    background: 'rgba(255, 255, 255, 0.02)',
+  },
+  tr: {
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+  },
+  td: {
+    padding: '14px 16px',
+    color: 'var(--text-secondary)',
+  },
+  tdEmpty: {
+    padding: '40px 16px',
+    textAlign: 'center',
+    color: 'var(--text-muted)',
   },
   manualContainer: {
     marginTop: '20px',

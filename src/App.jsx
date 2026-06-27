@@ -8,6 +8,7 @@ import AIRecommend from './pages/AIRecommend';
 import Websites from './pages/Websites';
 import Insights from './pages/Insights';
 import Admin from './pages/Admin';
+import ImageDownload from './pages/ImageDownload';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/ai-news" element={<AINews />} />
             <Route path="/ai-recommend" element={<AIRecommend />} />
             <Route path="/homepage" element={<Websites />} />
+            <Route path="/download" element={<ImageDownload />} />
             <Route path="/insights" element={<Insights />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>

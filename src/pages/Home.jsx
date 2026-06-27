@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { db, mapPortfolioItem } from '../supabaseClient';
+import { db, mapPortfolioItem, supabase } from '../supabaseClient';
 import PortfolioCard from '../components/PortfolioCard';
 import { MessageSquare, Star, Sparkles } from 'lucide-react';
 
@@ -413,6 +413,103 @@ export default function Home() {
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
   const [highlightCardId, setHighlightCardId] = useState(null);
+  const [stats, setStats] = useState({ visitors: 0, visitorsToday: 0, downloads: 0 });
+
+  // Load and subscribe to real-time stats (visitors & downloads)
+  useEffect(() => {
+    // Generate daily key in client local date (YYYY-MM-DD)
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    const dailyKey = `visitors_daily:${todayStr}`;
+
+    async function loadStats() {
+      try {
+        const { data } = await db.getStats();
+        if (data) {
+          setStats({
+            visitors: (data.visitors || 0) + 1000,
+            visitorsToday: (data[dailyKey] || 0) + 4,
+            downloads: (data.downloads || 0) + 1000
+          });
+        }
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+      }
+    }
+    loadStats();
+
+    async function trackVisit() {
+      const hasVisited = sessionStorage.getItem('has_visited_session');
+      if (!hasVisited) {
+        sessionStorage.setItem('has_visited_session', 'true');
+        try {
+          await db.incrementStat('visitors');
+          const { data } = await db.incrementStat(dailyKey);
+          if (data && db.isMock) {
+            setStats(prev => ({
+              ...prev,
+              visitors: (data.visitors || 0) + 1000,
+              visitorsToday: (data[dailyKey] || 0) + 4
+            }));
+          }
+        } catch (e) {
+          console.error('Failed to track visit:', e);
+        }
+      }
+    }
+    trackVisit();
+
+    let channel = null;
+    if (!db.isMock && supabase) {
+      channel = supabase
+        .channel('site-stats-changes')
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'site_stats' },
+          (payload) => {
+            const updatedRow = payload.new;
+            if (updatedRow && updatedRow.key) {
+              setStats(prev => {
+                if (updatedRow.key === 'visitors') {
+                  return { ...prev, visitors: Number(updatedRow.value) + 1000 };
+                } else if (updatedRow.key === dailyKey) {
+                  return { ...prev, visitorsToday: Number(updatedRow.value) + 4 };
+                } else if (updatedRow.key === 'downloads') {
+                  return { ...prev, downloads: Number(updatedRow.value) + 1000 };
+                }
+                return prev;
+              });
+            }
+          }
+        )
+        .subscribe();
+    } else {
+      const handleStorageChange = () => {
+        const localStats = localStorage.getItem('mock_stats');
+        if (localStats) {
+          try {
+            const parsed = JSON.parse(localStats);
+            setStats({
+              visitors: (parsed.visitors || 0) + 1000,
+              visitorsToday: (parsed[dailyKey] || 0) + 4,
+              downloads: (parsed.downloads || 0) + 1000
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      };
+      window.addEventListener('storage', handleStorageChange);
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []);
 
   // Fetch portfolio items
   useEffect(() => {
@@ -480,6 +577,25 @@ export default function Home() {
               실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여<br className="desktop-br" />
               업무의 한계를 넓혀보세요.
             </p>
+
+            {/* Real-time Stats Widget */}
+            <div style={styles.statsContainer}>
+              <div style={styles.statBox}>
+                <span style={styles.statLabel}>오늘 방문자</span>
+                <span style={styles.statValue}>{stats.visitorsToday.toLocaleString()}명</span>
+              </div>
+              <div style={styles.statDivider} />
+              <div style={styles.statBox}>
+                <span style={styles.statLabel}>누적 방문자</span>
+                <span style={styles.statValue}>{stats.visitors.toLocaleString()}명</span>
+              </div>
+              <div style={styles.statDivider} />
+              <div style={styles.statBox}>
+                <span style={styles.statLabel}>주인공 이미지 다운로드</span>
+                <span style={styles.statValue}>{stats.downloads.toLocaleString()}회</span>
+              </div>
+            </div>
+
             <div className="hero-actions" style={styles.heroActions}>
               <button 
                 onClick={() => {
@@ -597,6 +713,41 @@ export default function Home() {
 }
 
 const styles = {
+  statsContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '12px',
+    padding: '12px 20px',
+    marginTop: '8px',
+    marginBottom: '28px',
+    backdropFilter: 'blur(10px)',
+    width: 'fit-content',
+  },
+  statBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  statLabel: {
+    fontSize: '0.72rem',
+    color: 'var(--text-secondary)',
+    fontWeight: 500,
+    marginBottom: '4px',
+  },
+  statValue: {
+    fontSize: '1.15rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    fontFamily: 'var(--font-title)',
+  },
+  statDivider: {
+    width: '1px',
+    height: '24px',
+    background: 'rgba(255, 255, 255, 0.1)',
+  },
   container: {
     width: '100%',
     paddingBottom: '80px',

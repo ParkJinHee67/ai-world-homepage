@@ -411,6 +411,279 @@ export const db = {
       return { data: { subscription: { unsubscribe: () => {} } } };
     }
     return supabase.auth.onAuthStateChange(callback);
+  },
+
+  async incrementStat(key) {
+    if (this.isMock) {
+      const stats = getMockData('mock_stats', { visitors: 0, downloads: 0 });
+      stats[key] = (stats[key] || 0) + 1;
+      saveMockData('mock_stats', stats);
+      window.dispatchEvent(new Event('storage'));
+      return { data: stats, error: null };
+    }
+    try {
+      const { data, error } = await supabase.rpc('increment_stat', { stat_key: key });
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async getStats() {
+    if (this.isMock) {
+      return { data: getMockData('mock_stats', { visitors: 0, downloads: 0 }), error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('site_stats').select('*');
+      if (data) {
+        const stats = {};
+        data.forEach(row => {
+          stats[row.key] = Number(row.value);
+        });
+        return { data: stats, error: null };
+      }
+      return { data: null, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async saveLead(leadData) {
+    if (this.isMock) {
+      const leads = getMockData('mock_leads', []);
+      const newLead = {
+        id: 'lead_' + Math.random().toString(36).substring(2, 9),
+        name: leadData.name,
+        email: leadData.email,
+        requested_image: leadData.requestedImage,
+        created_at: new Date().toISOString()
+      };
+      leads.push(newLead);
+      saveMockData('mock_leads', leads);
+      return { data: newLead, error: null };
+    }
+    
+    const dbLead = {
+      name: leadData.name,
+      email: leadData.email,
+      requested_image: leadData.requestedImage
+    };
+    try {
+      const { data, error } = await supabase.from('marketing_leads').insert([dbLead]).select();
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async getLeads() {
+    if (this.isMock) {
+      return { data: getMockData('mock_leads', []), error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('marketing_leads').select('*').order('created_at', { ascending: false });
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async getResources() {
+    if (this.isMock) {
+      const defaultResources = [
+        {
+          id: 'res_default1',
+          title: '카카오 오픈채팅 대문 (가로형 배너)',
+          description: '오픈채팅방 커버나 유튜브 채널 아트에 적합한 와이드 가로 배너 이미지입니다.',
+          file_name: 'kakao-banner-horizontal.jpg',
+          file_content: '/images/kakao-banner-horizontal.jpg',
+          resolution: '1200 x 630',
+          file_size: '21 KB',
+          sort_order: 0,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'res_default2',
+          title: '카카오 오픈채팅 대문 (세로형 배너)',
+          description: '모바일 화면, 카카오톡 프로필 배경 등 모바일 뷰에 최적화된 고화질 세로형 이미지입니다.',
+          file_name: 'kakao-banner-vertical.png',
+          file_content: '/images/kakao-banner-vertical.png',
+          resolution: '1080 x 1920',
+          file_size: '1.0 MB',
+          sort_order: 1,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'res_default3',
+          title: '영상제작 주인공 소스 캡처',
+          description: '주인공 합성 템플릿에 바로 로드하여 사용할 수 있는 특화 영상 소스 이미지입니다.',
+          file_name: 'capture.jpg',
+          file_content: '/images/capture.jpg',
+          resolution: '640 x 360',
+          file_size: '34 KB',
+          sort_order: 2,
+          created_at: new Date().toISOString()
+        }
+      ];
+      const resources = getMockData('mock_resources', defaultResources);
+      return { data: resources.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)), error: null };
+    }
+    try {
+      const { data, error } = await supabase
+        .from('downloadable_resources')
+        .select('id, title, description, file_name, resolution, file_size, download_count, sort_order, created_at')
+        .order('sort_order', { ascending: true });
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async getResourceContent(id) {
+    if (this.isMock) {
+      const resources = getMockData('mock_resources', []);
+      const item = resources.find(r => r.id === id);
+      return { data: item ? item.file_content : null, error: null };
+    }
+    try {
+      const { data, error } = await supabase
+        .from('downloadable_resources')
+        .select('file_content')
+        .eq('id', id)
+        .single();
+      return { data: data ? data.file_content : null, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async saveResource(resourceData) {
+    if (this.isMock) {
+      const resources = getMockData('mock_resources', []);
+      if (resourceData.id) {
+        // Update
+        const idx = resources.findIndex(x => x.id === resourceData.id);
+        if (idx !== -1) {
+          resources[idx] = {
+            ...resources[idx],
+            title: resourceData.title,
+            description: resourceData.description,
+            ...(resourceData.fileName ? { file_name: resourceData.fileName } : {}),
+            ...(resourceData.fileContent ? { file_content: resourceData.fileContent } : {}),
+            ...(resourceData.resolution ? { resolution: resourceData.resolution } : {}),
+            ...(resourceData.fileSize ? { file_size: resourceData.fileSize } : {})
+          };
+        }
+        saveMockData('mock_resources', resources);
+        return { data: resources[idx], error: null };
+      } else {
+        // Insert
+        const newResource = {
+          id: 'res_' + Math.random().toString(36).substring(2, 9),
+          title: resourceData.title,
+          description: resourceData.description,
+          file_name: resourceData.fileName,
+          file_content: resourceData.fileContent,
+          resolution: resourceData.resolution,
+          file_size: resourceData.fileSize,
+          sort_order: resources.length,
+          created_at: new Date().toISOString()
+        };
+        resources.push(newResource);
+        saveMockData('mock_resources', resources);
+        return { data: newResource, error: null };
+      }
+    }
+
+    const dbResource = {
+      title: resourceData.title,
+      description: resourceData.description
+    };
+    if (resourceData.fileName) dbResource.file_name = resourceData.fileName;
+    if (resourceData.fileContent) dbResource.file_content = resourceData.fileContent;
+    if (resourceData.resolution) dbResource.resolution = resourceData.resolution;
+    if (resourceData.fileSize) dbResource.file_size = resourceData.fileSize;
+
+    if (resourceData.id) {
+      // Update
+      try {
+        const { data, error } = await supabase.from('downloadable_resources').update(dbResource).eq('id', resourceData.id).select();
+        return { data, error };
+      } catch (e) {
+        return { data: null, error: e };
+      }
+    } else {
+      // Insert
+      try {
+        const { data: currentResources } = await supabase.from('downloadable_resources').select('sort_order');
+        const maxSortOrder = currentResources && currentResources.length > 0
+          ? Math.max(...currentResources.map(x => x.sort_order || 0), -1)
+          : -1;
+        dbResource.sort_order = maxSortOrder + 1;
+        const { data, error } = await supabase.from('downloadable_resources').insert([dbResource]).select();
+        return { data, error };
+      } catch (e) {
+        return { data: null, error: e };
+      }
+    }
+  },
+
+  async deleteResource(id) {
+    if (this.isMock) {
+      const resources = getMockData('mock_resources', []);
+      const filtered = resources.filter(r => r.id !== id);
+      saveMockData('mock_resources', filtered);
+      return { error: null };
+    }
+    try {
+      const { error } = await supabase.from('downloadable_resources').delete().eq('id', id);
+      return { error };
+    } catch (e) {
+      return { error: e };
+    }
+  },
+
+  async updateResourcesOrder(resourcesOrder) {
+    if (this.isMock) {
+      const resources = getMockData('mock_resources', []);
+      const updated = resourcesOrder.map((res, index) => {
+        const original = resources.find(x => x.id === res.id);
+        return { ...original, sort_order: index };
+      });
+      saveMockData('mock_resources', updated);
+      return { error: null };
+    }
+    try {
+      const promises = resourcesOrder.map((res, index) => 
+        supabase.from('downloadable_resources').update({ sort_order: index }).eq('id', res.id)
+      );
+      const results = await Promise.all(promises);
+      const errors = results.filter(r => r.error);
+      return { error: errors.length > 0 ? errors[0].error : null };
+    } catch (e) {
+      return { error: e };
+    }
+  },
+
+  async incrementResourceDownload(id) {
+    if (this.isMock) {
+      const resources = getMockData('mock_resources', []);
+      const idx = resources.findIndex(r => r.id === id);
+      if (idx !== -1) {
+        resources[idx].download_count = (resources[idx].download_count || 0) + 1;
+        saveMockData('mock_resources', resources);
+      }
+      window.dispatchEvent(new Event('storage'));
+      return { error: null };
+    }
+    try {
+      const { data } = await supabase.from('downloadable_resources').select('download_count').eq('id', id).maybeSingle();
+      const currentCount = data ? (Number(data.download_count) || 0) : 0;
+      const { error } = await supabase.from('downloadable_resources').update({ download_count: currentCount + 1 }).eq('id', id);
+      return { error };
+    } catch (e) {
+      return { error: e };
+    }
   }
 };
 

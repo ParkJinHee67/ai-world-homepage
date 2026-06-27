@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog } from 'lucide-react';
+import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download } from 'lucide-react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +13,7 @@ export default function Navbar() {
     { path: '/', label: '홈', icon: Terminal },
     { path: '/ai-news', label: 'AI 뉴스', icon: Newspaper },
     { path: '/ai-recommend', label: '영상제작', icon: Video },
+    { path: '/download', label: '주인공 이미지', icon: Download },
     { path: '/homepage', label: '홈페이지', icon: Layout },
     { path: '/insights', label: '인사이트', icon: Lightbulb },
     { path: '/admin', label: '관리자', icon: ShieldAlert },
