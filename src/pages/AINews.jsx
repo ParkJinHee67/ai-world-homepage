@@ -135,6 +135,211 @@ const renderMarkdown = (content) => {
   });
 };
 
+const PlexusCanvas = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    let animationFrameId;
+    const dpr = window.devicePixelRatio || 1;
+    let width = 380;
+    let height = 380;
+    
+    const resize = () => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width || 380;
+      const h = rect.height || 380;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+      width = w;
+      height = h;
+    };
+    
+    resize();
+    window.addEventListener('resize', resize);
+    
+    // Particle settings
+    const numParticles = 90;
+    const radius = 115;
+    const particles = [];
+    
+    // Fibonacci sphere distribution for uniform points
+    for (let i = 0; i < numParticles; i++) {
+      const phi = Math.acos(-1 + (2 * i) / numParticles);
+      const theta = Math.sqrt(numParticles * Math.PI) * phi;
+      
+      particles.push({
+        ox: radius * Math.sin(phi) * Math.cos(theta),
+        oy: radius * Math.sin(phi) * Math.sin(theta),
+        oz: radius * Math.cos(phi),
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.01 + Math.random() * 0.02
+      });
+    }
+    
+    const angleX = 0.0015;
+    const angleY = 0.0025;
+    const fov = 350;
+    
+    // Mouse tracking
+    let mouse = { targetX: 0, targetY: 0, currentX: 0, currentY: 0 };
+    
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left - rect.width / 2;
+      const my = e.clientY - rect.top - rect.height / 2;
+      mouse.targetX = mx;
+      mouse.targetY = my;
+    };
+    
+    const handleMouseLeave = () => {
+      mouse.targetX = 0;
+      mouse.targetY = 0;
+    };
+    
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+    
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      
+      const cx = width / 2;
+      const cy = height / 2;
+      
+      // Interpolate mouse coordinates
+      mouse.currentX += (mouse.targetX - mouse.currentX) * 0.05;
+      mouse.currentY += (mouse.targetY - mouse.currentY) * 0.05;
+      
+      // Calculate rotation step based on auto-rotation + mouse velocity
+      const rx = angleX + mouse.currentY * 0.0002;
+      const ry = angleY - mouse.currentX * 0.0002;
+      
+      const cosX = Math.cos(rx);
+      const sinX = Math.sin(rx);
+      const cosY = Math.cos(ry);
+      const sinY = Math.sin(ry);
+      
+      const projected = [];
+      
+      // 3D rotation and projection
+      for (let p of particles) {
+        p.phase += p.speed;
+        const offset = Math.sin(p.phase) * 5;
+        const scaleFactor = 1 + offset / radius;
+        
+        let x = p.ox;
+        let y = p.oy;
+        let z = p.oz;
+        
+        // Rotate Y-axis
+        let x1 = x * cosY - z * sinY;
+        let z1 = z * cosY + x * sinY;
+        
+        // Rotate X-axis
+        let y2 = y * cosX - z1 * sinX;
+        let z2 = z1 * cosX + y * sinX;
+        
+        // Save rotated position
+        p.ox = x1;
+        p.oy = y2;
+        p.oz = z2;
+        
+        // Apply organic breathing scaling
+        let bx = x1 * scaleFactor;
+        let by = y2 * scaleFactor;
+        let bz = z2 * scaleFactor;
+        
+        // Perspective projection
+        const scale = fov / (fov + bz);
+        const projX = bx * scale + cx;
+        const projY = by * scale + cy;
+        
+        projected.push({
+          x: projX,
+          y: projY,
+          z: bz,
+          scale: scale
+        });
+      }
+      
+      // Draw lines
+      const maxDistance = 75;
+      ctx.lineWidth = 0.65;
+      
+      for (let i = 0; i < projected.length; i++) {
+        const pi = projected[i];
+        for (let j = i + 1; j < projected.length; j++) {
+          const pj = projected[j];
+          
+          // 3D Euclidean distance
+          const dx = particles[i].ox - particles[j].ox;
+          const dy = particles[i].oy - particles[j].oy;
+          const dz = particles[i].oz - particles[j].oz;
+          const dist3d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          
+          if (dist3d < maxDistance) {
+            const alpha = (1 - dist3d / maxDistance) * 0.45;
+            // Farther nodes have lower opacity lines
+            const lineOpacity = alpha * ( (pi.z + pj.z) / 2 > 0 ? 0.35 : 0.9 ); 
+            
+            ctx.beginPath();
+            ctx.moveTo(pi.x, pi.y);
+            ctx.lineTo(pj.x, pj.y);
+            // Neon cyan/emerald line
+            ctx.strokeStyle = `rgba(16, 185, 129, ${lineOpacity})`;
+            ctx.stroke();
+          }
+        }
+      }
+      
+      // Draw points
+      for (let p of projected) {
+        const size = Math.max(0.6, p.scale * 2.2);
+        const alpha = Math.max(0.1, (fov - p.z) / (fov * 2)) * 0.85;
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(52, 211, 153, ${alpha})`;
+        ctx.fill();
+        
+        // Ambient node glow
+        if (p.z < 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, size * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(52, 211, 153, ${alpha * 0.3})`;
+          ctx.fill();
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(draw);
+    };
+    
+    draw();
+    
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="news-header-canvas"
+      style={styles.headerCanvas}
+    />
+  );
+};
+
 export default function AINews() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -227,12 +432,7 @@ export default function AINews() {
             </p>
           </div>
           <div className="news-header-img-container" style={styles.headerImageContainer}>
-            <img 
-              src="/images/ai-news-hologram.png" 
-              alt="AI News Hologram" 
-              className="news-header-img"
-              style={styles.headerImage}
-            />
+            <PlexusCanvas />
             <div style={styles.glowBg1} />
             <div style={styles.glowBg2} />
           </div>
@@ -512,15 +712,13 @@ const styles = {
     position: 'relative',
     zIndex: 2,
   },
-  headerImage: {
+  headerCanvas: {
     width: '100%',
     maxWidth: '380px',
-    height: 'auto',
-    borderRadius: '24px',
-    objectFit: 'contain',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    background: 'rgba(10, 8, 20, 0.4)',
-    backdropFilter: 'blur(8px)',
+    aspectRatio: '1/1',
+    display: 'block',
+    position: 'relative',
+    zIndex: 2,
   },
   glowBg1: {
     position: 'absolute',
@@ -1007,25 +1205,24 @@ if (typeof document !== 'undefined') {
     }
     @keyframes floatNewsImage {
       0% {
-        transform: translateY(0px) rotate(0deg);
-        filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.25));
+        transform: translateY(0px);
+        filter: drop-shadow(0 10px 20px rgba(16, 185, 129, 0.15));
       }
       50% {
-        transform: translateY(-10px) rotate(1deg);
-        filter: drop-shadow(0 20px 40px rgba(139, 92, 246, 0.4));
+        transform: translateY(-10px);
+        filter: drop-shadow(0 20px 40px rgba(16, 185, 129, 0.35));
       }
       100% {
-        transform: translateY(0px) rotate(0deg);
-        filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.25));
+        transform: translateY(0px);
+        filter: drop-shadow(0 10px 20px rgba(16, 185, 129, 0.15));
       }
     }
-    .news-header-img {
+    .news-header-canvas {
       animation: floatNewsImage 6s ease-in-out infinite;
       transition: all 0.5s ease;
     }
-    .news-header-img:hover {
-      transform: translateY(-15px) scale(1.02);
-      filter: drop-shadow(0 25px 50px rgba(139, 92, 246, 0.5));
+    .news-header-canvas:hover {
+      transform: scale(1.02);
     }
     @media (max-width: 768px) {
       .news-header-flex {
