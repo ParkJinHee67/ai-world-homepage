@@ -218,12 +218,24 @@ export default function AINews() {
       
       {/* Header */}
       <section className="container-max" style={styles.headerSection}>
-        <div style={styles.headerInner}>
-          <h1 className="news-title" style={styles.title}>Daily AI News</h1>
-          <p className="news-subtitle" style={styles.subtitle}>
-            인공지능 모델 및 플랫폼 트렌드를 실시간 수집 및 요약하여 전달합니다.<br className="desktop-br" />
-            카드를 클릭하시면 상세 분석 리포트를 확인하실 수 있습니다.
-          </p>
+        <div className="news-header-flex" style={styles.headerFlexContainer}>
+          <div style={styles.headerInner}>
+            <h1 className="news-title" style={styles.title}>Daily AI News</h1>
+            <p className="news-subtitle" style={styles.subtitle}>
+              인공지능 모델 및 플랫폼 트렌드를 실시간 수집 및 요약하여 전달합니다.<br className="desktop-br" />
+              카드를 클릭하시면 상세 분석 리포트를 확인하실 수 있습니다.
+            </p>
+          </div>
+          <div className="news-header-img-container" style={styles.headerImageContainer}>
+            <img 
+              src="/images/ai-news-hologram.png" 
+              alt="AI News Hologram" 
+              className="news-header-img"
+              style={styles.headerImage}
+            />
+            <div style={styles.glowBg1} />
+            <div style={styles.glowBg2} />
+          </div>
         </div>
       </section>
 
@@ -480,8 +492,57 @@ const styles = {
   headerSection: {
     padding: '80px 0 40px 0',
   },
+  headerFlexContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '40px',
+    position: 'relative',
+  },
   headerInner: {
+    flex: '1.2',
     textAlign: 'left',
+    zIndex: 2,
+  },
+  headerImageContainer: {
+    flex: '0.8',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 2,
+  },
+  headerImage: {
+    width: '100%',
+    maxWidth: '380px',
+    height: 'auto',
+    borderRadius: '24px',
+    objectFit: 'contain',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: 'rgba(10, 8, 20, 0.4)',
+    backdropFilter: 'blur(8px)',
+  },
+  glowBg1: {
+    position: 'absolute',
+    width: '150px',
+    height: '150px',
+    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%)',
+    top: '-30px',
+    right: '20px',
+    zIndex: -1,
+    filter: 'blur(20px)',
+    pointerEvents: 'none',
+  },
+  glowBg2: {
+    position: 'absolute',
+    width: '180px',
+    height: '180px',
+    background: 'radial-gradient(circle, rgba(244, 63, 94, 0.2) 0%, transparent 70%)',
+    bottom: '-20px',
+    left: '20px',
+    zIndex: -1,
+    filter: 'blur(20px)',
+    pointerEvents: 'none',
   },
   title: {
     fontSize: '3.2rem',
@@ -944,7 +1005,43 @@ if (typeof document !== 'undefined') {
     .popup-markdown-link:hover {
       color: var(--accent-rose) !important;
     }
+    @keyframes floatNewsImage {
+      0% {
+        transform: translateY(0px) rotate(0deg);
+        filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.25));
+      }
+      50% {
+        transform: translateY(-10px) rotate(1deg);
+        filter: drop-shadow(0 20px 40px rgba(139, 92, 246, 0.4));
+      }
+      100% {
+        transform: translateY(0px) rotate(0deg);
+        filter: drop-shadow(0 10px 20px rgba(139, 92, 246, 0.25));
+      }
+    }
+    .news-header-img {
+      animation: floatNewsImage 6s ease-in-out infinite;
+      transition: all 0.5s ease;
+    }
+    .news-header-img:hover {
+      transform: translateY(-15px) scale(1.02);
+      filter: drop-shadow(0 25px 50px rgba(139, 92, 246, 0.5));
+    }
     @media (max-width: 768px) {
+      .news-header-flex {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 30px !important;
+      }
+      .news-header-flex > div {
+        text-align: center !important;
+      }
+      .news-header-img-container {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin: 0 auto !important;
+      }
       .news-title {
         font-size: 2.5rem !important;
       }
