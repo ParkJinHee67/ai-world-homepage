@@ -414,6 +414,29 @@ export default function Home() {
   const highlightId = searchParams.get('id');
   const [highlightCardId, setHighlightCardId] = useState(null);
   const [stats, setStats] = useState({ visitors: 0, visitorsToday: 0, downloads: 0 });
+  const [showPromoPopup, setShowPromoPopup] = useState(false);
+
+  // TimeBox Promotion Popup logic
+  useEffect(() => {
+    const hidePopupDate = localStorage.getItem('hideTimeBoxPromo');
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    if (hidePopupDate !== todayStr) {
+      const timer = setTimeout(() => {
+        setShowPromoPopup(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleClosePromo = () => {
+    setShowPromoPopup(false);
+  };
+
+  const handleHidePromoToday = () => {
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    localStorage.setItem('hideTimeBoxPromo', todayStr);
+    setShowPromoPopup(false);
+  };
 
   // Load and subscribe to real-time stats (visitors & downloads)
   useEffect(() => {
@@ -708,6 +731,52 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* TimeBox Promo Popup */}
+      {showPromoPopup && (
+        <div style={styles.popupOverlay}>
+          <div className="timebox-promo-card" style={styles.popupCard}>
+            <div style={styles.popupTopAccent} />
+            <button onClick={handleClosePromo} style={styles.popupCloseBtn}>✕</button>
+            <div style={styles.popupBadge}>
+              <Sparkles size={12} color="#FBBF24" />
+              <span>무료 공개 서비스</span>
+            </div>
+            <h3 style={styles.popupTitle}>⚡ TimeBox Daily Planner</h3>
+            <p style={styles.popupSubTitle}>하루를 통제하는 가장 확실한 방법</p>
+            <div style={styles.popupImgContainer}>
+              <img 
+                src="/images/timebox-promo.jpg" 
+                alt="TimeBox Planner" 
+                style={styles.popupImg} 
+              />
+            </div>
+            <p style={styles.popupDesc}>
+              📌 <strong>[일론 머스크의 30분 시간 관리법]</strong><br />
+              시간표 드래그 앤 드롭, 브레인덤프 정리, 구글 캘린더 연동까지! 톱니바꿈에서 제작한 타임박스 플래너를 지금 무료로 이용해보세요.
+            </p>
+            <div style={styles.popupActions}>
+              <a 
+                href="https://timebox-planner.vercel.app" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={styles.popupLaunchBtn}
+                onClick={handleClosePromo}
+              >
+                무료로 플래너 시작하기 (Launch)
+              </a>
+              <div style={styles.popupFooterOpts}>
+                <button onClick={handleHidePromoToday} style={styles.popupFooterLink}>
+                  오늘 하루 보지 않기
+                </button>
+                <button onClick={handleClosePromo} style={styles.popupFooterLink}>
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -944,6 +1013,144 @@ const styles = {
     color: 'var(--text-muted)',
     fontSize: '0.95rem',
   },
+  popupOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(3, 2, 7, 0.7)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  popupCard: {
+    position: 'relative',
+    width: '90%',
+    maxWidth: '400px',
+    background: 'rgba(16, 12, 28, 0.95)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '20px',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.15)',
+    fontFamily: 'var(--font-body)',
+  },
+  popupTopAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '4px',
+    background: 'linear-gradient(90deg, var(--accent-indigo), var(--accent-purple))',
+    borderTopLeftRadius: '20px',
+    borderTopRightRadius: '20px',
+  },
+  popupCloseBtn: {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-secondary)',
+    fontSize: '18px',
+    cursor: 'pointer',
+    padding: '4px',
+    lineHeight: 1,
+    transition: 'color 0.2s ease',
+  },
+  popupBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 12px',
+    borderRadius: '100px',
+    background: 'rgba(251, 191, 36, 0.08)',
+    border: '1px solid rgba(251, 191, 36, 0.2)',
+    color: '#FBBF24',
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    marginBottom: '12px',
+  },
+  popupTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    textAlign: 'center',
+    marginBottom: '4px',
+    letterSpacing: '-0.02em',
+  },
+  popupSubTitle: {
+    fontSize: '0.85rem',
+    fontWeight: 500,
+    color: 'var(--accent-indigo)',
+    textAlign: 'center',
+    marginBottom: '16px',
+  },
+  popupImgContainer: {
+    width: '100%',
+    height: '180px',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    marginBottom: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+  },
+  popupImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  popupDesc: {
+    fontSize: '0.82rem',
+    lineHeight: 1.5,
+    color: 'var(--text-secondary)',
+    textAlign: 'center',
+    marginBottom: '20px',
+  },
+  popupActions: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    alignItems: 'center',
+  },
+  popupLaunchBtn: {
+    width: '100%',
+    padding: '12px 0',
+    background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-purple))',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    textAlign: 'center',
+    boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)',
+    textDecoration: 'none',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  },
+  popupFooterOpts: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: '0 4px',
+    marginTop: '4px',
+  },
+  popupFooterLink: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
+    fontSize: '0.75rem',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    padding: 0,
+    transition: 'color 0.2s ease',
+  },
 };
 
 if (typeof document !== 'undefined') {
@@ -1000,6 +1207,20 @@ if (typeof document !== 'undefined') {
         width: 100% !important;
         justify-content: space-between !important;
       }
+    }
+    .timebox-promo-card {
+      animation: popup-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .timebox-promo-card button:hover {
+      color: var(--text-primary) !important;
+    }
+    .timebox-promo-card a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.45) !important;
+    }
+    @keyframes popup-fade-in {
+      from { opacity: 0; transform: scale(0.9) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
   `;
   document.head.appendChild(style);
