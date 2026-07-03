@@ -757,7 +757,7 @@ export default function Home() {
             </p>
             <div style={styles.popupActions}>
               <a 
-                href="https://timebox-planner.vercel.app" 
+                href="https://my-timebox-planner.vercel.app/?intro=true" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={styles.popupLaunchBtn}
