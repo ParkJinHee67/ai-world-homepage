@@ -8,6 +8,7 @@ import requests
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
 def fetch_latest_news_feed():
     """Fetch AI news articles from Google News RSS feed."""
@@ -57,8 +58,8 @@ def is_already_registered(source_url):
         return False
 
 def summarize_with_gemini(article_title, article_url):
-    """Call Google Gemini 1.5 Flash API to translate and summarize in Korean."""
-    api_url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    """Call Google Gemini API to translate and summarize in Korean."""
+    api_url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     
     prompt = f"""You are a professional Korean AI Tech journalist and expert researcher.
 Translate and analyze this English AI news article, then summarize it in Korean.
