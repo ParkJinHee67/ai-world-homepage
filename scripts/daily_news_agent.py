@@ -57,8 +57,8 @@ def is_already_registered(source_url):
         return False
 
 def summarize_with_gemini(article_title, article_url):
-    """Call Google Gemini 2.5 Flash API to translate and summarize in Korean."""
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    """Call Google Gemini 1.5 Flash API to translate and summarize in Korean."""
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     prompt = f"""You are a professional Korean AI Tech journalist and expert researcher.
 Translate and analyze this English AI news article, then summarize it in Korean.
