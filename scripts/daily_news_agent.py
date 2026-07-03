@@ -82,10 +82,7 @@ Your response MUST be a valid JSON object matching this schema (do NOT wrap it i
     payload = {
         "contents": [{
             "parts": [{"text": prompt}]
-        }],
-        "generation_config": {
-            "response_mime_type": "application/json"
-        }
+        }]
     }
     
     try:
