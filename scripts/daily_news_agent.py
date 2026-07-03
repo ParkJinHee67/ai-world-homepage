@@ -57,28 +57,36 @@ def is_already_registered(source_url):
         print(f"Error checking DB duplicates: {e}")
         return False
 
-def summarize_with_gemini(article_title, article_url):
-    """Call Google Gemini API to translate and summarize in Korean."""
+def summarize_articles_batch(items):
+    """Call Google Gemini API to translate and summarize multiple articles in a single batch."""
     api_url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     
+    articles_data = []
+    for idx, item in enumerate(items):
+        articles_data.append(f"[Article {idx+1}]\nTitle: {item['title']}\nLink: {item['link']}")
+    articles_text = "\n\n".join(articles_data)
+    
     prompt = f"""You are a professional Korean AI Tech journalist and expert researcher.
-Translate and analyze this English AI news article, then summarize it in Korean.
+Translate and analyze these English AI news articles, then summarize each in Korean.
 
-Article Title: {article_title}
-Article Link: {article_url}
+{articles_text}
 
-Create a highly catching Korean headline/title.
+For each article, create a highly catching Korean headline/title.
 Then, summarize the news into 3 precise key points using the Korean language.
 The summary MUST strictly follow this markdown format using '📌[1]', '📌[2]', '📌[3]' and bold text for key terms:
 📌[1] **key term**: detailed explanation in Korean.
 📌[2] **key term**: detailed explanation in Korean.
 📌[3] **key term**: detailed explanation in Korean.
 
-Your response MUST be a valid JSON object matching this schema (do NOT wrap it in markdown codeblocks like ```json):
-{{
-  "title": "catchy Korean headline",
-  "summary": "📌[1] **핵심키워드**: 한국어 상세 설명...\\n📌[2] **핵심키워드**: 한국어 상세 설명...\\n📌[3] **핵심키워드**: 한국어 상세 설명..."
-}}"""
+Your response MUST be a valid JSON array matching this schema (do NOT wrap it in markdown codeblocks like ```json):
+[
+  {{
+    "link": "original article link",
+    "title": "catchy Korean headline",
+    "summary": "📌[1] **핵심키워드**: 한국어 상세 설명...\\n📌[2] **핵심키워드**: 한국어 상세 설명...\\n📌[3] **핵심키워드**: 한국어 상세 설명..."
+  }},
+  ...
+]"""
 
     payload = {
         "contents": [{
@@ -87,34 +95,36 @@ Your response MUST be a valid JSON object matching this schema (do NOT wrap it i
     }
     
     import time
+    import json
     max_retries = 5
     for attempt in range(max_retries):
         try:
-            res = requests.post(api_url, json=payload, timeout=30)
+            res = requests.post(api_url, json=payload, timeout=40)
             if res.status_code == 200:
                 result = res.json()
                 text_response = result["candidates"][0]["content"]["parts"][0]["text"]
                 
                 # Parse JSON response
-                import json
                 parsed = json.loads(text_response)
-                return parsed.get("title"), parsed.get("summary")
+                return parsed
             
             if res.status_code in (500, 503, 429):
+                if res.status_code == 429:
+                    print(f"429 상세 오류: {res.text[:500]}")
                 wait = 2 ** attempt * 5
                 print(f"[{res.status_code}] {wait}초 후 재시도 ({attempt+1}/{max_retries})...")
                 time.sleep(wait)
                 continue
             else:
                 print(f"Gemini API returned error: {res.status_code} - {res.text}")
-                return None, None
+                return None
         except Exception as e:
             wait = 2 ** attempt * 5
             print(f"요청/파싱 실패: {e} — {wait}초 후 재시도 ({attempt+1}/{max_retries})...")
             time.sleep(wait)
             
-    print("최대 재시도 횟수 초과, 이 기사는 건너뜁니다.")
-    return None, None
+    print("최대 재시도 횟수 초과, 배치 요약을 건너뜁니다.")
+    return None
 
 def register_to_supabase(title, summary_points, article_url):
     """Post summarized news to Supabase."""
@@ -164,37 +174,62 @@ def main():
         print("No news articles found.")
         return
 
-    registered_count = 0
+    # 1. Filter unregistered news items
+    new_articles = []
     for item in news_items:
-        # We only register up to 2 new articles per run to keep feed clean and avoid API limits
-        if registered_count >= 2:
-            break
-            
         title = item["title"]
         url = item["link"]
-        
-        # Clean Google News titles (usually ends with ' - Source Name')
         clean_title = re.sub(r'\s+-\s+[^(-]+$', '', title).strip()
         
-        # 1. Check duplicate
         if is_already_registered(url):
             print(f"Skip (already registered): {clean_title}")
             continue
             
-        print(f"Processing new article: {clean_title}")
+        new_articles.append({
+            "title": clean_title,
+            "link": url
+        })
         
-        # 2. Summarize using Gemini
-        ko_title, ko_summary = summarize_with_gemini(clean_title, url)
-        
-        # Add 3 seconds delay between requests to avoid Google API Rate Limits (503/429)
-        import time
-        time.sleep(3)
-        
-        if not ko_title or not ko_summary:
-            print(f"Failed to generate summary for: {clean_title}")
+        # We only need up to 2 new articles
+        if len(new_articles) >= 2:
+            break
+
+    if not new_articles:
+        print("No new articles to process today. Finished.")
+        return
+
+    print(f"Found {len(new_articles)} new articles to process.")
+    for idx, a in enumerate(new_articles):
+        print(f"  [{idx+1}] {a['title']}")
+
+    # 2. Summarize all new articles in a single batch call
+    summaries = summarize_articles_batch(new_articles)
+    if not summaries:
+        print("Failed to generate batch summaries.")
+        return
+
+    # Create mapping by link for easy lookup
+    summary_map = {item["link"]: item for item in summaries if isinstance(item, dict) and "link" in item}
+
+    # 3. Register to Supabase
+    registered_count = 0
+    for idx, a in enumerate(new_articles):
+        url = a["link"]
+        # Try link mapping first, fallback to sequential matching
+        summary_item = summary_map.get(url)
+        if not summary_item and idx < len(summaries):
+            summary_item = summaries[idx]
+            
+        if not summary_item:
             continue
             
-        # 3. Save to database
+        ko_title = summary_item.get("title")
+        ko_summary = summary_item.get("summary")
+        
+        if not ko_title or not ko_summary:
+            print(f"Skipping registration for {a['title']} due to missing batch data fields.")
+            continue
+            
         success = register_to_supabase(ko_title, ko_summary, url)
         if success:
             registered_count += 1
