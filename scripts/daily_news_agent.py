@@ -86,22 +86,35 @@ Your response MUST be a valid JSON object matching this schema (do NOT wrap it i
         }]
     }
     
-    try:
-        res = requests.post(api_url, json=payload, timeout=20)
-        if res.status_code == 200:
-            result = res.json()
-            text_response = result["candidates"][0]["content"]["parts"][0]["text"]
+    import time
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            res = requests.post(api_url, json=payload, timeout=30)
+            if res.status_code == 200:
+                result = res.json()
+                text_response = result["candidates"][0]["content"]["parts"][0]["text"]
+                
+                # Parse JSON response
+                import json
+                parsed = json.loads(text_response)
+                return parsed.get("title"), parsed.get("summary")
             
-            # Parse JSON response
-            import json
-            parsed = json.loads(text_response)
-            return parsed.get("title"), parsed.get("summary")
-        else:
-            print(f"Gemini API returned error: {res.status_code} - {res.text}")
-            return None, None
-    except Exception as e:
-        print(f"Error calling Gemini API: {e}")
-        return None, None
+            if res.status_code in (500, 503, 429):
+                wait = 2 ** attempt * 5
+                print(f"[{res.status_code}] {wait}초 후 재시도 ({attempt+1}/{max_retries})...")
+                time.sleep(wait)
+                continue
+            else:
+                print(f"Gemini API returned error: {res.status_code} - {res.text}")
+                return None, None
+        except Exception as e:
+            wait = 2 ** attempt * 5
+            print(f"요청/파싱 실패: {e} — {wait}초 후 재시도 ({attempt+1}/{max_retries})...")
+            time.sleep(wait)
+            
+    print("최대 재시도 횟수 초과, 이 기사는 건너뜁니다.")
+    return None, None
 
 def register_to_supabase(title, summary_points, article_url):
     """Post summarized news to Supabase."""
@@ -172,6 +185,11 @@ def main():
         
         # 2. Summarize using Gemini
         ko_title, ko_summary = summarize_with_gemini(clean_title, url)
+        
+        # Add 3 seconds delay between requests to avoid Google API Rate Limits (503/429)
+        import time
+        time.sleep(3)
+        
         if not ko_title or not ko_summary:
             print(f"Failed to generate summary for: {clean_title}")
             continue
