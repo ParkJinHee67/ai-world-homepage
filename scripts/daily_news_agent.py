@@ -8,7 +8,7 @@ import requests
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 def fetch_latest_news_feed():
     """Fetch AI news articles from Google News RSS feed."""
@@ -59,7 +59,7 @@ def is_already_registered(source_url):
 
 def summarize_articles_batch(items):
     """Call Google Gemini API to translate and summarize multiple articles in a single batch."""
-    api_url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     
     articles_data = []
     for idx, item in enumerate(items):
@@ -91,7 +91,10 @@ Your response MUST be a valid JSON array matching this schema (do NOT wrap it in
     payload = {
         "contents": [{
             "parts": [{"text": prompt}]
-        }]
+        }],
+        "generation_config": {
+            "response_mime_type": "application/json"
+        }
     }
     
     import time
@@ -104,9 +107,29 @@ Your response MUST be a valid JSON array matching this schema (do NOT wrap it in
                 result = res.json()
                 text_response = result["candidates"][0]["content"]["parts"][0]["text"]
                 
-                # Parse JSON response
-                parsed = json.loads(text_response)
-                return parsed
+                # Parse JSON response robustly
+                cleaned_response = text_response.strip()
+                if cleaned_response.startswith("```"):
+                    newline_idx = cleaned_response.find("\n")
+                    if newline_idx != -1:
+                        cleaned_response = cleaned_response[newline_idx:].strip()
+                    if cleaned_response.endswith("```"):
+                        cleaned_response = cleaned_response[:-3].strip()
+                
+                parsed = json.loads(cleaned_response)
+                
+                # Ensure parsed result is a list. If it is wrapped in an object, extract the list.
+                if isinstance(parsed, dict):
+                    for val in parsed.values():
+                        if isinstance(val, list):
+                            parsed = val
+                            break
+                
+                if isinstance(parsed, list):
+                    return parsed
+                else:
+                    print(f"Warning: parsed response is not a list/array: {parsed}")
+                    return None
             
             if res.status_code in (500, 503, 429):
                 if res.status_code == 429:
@@ -223,11 +246,15 @@ def main():
         if not summary_item:
             continue
             
+        if not isinstance(summary_item, dict):
+            print(f"Skipping registration for {a['title']} because summary item is not a dictionary: {summary_item}")
+            continue
+            
         ko_title = summary_item.get("title")
         ko_summary = summary_item.get("summary")
         
         if not ko_title or not ko_summary:
-            print(f"Skipping registration for {a['title']} due to missing batch data fields.")
+            print(f"Skipping registration for {a['title']} due to missing batch data fields: {summary_item}")
             continue
             
         success = register_to_supabase(ko_title, ko_summary, url)
