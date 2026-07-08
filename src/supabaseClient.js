@@ -396,8 +396,8 @@ export const db = {
       return !!localStorage.getItem('mock_admin_email');
     }
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      return !!session;
+      const { data: { user } } = await supabase.auth.getUser();
+      return !!user;
     } catch (e) {
       return false;
     }
