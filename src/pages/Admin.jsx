@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db, mapPortfolioItem, mapNewsItem } from '../supabaseClient';
 import { 
   Plus, Pen, Trash2, GripVertical, ShieldAlert, LogOut, Check, Terminal, FileText, Image as ImageIcon, Sparkles, AlertCircle, Copy, Link, Monitor, Database, Loader2
@@ -80,6 +80,14 @@ export default function Admin() {
   
   // Drag and drop states
   const [draggedIndex, setDraggedIndex] = useState(null);
+
+  // Re-authentication states (data loss prevention)
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthCallback, setReauthCallback] = useState(null);
+  const [reauthEmailInput, setReauthEmailInput] = useState('');
+  const [reauthPasswordInput, setReauthPasswordInput] = useState('');
+  const [reauthError, setReauthError] = useState('');
+  const [reauthLoading, setReauthLoading] = useState(false);
   
   // Migration states
   const [hasLocalData, setHasLocalData] = useState(false);
@@ -114,26 +122,23 @@ export default function Admin() {
   };
   
   // Setup authentication listener
+  const handleAuthStateRef = useRef(null);
+
+  useEffect(() => {
+    handleAuthStateRef.current = handleAuthState;
+  });
+
   useEffect(() => {
     async function checkAuth() {
-      const passcodeLoggedIn = localStorage.getItem('supabase_admin_logged_in') === 'true';
-      if (passcodeLoggedIn) {
-        const localEmail = localStorage.getItem('supabase_admin_email') || 'jhpa670211@gmail.com';
-        setAdminUser({ email: localEmail });
-        setIsLoggedIn(true);
-        loadDashboardData();
-        return;
-      }
-
       const { data: { session } } = await db.getSession();
       handleAuthState(session);
     }
     checkAuth();
 
     const { data: { subscription } } = db.onAuthStateChange((event, session) => {
-      const passcodeLoggedIn = localStorage.getItem('supabase_admin_logged_in') === 'true';
-      if (passcodeLoggedIn) return;
-      handleAuthState(session);
+      if (handleAuthStateRef.current) {
+        handleAuthStateRef.current(session);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -150,8 +155,19 @@ export default function Admin() {
         return;
       }
     }
-    setIsLoggedIn(false);
-    setLoading(false);
+    
+    // Instead of immediately kicking the user out of the dashboard (which unmounts everything and clears state),
+    // check if a modal is open. If so, trigger the reauth modal.
+    const isEditing = showPortfolioModal || showNewsModal || showResourceModal;
+    if (isEditing) {
+      setReauthEmailInput(adminUser?.email || emailInput || '');
+      setReauthPasswordInput('');
+      setReauthError('');
+      setShowReauthModal(true);
+    } else {
+      setIsLoggedIn(false);
+      setLoading(false);
+    }
   };
 
   const loadDashboardData = async () => {
@@ -257,6 +273,19 @@ export default function Admin() {
     }
   };
 
+  const checkSessionOrReauth = async (callback) => {
+    const isActive = await db.checkSessionActive();
+    if (!isActive) {
+      setReauthEmailInput(adminUser?.email || emailInput || '');
+      setReauthPasswordInput('');
+      setReauthError('');
+      setReauthCallback(() => callback);
+      setShowReauthModal(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleResourceDragStart = (e, index) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -277,10 +306,15 @@ export default function Admin() {
 
   const handleResourceDragEnd = async () => {
     setDraggedIndex(null);
-    const { error } = await db.updateResourcesOrder(resources);
-    if (error) {
-      alert(`순서 저장 실패: ${error.message}`);
-    }
+    const runOrderUpdate = async () => {
+      const { error } = await db.updateResourcesOrder(resources);
+      if (error) {
+        alert(`순서 저장 실패: ${error.message}`);
+      }
+    };
+    const isLogged = await checkSessionOrReauth(runOrderUpdate);
+    if (!isLogged) return;
+    await runOrderUpdate();
   };
 
   const handleResourceFileChange = (e) => {
@@ -312,35 +346,42 @@ export default function Admin() {
   };
 
   const handleResourceSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!editingResourceItem && !resourceFile && !resourceForm.fileContent) {
       alert("이미지 파일을 선택해 주세요.");
       return;
     }
-    setIsUploadingResource(true);
-    try {
-      let finalForm = { ...resourceForm };
-      
-      // If a new file is selected, upload it to storage first
-      if (resourceFile) {
-        const { data: publicUrl, error: uploadError } = await db.uploadResourceFile(resourceFile);
-        if (uploadError) throw uploadError;
-        finalForm.fileContent = publicUrl;
+
+    const runSave = async () => {
+      setIsUploadingResource(true);
+      try {
+        let finalForm = { ...resourceForm };
+        
+        // If a new file is selected, upload it to storage first
+        if (resourceFile) {
+          const { data: publicUrl, error: uploadError } = await db.uploadResourceFile(resourceFile);
+          if (uploadError) throw uploadError;
+          finalForm.fileContent = publicUrl;
+        }
+        
+        const { error } = await db.saveResource(finalForm);
+        if (error) throw error;
+        alert(editingResourceItem ? "리소스가 성공적으로 수정되었습니다!" : "리소스가 성공적으로 등록되었습니다!");
+        setShowResourceModal(false);
+        setEditingResourceItem(null);
+        setResourceFile(null);
+        loadDashboardData();
+      } catch (err) {
+        console.error('Failed to save resource:', err);
+        alert(`저장 실패: ${err.message || err}`);
+      } finally {
+        setIsUploadingResource(false);
       }
-      
-      const { error } = await db.saveResource(finalForm);
-      if (error) throw error;
-      alert(editingResourceItem ? "리소스가 성공적으로 수정되었습니다!" : "리소스가 성공적으로 등록되었습니다!");
-      setShowResourceModal(false);
-      setEditingResourceItem(null);
-      setResourceFile(null);
-      loadDashboardData();
-    } catch (err) {
-      console.error('Failed to save resource:', err);
-      alert(`저장 실패: ${err.message || err}`);
-    } finally {
-      setIsUploadingResource(false);
-    }
+    };
+
+    const isLogged = await checkSessionOrReauth(runSave);
+    if (!isLogged) return;
+    await runSave();
   };
 
   const handleDeleteResource = async (id) => {
@@ -358,24 +399,31 @@ export default function Admin() {
   };
 
   // Login/Logout actions
-  const handlePasscodeSubmit = (e) => {
+  const handlePasscodeSubmit = async (e) => {
     e.preventDefault();
-    const correctPasscode = import.meta.env.VITE_ADMIN_PASSCODE || 'jhpa670211';
-    if (passcodeInput === correctPasscode) {
-      localStorage.setItem('supabase_admin_logged_in', 'true');
-      localStorage.setItem('supabase_admin_email', emailInput);
-      setAdminUser({ email: emailInput });
-      setIsLoggedIn(true);
-      loadDashboardData();
-      setLoginError('');
-    } else {
-      setLoginError('비밀번호가 일치하지 않습니다.');
+    setLoginError('');
+    setLoading(true);
+    try {
+      const { data, error } = await db.signInWithEmail(emailInput, passcodeInput);
+      if (error) {
+        setLoginError(error.message || '로그인에 실패했습니다.');
+        setIsLoggedIn(false);
+      } else {
+        setLoginError('');
+        if (db.isMock) {
+          setAdminUser({ email: emailInput });
+          setIsLoggedIn(true);
+          loadDashboardData();
+        }
+      }
+    } catch (err) {
+      setLoginError(err.message || '오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    localStorage.removeItem('supabase_admin_logged_in');
-    localStorage.removeItem('supabase_admin_email');
     setIsLoggedIn(false);
     setAdminUser(null);
     await db.signOut();
@@ -402,10 +450,15 @@ export default function Admin() {
 
   const handleDragEnd = async () => {
     setDraggedIndex(null);
-    const { error } = await db.updatePortfolioOrder(portfolioItems);
-    if (error) {
-      alert(`순서 저장 실패: ${error.message}`);
-    }
+    const runOrderUpdate = async () => {
+      const { error } = await db.updatePortfolioOrder(portfolioItems);
+      if (error) {
+        alert(`순서 저장 실패: ${error.message}`);
+      }
+    };
+    const isLogged = await checkSessionOrReauth(runOrderUpdate);
+    if (!isLogged) return;
+    await runOrderUpdate();
   };
 
   // Image Upload handler
@@ -526,35 +579,48 @@ export default function Admin() {
   };
 
   const handlePortfolioSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!portfolioForm.title || !portfolioForm.category) {
       alert('제목과 카테고리는 필수 기입 사항입니다.');
       return;
     }
     
-    setLoading(true);
-    try {
-      const { error } = await db.savePortfolioItem(portfolioForm);
-      if (error) throw error;
-      setShowPortfolioModal(false);
-      loadDashboardData();
-    } catch (e) {
-      alert(`저장 오류: ${e.message}`);
-      setLoading(false);
-    }
+    const runSave = async () => {
+      setLoading(true);
+      try {
+        const { error } = await db.savePortfolioItem(portfolioForm);
+        if (error) throw error;
+        setShowPortfolioModal(false);
+        loadDashboardData();
+      } catch (err) {
+        alert(`저장 오류: ${err.message}`);
+        setLoading(false);
+      }
+    };
+
+    const isLogged = await checkSessionOrReauth(runSave);
+    if (!isLogged) return;
+    await runSave();
   };
 
   const handlePortfolioDelete = async (id) => {
     if (!confirm('정말로 해당 포트폴리오를 삭제하시겠습니까?')) return;
-    setLoading(true);
-    try {
-      const { error } = await db.deletePortfolioItem(id);
-      if (error) throw error;
-      loadDashboardData();
-    } catch (e) {
-      alert(`삭제 오류: ${e.message}`);
-      setLoading(false);
-    }
+    
+    const runDelete = async () => {
+      setLoading(true);
+      try {
+        const { error } = await db.deletePortfolioItem(id);
+        if (error) throw error;
+        loadDashboardData();
+      } catch (err) {
+        alert(`삭제 오류: ${err.message}`);
+        setLoading(false);
+      }
+    };
+
+    const isLogged = await checkSessionOrReauth(runDelete);
+    if (!isLogged) return;
+    await runDelete();
   };
 
   // NEWS CRUD ACTIONS
@@ -582,35 +648,48 @@ export default function Admin() {
   };
 
   const handleNewsSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!newsForm.title || !newsForm.description || !newsForm.content) {
       alert('제목, 코멘트, 마크다운 본문은 필수 기입 사항입니다.');
       return;
     }
 
-    setLoading(true);
-    try {
-      const { error } = await db.saveNewsItem(newsForm);
-      if (error) throw error;
-      setShowNewsModal(false);
-      loadDashboardData();
-    } catch (e) {
-      alert(`저장 오류: ${e.message}`);
-      setLoading(false);
-    }
+    const runSave = async () => {
+      setLoading(true);
+      try {
+        const { error } = await db.saveNewsItem(newsForm);
+        if (error) throw error;
+        setShowNewsModal(false);
+        loadDashboardData();
+      } catch (e) {
+        alert(`저장 오류: ${e.message}`);
+        setLoading(false);
+      }
+    };
+
+    const isLogged = await checkSessionOrReauth(runSave);
+    if (!isLogged) return;
+    await runSave();
   };
 
   const handleNewsDelete = async (id) => {
     if (!confirm('정말로 해당 뉴스를 삭제하시겠습니까?')) return;
-    setLoading(true);
-    try {
-      const { error } = await db.deleteNewsItem(id);
-      if (error) throw error;
-      loadDashboardData();
-    } catch (e) {
-      alert(`삭제 오류: ${e.message}`);
-      setLoading(false);
-    }
+
+    const runDelete = async () => {
+      setLoading(true);
+      try {
+        const { error } = await db.deleteNewsItem(id);
+        if (error) throw error;
+        loadDashboardData();
+      } catch (err) {
+        alert(`삭제 오류: ${err.message}`);
+        setLoading(false);
+      }
+    };
+
+    const isLogged = await checkSessionOrReauth(runDelete);
+    if (!isLogged) return;
+    await runDelete();
   };
 
   const handleCopyCode = () => {
@@ -1658,6 +1737,93 @@ def register_ai_news(title, summary_points, article_url):
                   disabled={isUploadingResource}
                 >
                   {isUploadingResource ? '업로드 중...' : (editingResourceItem ? '수정 완료' : '등록 완료')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* REAUTH MODAL */}
+      {showReauthModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.lockIconContainer}>
+              <ShieldAlert size={32} color="var(--accent-indigo)" />
+            </div>
+            <h2 style={styles.modalTitle}>세션 만료 - 재인증 필요</h2>
+            <p style={{ ...styles.manualText, textAlign: 'center', marginBottom: '20px' }}>
+              보안을 위해 관리자 비밀번호를 다시 입력해 주세요.<br />
+              작성 중이던 데이터는 그대로 유지됩니다.
+            </p>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setReauthError('');
+              setReauthLoading(true);
+              try {
+                const { data, error } = await db.signInWithEmail(reauthEmailInput, reauthPasswordInput);
+                if (error) {
+                  setReauthError(error.message || '인증에 실패했습니다.');
+                } else {
+                  setShowReauthModal(false);
+                  if (reauthCallback) {
+                    await reauthCallback();
+                  }
+                  setReauthCallback(null);
+                }
+              } catch (err) {
+                setReauthError(err.message || '오류가 발생했습니다.');
+              } finally {
+                setReauthLoading(false);
+              }
+            }}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>이메일</label>
+                <input
+                  type="email"
+                  value={reauthEmailInput}
+                  onChange={(e) => setReauthEmailInput(e.target.value)}
+                  required
+                  style={styles.loginInput}
+                  className="input-field"
+                  disabled={reauthLoading}
+                />
+              </div>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>비밀번호</label>
+                <input
+                  type="password"
+                  value={reauthPasswordInput}
+                  onChange={(e) => setReauthPasswordInput(e.target.value)}
+                  placeholder="비밀번호를 입력하세요"
+                  required
+                  style={styles.loginInput}
+                  className="input-field"
+                  disabled={reauthLoading}
+                />
+              </div>
+              {reauthError && (
+                <p style={styles.loginErrorText}>{reauthError}</p>
+              )}
+              <div style={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReauthModal(false);
+                    setReauthCallback(null);
+                    handleLogout();
+                  }}
+                  style={styles.cancelBtn}
+                  disabled={reauthLoading}
+                >
+                  취소 (로그아웃)
+                </button>
+                <button
+                  type="submit"
+                  style={styles.saveBtn}
+                  disabled={reauthLoading}
+                >
+                  {reauthLoading ? '인증 중...' : '인증 완료'}
                 </button>
               </div>
             </form>

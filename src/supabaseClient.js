@@ -378,6 +378,31 @@ export const db = {
     return supabase.auth.getSession();
   },
 
+  async signInWithEmail(email, password) {
+    if (this.isMock) {
+      const correctPasscode = import.meta.env.VITE_ADMIN_PASSCODE || 'jhpa670211';
+      if (password === correctPasscode) {
+        localStorage.setItem('mock_admin_email', email.toLowerCase());
+        return { data: { user: { email } }, error: null };
+      } else {
+        return { data: null, error: { message: '비밀번호가 일치하지 않습니다.' } };
+      }
+    }
+    return supabase.auth.signInWithPassword({ email: email.toLowerCase(), password });
+  },
+
+  async checkSessionActive() {
+    if (this.isMock) {
+      return !!localStorage.getItem('mock_admin_email');
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return !!session;
+    } catch (e) {
+      return false;
+    }
+  },
+
   async signInWithGoogle() {
     if (this.isMock) {
       // Mock login: prompt or just return success with dummy email
