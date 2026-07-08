@@ -414,6 +414,19 @@ export default function Admin() {
           setAdminUser({ email: emailInput });
           setIsLoggedIn(true);
           loadDashboardData();
+        } else {
+          // Explicitly process the session returned from Supabase sign in immediately
+          if (data?.session) {
+            await handleAuthState(data.session);
+          } else {
+            const { data: sessionData } = await db.getSession();
+            if (sessionData?.session) {
+              await handleAuthState(sessionData.session);
+            } else {
+              setLoginError('로그인 세션을 획득하지 못했습니다. 다시 시도해 주세요.');
+              setIsLoggedIn(false);
+            }
+          }
         }
       }
     } catch (err) {
