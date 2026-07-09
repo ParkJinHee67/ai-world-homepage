@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { db, mapNewsItem } from '../supabaseClient';
+import { db, mapNewsItem, formatKSTDate } from '../supabaseClient';
 import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Link2, Share2, Check, X, Newspaper } from 'lucide-react';
 
 // Custom lightweight Markdown/Rich text Parser
@@ -475,7 +475,7 @@ export default function AINews() {
                     <div style={styles.cardMeta}>
                       <span style={styles.cardDate}>
                         <Calendar size={11} style={{ marginRight: '5px' }} />
-                        {item.createdAt}
+                        {formatKSTDate(item.createdAt)}
                       </span>
                       <button
                         onClick={(e) => handleCopyLink(e, item.id)}
@@ -609,7 +609,7 @@ export default function AINews() {
               <span style={styles.popupMetaDivider}>•</span>
               <span style={styles.popupDate}>
                 <Calendar size={12} style={{ marginRight: '6px' }} />
-                {selectedNews.createdAt}
+                {formatKSTDate(selectedNews.createdAt)}
               </span>
             </div>
 

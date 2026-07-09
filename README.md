@@ -1,6 +1,13 @@
-# React + Vite
+# 톱니바꿈월드 (GearShift World) 홈페이지
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+톱니바꿈월드 공식 웹사이트 프로젝트 레포지토리입니다.
+
+> [!TIP]
+> 웹사이트 시스템 구조, 관리자 가이드, 그리고 AI 뉴스 자동 수집 파이프라인 정보는 **[운영자 매뉴얼 (ADMIN_MANUAL.md)](file:///d:/홈페이지/톱니바꿈월드/ADMIN_MANUAL.md)** 문서를 참고해 주세요.
+
+## 개발 스택 및 실행
+- **React + Vite**
+
 
 Currently, two official plugins are available:
 

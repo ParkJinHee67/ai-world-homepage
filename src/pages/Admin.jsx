@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { db, mapPortfolioItem, mapNewsItem } from '../supabaseClient';
+import { db, mapPortfolioItem, mapNewsItem, formatKSTDate } from '../supabaseClient';
 import { 
   Plus, Pen, Trash2, GripVertical, ShieldAlert, LogOut, Check, Terminal, FileText, Image as ImageIcon, Sparkles, AlertCircle, Copy, Link, Monitor, Database, Loader2
 } from 'lucide-react';
@@ -1014,7 +1014,7 @@ def register_ai_news(title, summary_points, article_url):
                                   {item.category === 'App' ? '홈페이지' : (item.category === 'Insight' ? '인사이트' : '영상제작')}
                                 </span>
                               </td>
-                              <td style={styles.td}>{item.createdAt}</td>
+                              <td style={styles.td}>{formatKSTDate(item.createdAt)}</td>
                               <td style={{ ...styles.td, textAlign: 'center' }}>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
                                   <button onClick={() => openPortfolioModal(item)} style={styles.iconEditBtn} title="수정">
@@ -1055,7 +1055,7 @@ def register_ai_news(title, summary_points, article_url):
                         <tbody>
                           {newsItems.map((item) => (
                             <tr key={item.id} style={styles.trBody} className="admin-table-row">
-                              <td style={styles.td}>{item.createdAt}</td>
+                              <td style={styles.td}>{formatKSTDate(item.createdAt)}</td>
                               <td style={styles.td}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <img
