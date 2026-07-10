@@ -1195,7 +1195,8 @@ def register_ai_news(title, summary_points, article_url):
                         - <strong>수동 등록</strong>: 대시보드에서 직접 헤드라인과 요약, 상세 마크다운 본문을 작성해 AI 뉴스를 발행할 수 있습니다.<br />
                         - <strong>GitHub Actions 스케줄러 자동화</strong>: 매일 한국 시간 <strong>오전 7:00</strong>에 깃허브에서 파이썬 기동 스크립트(<code>scripts/daily_news_agent.py</code>)가 자동으로 동작합니다.<br />
                         - <strong>중복 등록 차단</strong>: 구글 뉴스 RSS feed에서 최신 AI 뉴스를 가져오며, 데이터베이스에 이미 등록된 기사인 경우 자동으로 스킵하고 새로운 기사만 요약해 등록합니다.<br />
-                        - <strong>Gemini 2.5 Flash 번역/요약</strong>: 구글 AI API가 영문 뉴스를 매끄러운 한글로 자동 번역하고, 요점 3가지를 <code>📌[1]~[3]</code> 마크다운 팝업 리포트로 요약하여 완벽하게 데이터베이스에 주입합니다.<br />
+                        - <strong>Gemini AI 번역/요약 및 폴백</strong>: 구글 AI API(기본 <code>gemini-3.5-flash</code>)가 영문 뉴스를 매끄러운 한글로 자동 번역하고, 핵심 요점 3가지를 요약하여 등록합니다. 일시적인 API 서버 부하/장애(503 등) 발생 시 <code>gemini-1.5-flash</code> 등 대체 모델로 자동 우회 시도하여 중단 없는 서비스를 지원합니다.<br />
+                        - <strong>수동 즉시 재발행 및 에러 확인</strong>: 수집/발행 실패 시 <a href="https://github.com/ParkJinHee67/ai-world-homepage/actions/workflows/daily_news.yml" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-indigo)', textDecoration: 'underline' }}>GitHub Actions 워크플로우 페이지</a>에서 최근 실행의 빨간색 ❌ 표시를 눌러 에러 로그를 확인하거나, 우측 상단의 <strong>Run workflow</strong> 버튼을 이용해 즉시 수집을 재발행할 수 있습니다.<br />
                         - <strong>깃허브 보안 키 설정</strong>: 워크플로우 가동을 위해 저장소 Settings ➜ Secrets에 <code>SUPABASE_URL</code>, <code>SUPABASE_KEY</code>, <code>GEMINI_API_KEY</code>를 반드시 입력해 두어야 합니다.
                       </p>
                     </div>

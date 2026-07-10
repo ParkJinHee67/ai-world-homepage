@@ -177,6 +177,17 @@ sequenceDiagram
    WITH CHECK (true);
    ```
 
+#### 🚨 트러블슈팅: "AI 뉴스가 실시간으로 등록되지 않는 문제 (Gemini API 503 오류 및 수동 재발행)"
+만약 매일 아침 뉴스가 올라오지 않았다면, Google Gemini API 서버의 일시적인 가용성 장애(503 Service Unavailable) 등으로 인해 요약 단계가 패스된 것일 수 있습니다. (현재는 자동 대체 모델 Fallback 로직이 내장되어 3.5-flash 실패 시 1.5-flash 모델로 우회 시도합니다)
+
+**해결책: GitHub Actions에서 수동 재발행 및 에러 확인**
+현재 깃허브 워크플로우에 수동 실행 기능(`workflow_dispatch`)이 연동되어 있어 실패 시 에러 로그를 확인하거나 즉시 재발행할 수 있습니다.
+* **직접 실행 및 에러 확인 주소**: [GitHub Actions Daily AI News Workflow](https://github.com/ParkJinHee67/ai-world-homepage/actions/workflows/daily_news.yml)
+1. 위의 주소로 접속하거나, GitHub 저장소 상단 탭 메뉴의 **Actions** ➔ 좌측 목록에서 **`Daily AI News Auto Publisher`**를 선택합니다.
+2. 실행 목록에서 가장 최근 실패(빨간색 ❌ 표시)한 항목이 있다면 클릭하여 어떤 부분에서 에러가 났는지 로그를 확인할 수 있습니다.
+3. 수동 재발행을 원할 경우 우측의 **`Run workflow`** 버튼을 누르고 초록색 **`Run workflow`**를 한 번 더 클릭하여 실행합니다.
+4. 약 1분 후 동작이 완료되면 홈페이지의 AI 뉴스 탭에서 즉시 확인 가능합니다.
+
 ---
 
 ### 🔑 주요 환경 변수 설정 (.env / GitHub Secrets)
