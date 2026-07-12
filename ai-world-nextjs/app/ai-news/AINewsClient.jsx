@@ -325,8 +325,13 @@ export default function AINewsClient({ initialNews, highlightId }) {
 
   // Sync details open if query param highlightId matches
   useEffect(() => {
-    if (highlightId && news.length > 0) {
-      const matched = news.find(x => x.id === highlightId);
+    let hId = highlightId;
+    if (!hId && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      hId = params.get('id');
+    }
+    if (hId && news.length > 0) {
+      const matched = news.find(x => x.id === hId);
       if (matched) {
         setSelectedNews(matched);
       }

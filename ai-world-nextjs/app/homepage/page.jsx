@@ -23,11 +23,7 @@ export const metadata = {
   }
 };
 
-export default async function Page(props) {
-  // Read query parameters
-  const searchParams = await props.searchParams;
-  const highlightId = searchParams?.id || null;
-
+export default async function Page() {
   let filteredItems = [];
   try {
     const { data, error } = await db.getPortfolio();
@@ -40,6 +36,6 @@ export default async function Page(props) {
   }
 
   return (
-    <WebsitesClient initialItems={filteredItems} highlightId={highlightId} />
+    <WebsitesClient initialItems={filteredItems} />
   );
 }

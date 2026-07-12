@@ -23,11 +23,7 @@ export const metadata = {
   }
 };
 
-export default async function Page(props) {
-  // Read query parameters
-  const searchParams = await props.searchParams;
-  const downloadId = searchParams?.id || null;
-
+export default async function Page() {
   let initialResources = [];
   try {
     const { data } = await db.getResources();
@@ -41,7 +37,6 @@ export default async function Page(props) {
   return (
     <ImageDownloadClient 
       initialResources={initialResources} 
-      downloadId={downloadId} 
     />
   );
 }

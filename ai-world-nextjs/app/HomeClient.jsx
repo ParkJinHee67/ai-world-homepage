@@ -15,20 +15,27 @@ function CloudWordCanvas() {
     if (!ctx) return;
 
     let animationId;
-    let width = (canvas.width = canvas.parentElement.offsetWidth);
-    let height = (canvas.height = canvas.parentElement.offsetHeight);
+    let width = 380;
+    let height = 380;
     let cx = width / 2;
     let cy = height / 2;
 
-    const handleResize = () => {
-      if (canvas && canvas.parentElement) {
-        width = canvas.width = canvas.parentElement.offsetWidth;
-        height = canvas.height = canvas.parentElement.offsetHeight;
-        cx = width / 2;
-        cy = height / 2;
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const w = entry.contentRect.width || 380;
+        const h = entry.contentRect.height || 380;
+        canvas.width = w;
+        canvas.height = h;
+        width = w;
+        height = h;
+        cx = w / 2;
+        cy = h / 2;
       }
-    };
-    window.addEventListener('resize', handleResize);
+    });
+
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
 
     const wordsList = [
       '톱니바꿈', 'AI', 'LLM', 'Agent', 'Prompt', 'Automation', 'Flow', 
@@ -299,7 +306,7 @@ function CloudWordCanvas() {
     animate();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       if (canvas && canvas.parentElement) {
         canvas.parentElement.removeEventListener('mousemove', handleMouseMove);
         canvas.parentElement.removeEventListener('mouseleave', handleMouseLeave);
@@ -464,23 +471,30 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
 
   // Handle smooth scroll to highlighted card
   useEffect(() => {
-    if (!loading && highlightId) {
-      setHighlightCardId(highlightId);
-      const timer = setTimeout(() => {
-        const el = document.getElementById(`card-${highlightId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 400);
+    if (!loading) {
+      let hId = highlightId;
+      if (!hId && typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        hId = params.get('id');
+      }
+      if (hId) {
+        setHighlightCardId(hId);
+        const timer = setTimeout(() => {
+          const el = document.getElementById(`card-${hId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 400);
 
-      const clearTimer = setTimeout(() => {
-        setHighlightCardId(null);
-      }, 3000);
+        const clearTimer = setTimeout(() => {
+          setHighlightCardId(null);
+        }, 3000);
 
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(clearTimer);
-      };
+        return () => {
+          clearTimeout(timer);
+          clearTimeout(clearTimer);
+        };
+      }
     }
   }, [loading, highlightId]);
 

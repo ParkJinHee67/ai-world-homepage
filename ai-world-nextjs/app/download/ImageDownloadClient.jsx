@@ -91,8 +91,13 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
           setResources(data);
           
           // Check if we need to auto-download based on query parameter
-          if (downloadId && !hasDownloadedRef.current) {
-            const image = data.find(r => r.id === downloadId);
+          let dlId = downloadId;
+          if (!dlId && typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            dlId = params.get('id');
+          }
+          if (dlId && !hasDownloadedRef.current) {
+            const image = data.find(r => r.id === dlId);
             if (image) {
               hasDownloadedRef.current = true; // Set ref immediately to prevent subsequent runs
               

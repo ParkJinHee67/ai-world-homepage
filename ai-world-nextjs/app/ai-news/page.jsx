@@ -23,11 +23,7 @@ export const metadata = {
   }
 };
 
-export default async function Page(props) {
-  // Read query search parameters
-  const searchParams = await props.searchParams;
-  const newsId = searchParams?.id || null;
-
+export default async function Page() {
   let newsList = [];
   try {
     const { data, error } = await db.getNews();
@@ -39,6 +35,6 @@ export default async function Page(props) {
   }
 
   return (
-    <AINewsClient initialNews={newsList} highlightId={newsId} />
+    <AINewsClient initialNews={newsList} />
   );
 }

@@ -252,23 +252,30 @@ export default function WebsitesClient({ initialItems, highlightId }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && highlightId) {
-      setHighlightCardId(highlightId);
-      const timer = setTimeout(() => {
-        const el = document.getElementById(`card-${highlightId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 400);
+    if (!loading) {
+      let hId = highlightId;
+      if (!hId && typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        hId = params.get('id');
+      }
+      if (hId) {
+        setHighlightCardId(hId);
+        const timer = setTimeout(() => {
+          const el = document.getElementById(`card-${hId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 400);
 
-      const clearTimer = setTimeout(() => {
-        setHighlightCardId(null);
-      }, 3000);
+        const clearTimer = setTimeout(() => {
+          setHighlightCardId(null);
+        }, 3000);
 
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(clearTimer);
-      };
+        return () => {
+          clearTimeout(timer);
+          clearTimeout(clearTimer);
+        };
+      }
     }
   }, [loading, highlightId]);
 

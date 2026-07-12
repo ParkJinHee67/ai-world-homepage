@@ -23,11 +23,7 @@ export const metadata = {
   }
 };
 
-export default async function Page(props) {
-  // Read searchParams (Next.js 15 requires awaiting it)
-  const searchParams = await props.searchParams;
-  const highlightId = searchParams?.id || null;
-
+export default async function Page() {
   let portfolioItems = [];
   let stats = { visitors: 1000, visitorsToday: 4, downloads: 1000 };
 
@@ -59,7 +55,6 @@ export default async function Page(props) {
     <HomeClient 
       initialItems={portfolioItems} 
       initialStats={stats} 
-      highlightId={highlightId} 
     />
   );
 }
