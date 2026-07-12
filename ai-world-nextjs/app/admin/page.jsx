@@ -1207,9 +1207,19 @@ def register_ai_news(title, summary_points, article_url):
                         <span style={styles.manualNumber}>4</span> 로컬 개발 및 빌드 환경 가이드
                       </h3>
                       <p style={styles.manualText}>
-                        - <strong>개발 서버 기동</strong>: <code>npm run dev</code> (기본 http://localhost:5173/)<br />
-                        - <strong>배포용 빌드</strong>: <code>npm run build</code> (경량 컴파일 및 <code>dist/</code> 디렉토리 번들링 완성)<br />
+                        - <strong>개발 서버 기동</strong>: <code>npm run dev</code> (기본 http://localhost:3000/)<br />
+                        - <strong>배포용 빌드</strong>: <code>npm run build</code> (정적 페이지 최적화 및 <code>.next/</code> 디렉토리 빌드 완성)<br />
                         - <strong>데이터베이스 스키마</strong>: Supabase SQL Editor를 통해 <code>portfolio_items</code>, <code>ai_news</code>, <code>admin_accounts</code> 테이블이 연결되어 관리됩니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.manualNumber}>5</span> Next.js 환경 변수(Vercel) 가이드
+                      </h3>
+                      <p style={styles.manualText}>
+                        - Next.js의 보안 가이드라인에 따라, 브라우저 단에서 사용되는 모든 환경 변수명 앞에는 반드시 <code>NEXT_PUBLIC_</code> 접두사가 있어야 정상 작동합니다.<br />
+                        - Vercel에 환경 변수를 입력할 때는 <code>NEXT_PUBLIC_VITE_SUPABASE_URL</code>, <code>NEXT_PUBLIC_VITE_SUPABASE_ANON_KEY</code>, <code>NEXT_PUBLIC_VITE_EMAILJS_SERVICE_ID</code> 등과 같이 접두사를 추가해 주셔야 합니다.
                       </p>
                     </div>
                   </div>
