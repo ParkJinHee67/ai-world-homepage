@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Link2, Share2, Check, X } from 'lucide-react';
 import { formatKSTDate } from '../supabaseClient';
 
@@ -426,12 +425,14 @@ export default function AINewsClient({ initialNews, highlightId }) {
                 >
                   {/* Thumbnail Image */}
                   <div style={styles.cardImageContainer}>
-                    <Image
+                    <img
                       src={item.imageUrl || 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop'}
                       alt={item.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                      style={{ objectFit: 'cover', transition: 'transform 0.4s ease' }}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop';
+                      }}
+                      style={styles.cardImage}
                     />
                     <div style={styles.cardImageOverlay} />
                     <span className="badge news" style={styles.cardBadge}>AI NEWS</span>
@@ -560,12 +561,11 @@ export default function AINewsClient({ initialNews, highlightId }) {
             {/* Banner Image */}
             {selectedNews.imageUrl && (
               <div style={styles.popupBannerContainer}>
-                <Image 
+                <img 
                   src={selectedNews.imageUrl} 
                   alt={selectedNews.title} 
-                  fill
-                  sizes="(max-width: 768px) 100vw, 720px"
-                  style={{ objectFit: 'cover' }}
+                  onError={(e) => e.target.style.display='none'}
+                  style={styles.popupBanner}
                 />
                 <div style={styles.popupBannerOverlay} />
               </div>

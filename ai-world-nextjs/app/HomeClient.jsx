@@ -53,7 +53,7 @@ function CloudWordCanvas() {
         isText,
         text: word,
         size,
-        alpha: isText ? (0.7 + Math.random() * 0.2) : (0.05 + Math.random() * 0.2),
+        alpha: isText ? (0.8 + Math.random() * 0.2) : (0.28 + Math.random() * 0.35),
         color: i % 3 === 0 
           ? '99, 102, 241' 
           : (i % 3 === 1 ? '168, 85, 247' : '244, 63, 94'),
@@ -152,8 +152,8 @@ function CloudWordCanvas() {
       ctx.shadowBlur = 4;
 
       // Hub to Inner
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
-      ctx.shadowColor = 'rgba(99, 102, 241, 0.3)';
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.55)';
+      ctx.shadowColor = 'rgba(99, 102, 241, 0.65)';
       for (let i = 1; i <= 6; i++) {
         ctx.beginPath();
         ctx.moveTo(gearNodes[0].x, gearNodes[0].y);
@@ -162,8 +162,8 @@ function CloudWordCanvas() {
       }
 
       // Inner circle outline
-      ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
-      ctx.shadowColor = 'rgba(168, 85, 247, 0.4)';
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.75)';
+      ctx.shadowColor = 'rgba(168, 85, 247, 0.75)';
       ctx.beginPath();
       ctx.moveTo(gearNodes[1].x, gearNodes[1].y);
       for (let i = 2; i <= 6; i++) {
@@ -173,7 +173,7 @@ function CloudWordCanvas() {
       ctx.stroke();
 
       // Inner to Outer spoke lines
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.15)';
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
       for (let i = 0; i < 6; i++) {
         const innerNode = gearNodes[1 + i];
         const outerNode1 = gearNodes[7 + (i * 2) % 12];
@@ -191,8 +191,8 @@ function CloudWordCanvas() {
       }
 
       // Outer circle outline with gear teeth inserted
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
-      ctx.shadowColor = 'rgba(244, 63, 94, 0.4)';
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
+      ctx.shadowColor = 'rgba(244, 63, 94, 0.75)';
       for (let i = 0; i < 6; i++) {
         const oIdx1 = 7 + i * 2;
         const oIdx2 = 7 + i * 2 + 1;
@@ -238,7 +238,7 @@ function CloudWordCanvas() {
           const dist = Math.hypot(dx, dy);
 
           if (dist < 100) {
-            const alpha = (100 - dist) / 100 * 0.08;
+            const alpha = (100 - dist) / 100 * 0.28;
             ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -284,7 +284,7 @@ function CloudWordCanvas() {
         });
 
         if (closestNode) {
-          const connectionAlpha = (120 - minDynamicDist) / 120 * 0.12;
+          const connectionAlpha = (120 - minDynamicDist) / 120 * 0.36;
           ctx.strokeStyle = `rgba(${p.color}, ${connectionAlpha})`;
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
