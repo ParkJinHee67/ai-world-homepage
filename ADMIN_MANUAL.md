@@ -1,6 +1,6 @@
 # ⚙️ 톱니바꿈월드 웹사이트 운영자 매뉴얼
 
-본 문서는 **톱니바꿈월드** 웹사이트의 시스템 아키텍처, 관리자 대시보드 사용법, 그리고 **AI 뉴스 자동 수집 및 발행 파이프라인**에 대해 설명하는 운영 지침서입니다.
+본 문서는 **톱니바꿈월드** 웹사이트의 Next.js App Router 시스템 아키텍처, 관리자 대시보드 사용법, 그리고 **AI 뉴스 자동 수집 및 발행 파이프라인**에 대해 설명하는 운영 지침서입니다.
 
 ---
 
@@ -15,12 +15,12 @@
 
 ## 1. 시스템 아키텍처 개요
 
-본 웹사이트는 서버리스(Serverless) 아키텍처로 설계되어 유지보수 비용이 거의 발생하지 않으며, 각 역할이 다음과 같이 분담되어 있습니다.
+본 웹사이트는 Next.js App Router를 기반으로 한 서버리스(Serverless) 정적 생성(SSG) 아키텍처로 빌드되어 성능과 SEO(검색엔진 최적화)가 극대화되어 있으며, 각 역할이 다음과 같이 분담되어 있습니다.
 
 ```mermaid
 graph LR
     subgraph Frontend [프론트엔드]
-        A[React + Vite App]
+        A[Next.js App Router]
     end
     subgraph Hosting [호스팅]
         V[Vercel]
@@ -34,16 +34,18 @@ graph LR
         GM[Gemini API]
     end
 
-    A -->|배포| V
+    A -->|정적 빌드 & 배포| V
     A -->|API 호출 & 실시간 데이터| S
     G -->|매일 아침 실행| P
     P -->|뉴스 요약 요청| GM
     P -->|뉴스 저장| S
+    P -->|정적 페이지 재생성 유도| V
 ```
 
-* **프론트엔드**: React(Vite 기반)로 구현되어 있으며, Vercel을 통해 글로벌 CDN 배포됩니다.
-* **백엔드/DB**: Supabase를 사용하여 데이터 저장 및 관리자 인증을 수행합니다.
-* **자동화**: GitHub Actions의 크론탭 스케줄러가 매일 아침 Python 크롤러 에이전트를 실행시킵니다.
+* **프론트엔드**: **Next.js 15+ (App Router)** 기반으로 구현되어 있습니다. 빌드 타임에 Supabase의 모든 포트폴리오 및 뉴스 데이터를 가져와 완전한 정적 HTML(Static SSG)로 사전 생성(Pre-rendering)합니다.
+* **호스팅**: Vercel의 글로벌 Edge CDN에 정적 파일들이 올려집니다. 서버의 데이터 요청 대기 시간이 없어 **0초대 로딩(Instant Load)**이 가능하며 구글 검색 로봇에 모든 콘텐츠 텍스트가 완벽하게 노출됩니다.
+* **백엔드/DB**: Supabase를 사용하여 데이터 저장 및 관리자 인증을 수행합니다. 브라우저에서 실행되는 클라이언트 컴포넌트는 Supabase 실시간 구독을 통해 방문자 수와 실시간 상태 정보를 동기화합니다.
+* **자동화**: GitHub Actions의 크론탭 스케줄러가 매일 아침 Python 크롤러 에이전트를 실행시켜 뉴스를 무인으로 공급합니다.
 
 ---
 
@@ -93,31 +95,29 @@ sequenceDiagram
    * `ai_news` 테이블의 `source_url` 컬럼에 동일한 기사 주소가 존재하는지 체크합니다.
    * 이미 수집된 뉴스인 경우 패스하고, **새롭게 수집된 뉴스 기사 중 가장 최신의 2개 기사만 가공 대상**으로 지정합니다.
 3. **인공지능 번역 및 3가지 핵심 요약 (Gemini 3.5 Flash)**:
-   * 선정된 영어 뉴스는 Gemini API를 통해 한국어로 요약됩니다.
-   * 프롬프트 템플릿에 따라 다음의 엄격한 요약 가이드라인을 따릅니다:
-     * 한국어로 번역하고, 클릭을 부르는 매력적인 헤드라인을 생성할 것.
-     * 기사 내용을 **정확히 3개의 주요 포인트**로 요약할 것.
-     * 요약 형식은 반드시 **`📌[1] **핵심어**: 한국어 내용...`** 형식을 지킬 것.
+   * Gemini API를 통해 한국어로 요약됩니다.
+   * 요약 형식은 반드시 **`📌[1] **핵심어**: 한국어 내용...`** 형식을 지킵니다.
 4. **뉴스 썸네일 자동 생성**:
    * 유튜브 기사일 경우: 유튜브 공식 썸네일 주소(`https://img.youtube.com/vi/...`)를 자동으로 매핑합니다.
-   * 일반 웹사이트 기사일 경우: **Microlink API**를 호출하여 기사 본문 페이지의 가로형 웹 캡처 썸네일을 생성하여 적용합니다.
-5. **데이터 적재**:
-   * 가공이 끝난 뉴스는 Supabase의 `ai_news` 테이블에 입력됩니다. 입력 즉시 홈페이지 방문객 전원에게 실시간으로 포매팅되어 노출됩니다.
+   * 일반 웹사이트 기사일 경우: **Microlink API**를 호출하여 기사의 웹 화면 캡처 이미지를 썸네일로 가공하여 적용합니다.
+5. **데이터 적재 및 노출**:
+   * 가공이 끝난 뉴스는 Supabase의 `ai_news` 테이블에 입력됩니다.
+   * 마이그레이션된 프론트엔드(`AINewsClient.jsx`)는 무작위 도메인에서 수집되는 뉴스 썸네일 이미지가 깨지지 않도록 네이티브 `<img>` 태그를 활용해 브라우저 단에서 직접 안전하게 로드합니다.
 
 > [!NOTE]
 > **뉴스 발행 시간 정보**:
-> 데이터베이스에는 UTC 표준시로 저장되지만, 프런트엔드(`AINews.jsx`) 단에서 접속자의 로컬 타임존(한국 KST)에 맞추어 `YYYY-MM-DD HH:mm:ss` 포맷으로 자동 변환되어 읽기 쉽게 나타납니다.
+> 데이터베이스에는 UTC 표준시로 저장되지만, 프런트엔드 단에서 접속자의 로컬 타임존(한국 KST)에 맞추어 `YYYY-MM-DD HH:mm:ss` 포맷으로 자동 변환되어 읽기 쉽게 나타납니다.
 
 ---
 
 ## 3. 관리자 대시보드 사용 가이드
 
-운영자는 웹사이트 하단의 자물쇠 아이콘이나 특정 경로로 접근하여 관리자 기능을 사용할 수 있습니다.
+운영자는 웹사이트 하단의 자물쇠 아이콘이나 특정 경로(`/admin`)로 접근하여 관리자 기능을 사용할 수 있습니다.
 
 ### 🔑 관리자 로그인
 * **인증 방법**: 패스코드(Passcode) 인증
-* **초기 비밀번호**: `.env` 파일의 `VITE_ADMIN_PASSCODE` 값 확인
-* 관리자 비밀번호를 통해 한 번 인증되면 브라우저 세션에 로그인 상태가 유지됩니다.
+* **초기 비밀번호**: `VITE_ADMIN_PASSCODE` 값 확인 (`jhpa670211`)
+* 관리자 비밀번호를 통해 한 번 인증되면 브라우저 세션에 로그인 상태가 유지됩니다. Next.js App Router 마이그레이션으로 인해 관리자 화면은 검색엔진 크롤링에서 안전하게 차단(`robots.js`를 통해 `/admin` 제외)되도록 설정되었습니다.
 
 ### 📂 관리 항목 및 조작
 
@@ -139,10 +139,10 @@ sequenceDiagram
 자료실에서 방문객이 자료를 다운로드하기 위해 이름과 이메일을 입력하면, 마케팅을 위한 잠재고객 데이터가 수집됩니다.
 
 ### 📥 리드 수집 및 다운로드 과정
-1. 방문객이 자료실에서 리소스의 `다운로드` 클릭.
+1. 방문객이 자료실에서 리소스의 `다운로드 신청하기` 클릭.
 2. 이름과 이메일 주소를 묻는 팝업 창 노출.
 3. 입력 시 데이터베이스(`marketing_leads` 테이블)에 입력 시각, 고객명, 이메일 주소, 요청한 리소스명이 기록됨.
-4. 동시에 방문객에게는 파일 다운로드 처리가 실행됨.
+4. 동시에 방문객에게는 파일 다운로드 처리가 실행되며, 입력한 이메일 주소로 영구 보관용 다운로드 링크가 **EmailJS API**를 통해 메일로 즉시 자동 발송됩니다.
 
 ### 📊 리드 데이터 활용 (관리자 전용)
 * 관리자 대시보드의 **`잠재고객 수집 리드`** 탭에서 수집된 전체 이메일 리스트를 실시간으로 확인 가능합니다.
@@ -186,19 +186,20 @@ sequenceDiagram
 1. 위의 주소로 접속하거나, GitHub 저장소 상단 탭 메뉴의 **Actions** ➔ 좌측 목록에서 **`Daily AI News Auto Publisher`**를 선택합니다.
 2. 실행 목록에서 가장 최근 실패(빨간색 ❌ 표시)한 항목이 있다면 클릭하여 어떤 부분에서 에러가 났는지 로그를 확인할 수 있습니다.
 3. 수동 재발행을 원할 경우 우측의 **`Run workflow`** 버튼을 누르고 초록색 **`Run workflow`**를 한 번 더 클릭하여 실행합니다.
-4. 약 1분 후 동작이 완료되면 홈페이지의 AI 뉴스 탭에서 즉시 확인 가능합니다.
 
 ---
 
-### 🔑 주요 환경 변수 설정 (.env / GitHub Secrets)
+### 🔑 주요 환경 변수 설정 (.env / Vercel Settings)
 
-프로젝트 빌드 및 스크립트 실행에 필요한 환경 변수 목록입니다.
+Next.js 15+ App Router 환경에서는 **클라이언트 측 브라우저에서 접근하는 모든 환경 변수명 앞에 반드시 `NEXT_PUBLIC_` 접두사를 붙여야 합니다.** 
 
-| 변수명 | 위치 | 설명 |
-| :--- | :--- | :--- |
-| `VITE_SUPABASE_URL` | `.env` / Vercel | Supabase 프로젝트 API 접속 URL |
-| `VITE_SUPABASE_ANON_KEY` | `.env` / Vercel | 클라이언트용 공개 API 키 (`anon`) |
-| `VITE_ADMIN_PASSCODE` | `.env` / Vercel | 관리자 대시보드 로그인 패스코드 |
-| `SUPABASE_URL` | GitHub Secrets | 뉴스 로봇이 호출할 Supabase URL |
-| `SUPABASE_KEY` | GitHub Secrets | 뉴스 로봇용 API 키 (안전을 위해 `service_role` 권장) |
-| `GEMINI_API_KEY` | GitHub Secrets | 구글 Gemini 요약용 무료 API 키 |
+| 환경 변수명 (Vercel / .env) | 용도 및 설명 |
+| :--- | :--- |
+| `NEXT_PUBLIC_VITE_SUPABASE_URL`<br>`VITE_SUPABASE_URL` | Supabase 프로젝트 API 접속 URL |
+| `NEXT_PUBLIC_VITE_SUPABASE_ANON_KEY`<br>`VITE_SUPABASE_ANON_KEY` | 클라이언트용 공개 API 키 (`anon`) |
+| `VITE_ADMIN_PASSCODE` | 관리자 대시보드 로그인 패스코드 (`jhpa670211`) |
+| `NEXT_PUBLIC_VITE_EMAILJS_PUBLIC_KEY`<br>`VITE_EMAILJS_PUBLIC_KEY` | EmailJS 이메일 발송용 API 공개 키 |
+| `NEXT_PUBLIC_VITE_EMAILJS_SERVICE_ID`<br>`VITE_EMAILJS_SERVICE_ID` | EmailJS 서비스 ID |
+| `NEXT_PUBLIC_VITE_EMAILJS_TEMPLATE_ID`<br>`VITE_EMAILJS_TEMPLATE_ID` | EmailJS 이메일 발송 양식 템플릿 ID |
+
+*참고: GitHub Actions 뉴스 크롤링 워크플로우를 가동하는 [Secrets] 환경 변수는 기존과 동일하게 유지됩니다 (`SUPABASE_URL`, `SUPABASE_KEY`, `GEMINI_API_KEY`).*
