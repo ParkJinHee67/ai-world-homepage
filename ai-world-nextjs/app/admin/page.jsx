@@ -866,6 +866,15 @@ def register_ai_news(title, summary_points, article_url):
                     운영 매뉴얼
                   </button>
                   <button 
+                    onClick={() => setCurrentTab('migration')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'migration' ? styles.tabBtnActiveMigration : {})
+                    }}
+                  >
+                    마이그레이션 & 로드맵
+                  </button>
+                  <button 
                     onClick={() => setCurrentTab('leads')}
                     style={{
                       ...styles.tabBtn,
@@ -1221,6 +1230,90 @@ def register_ai_news(title, summary_points, article_url):
                         - Next.js의 보안 가이드라인에 따라, 브라우저 단에서 사용되는 모든 환경 변수명 앞에는 반드시 <code>NEXT_PUBLIC_</code> 접두사가 있어야 정상 작동합니다.<br />
                         - Vercel에 환경 변수를 입력할 때는 <code>NEXT_PUBLIC_VITE_SUPABASE_URL</code>, <code>NEXT_PUBLIC_VITE_SUPABASE_ANON_KEY</code>, <code>NEXT_PUBLIC_VITE_EMAILJS_SERVICE_ID</code> 등과 같이 접두사를 추가해 주셔야 합니다.
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 6: Migration & Roadmap View */}
+                {currentTab === 'migration' && (
+                  <div style={styles.manualContainer} className="glass-panel">
+                    <h2 style={{...styles.manualTitle, borderColor: 'rgba(16, 185, 129, 0.2)'}}>
+                      Vite SPA → Next.js 마이그레이션 & 개발 로드맵
+                    </h2>
+                    
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.migrationNumber}>1</span> 마이그레이션 수행 목적 및 이유
+                      </h3>
+                      <p style={styles.manualText}>
+                        - <strong>검색엔진 최적화 (SEO) 극대화</strong>: 기존 React SPA(Vite) 구조는 자바스크립트 실행 전까지 검색 엔진이 빈 페이지를 읽어 노출에 한계가 있었습니다. Next.js App Router로 마이그레이션하여, 빌드 타임에 Supabase 데이터를 정적으로 읽어와 HTML로 인코딩하므로 검색 노출이 대폭 향상됩니다.<br />
+                        - <strong>0초대 초기 로딩 속도 구현 (Instant Load)</strong>: 브라우저가 직접 Supabase API를 호출하기 전에 Next.js 서버 컴포넌트가 데이터를 미리 조회(Pre-fetch)하여 HTML에 녹여냅니다. 따라서 첫 로딩 시 서버 딜레이가 최소화되고 레이아웃이 밀리는 현상이 방지됩니다.<br />
+                        - <strong>프론트엔드/백엔드 통합 확장성</strong>: 미들웨어, 서버 API 엔드포인트(Route Handlers), 하이브리드 정적/동적 렌더링을 한 프로젝트 내에서 손쉽게 확장하여 활용 가능합니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.migrationNumber}>2</span> 완료된 마이그레이션 세부 내역
+                      </h3>
+                      <p style={styles.manualText}>
+                        - <strong>Next.js 15+ 프로젝트 구축</strong>: <code>ai-world-nextjs</code> 하위 폴더에 Next.js 어플리케이션을 완성하여, 기존 Vite와 구분해 독립적으로 구동 가능합니다.<br />
+                        - <strong>서버/클라이언트 컴포넌트 이원화 설계</strong>: <code>page.jsx</code>가 서버 측에서 데이터를 프리패치하고, <code>"use client"</code> 지시어를 가진 클라이언트 컴포넌트들이 화면 상호작용 및 통계 구독을 실시간 담당하도록 전환했습니다.<br />
+                        - <strong>안전한 이미지 렌더링 최적화</strong>: 뉴스 기사의 다양한 외부 썸네일 경로가 Next.js <code>Image</code> 도메인 차단 보안 정책으로 인해 깨지지 않도록, 렌더링 안전성이 담보되는 네이티브 이미지 처리를 적용했습니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.migrationNumber}>3</span> ⚙️ SEO (검색엔진 최적화) 설정 완료 내역
+                      </h3>
+                      <p style={styles.manualText}>
+                        - <strong>페이지별 Metadata API 적용</strong>: 각 페이지 서버 컴포넌트(<code>page.jsx</code>) 마다 고유 메타데이터(Title, Description, OpenGraph, Twitter 카드)를 정적으로 선언하여 빌드 타임 컴파일 및 검색 엔진 수집 최적화를 완료했습니다.<br />
+                        - <strong>sitemap.js 자동 생성</strong>: 전체 공개 경로(<code>/</code>, <code>/ai-news</code> 등)를 동적으로 읽어 <code>/sitemap.xml</code>을 표준 규격으로 빌드 타임 자동 생성하도록 설정했습니다.<br />
+                        - <strong>robots.js 크롤링 규약 지정</strong>: 전체 웹 페이지 색인은 허용하되, 보안이 필요한 관리자 경로(<code>/admin</code>)는 봇 수집에서 차단(disallow) 처리하여 연결성을 지켰습니다.<br />
+                        - <strong>HTML Lang 다국어 한국어 선언</strong>: 레이아웃에서 <code>&lt;html lang="ko"&gt;</code> 언어 규격을 고정 명시하여 검색 친화도와 브라우저 자동 번역 오작동을 예방했습니다.<br />
+                        - <strong>JSON-LD 스키마 마크업 삽입</strong>: 구글 등 인공지능 검색 엔진이 기업 정보를 정확히 구조화 분류하도록 Schema.org 표준 JSON-LD를 헤더에 적용했습니다.
+                      </p>
+                    </div>
+
+                    <div style={styles.manualSection}>
+                      <h3 style={styles.manualSubTitle}>
+                        <span style={styles.migrationNumber}>4</span> 🚀 향후 남은 개발 과제 및 로드맵
+                      </h3>
+                      <div style={styles.roadmapBox}>
+                        <div style={styles.roadmapItem}>
+                          <h4 style={styles.roadmapItemTitle}>
+                            <FileText size={16} style={{ color: '#a7f3d0' }} />
+                            과제 1: 블로그 / 인사이트 글 섹션 고도화 (마크다운 & MDX)
+                          </h4>
+                          <p style={styles.roadmapItemText}>
+                            - <strong>현황</strong>: 현재는 DB 텍스트 형태로 수록 중이나, 작성되는 글 분량이 지속적으로 증가하면 관리가 복잡해질 수 있습니다.<br />
+                            - <strong>개선 방안</strong>: 마크다운(Markdown) 혹은 **MDX** 기반의 정적 페이지 생성 방식을 연동합니다. <code>app/insights/[slug]/page.jsx</code> 구조를 설계하여 로컬에 <code>.mdx</code> 파일이 추가될 때마다 검색엔진에 최적화된 블로그 글 페이지가 자동으로 빌드 타임에 정적 생성되도록 구현할 예정입니다.
+                          </p>
+                        </div>
+
+                        <div style={styles.roadmapItem}>
+                          <h4 style={styles.roadmapItemTitle}>
+                            <Monitor size={16} style={{ color: '#a7f3d0' }} />
+                            과제 2: 구글 애드센스(Google AdSense) 수익화 코드 삽입
+                          </h4>
+                          <p style={styles.roadmapItemText}>
+                            - <strong>현황</strong>: 현재 광고 코드가 삽입되지 않은 초기 릴리즈 상태입니다.<br />
+                            - <strong>개선 방안</strong>: Next.js 전용 <code>next/script</code> 컴포넌트를 사용하여 애드센스 클라이언트 코드를 비동기(lazyOnload)로 삽입합니다. 전체 레이아웃 파일(<code>app/layout.js</code>)에 광고 코드를 주입하고, 뉴스 리스트 피드 중간과 인사이트 칼럼 본문 내부 영역에 알맞은 광고 크기를 반응형으로 삽입할 계획입니다.
+                          </p>
+                        </div>
+
+                        <div style={styles.roadmapItem}>
+                          <h4 style={styles.roadmapItemTitle}>
+                            <Link size={16} style={{ color: '#a7f3d0' }} />
+                            과제 3: 제휴 마케팅 링크 컴포넌트 구현 (쿠팡파트너스 등)
+                          </h4>
+                          <p style={styles.roadmapItemText}>
+                            - <strong>현황</strong>: 포트폴리오 및 칼럼 본문 내에서 외부 링크 유도가 일반적인 텍스트로만 제공됩니다.<br />
+                            - <strong>개선 방안</strong>: 쿠팡파트너스 등 외부 제휴 마케팅 링크를 프리미엄 쇼핑 카드(Rich Card) 형태로 노출하는 공통 컴포넌트를 설계합니다. 클릭 시 리다이렉션 트래킹 이벤트를 수집하여 성과를 측정할 수 있도록 지원하며, 법적 의무 사항인 '대가성 문구'가 고정 노출되도록 컴포넌트화할 계획입니다.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2658,6 +2751,52 @@ const styles = {
     color: 'var(--text-secondary)',
     lineHeight: 1.7,
     paddingLeft: '34px',
+  },
+  tabBtnActiveMigration: {
+    background: 'var(--accent-emerald)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
+  },
+  migrationNumber: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    background: 'rgba(16, 185, 129, 0.15)',
+    color: '#a7f3d0',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    fontSize: '0.82rem',
+    fontWeight: 700,
+  },
+  roadmapBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+    paddingLeft: '34px',
+    marginTop: '16px',
+  },
+  roadmapItem: {
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '12px',
+    padding: '20px',
+    transition: 'var(--transition-fast)',
+  },
+  roadmapItemTitle: {
+    fontSize: '1.05rem',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  roadmapItemText: {
+    fontSize: '0.85rem',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.6,
   }
 };
 
