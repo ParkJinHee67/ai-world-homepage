@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { MessageSquare, Heart } from 'lucide-react';
 
 export default function Footer() {
@@ -12,6 +13,15 @@ export default function Footer() {
           <p style={styles.desc}>
             AI 기술을 활용한 혁신적인 어플리케이션과 트렌드 분석 리포트를 제공합니다.
           </p>
+          <div style={styles.linksRow}>
+            <Link href="/about" style={styles.footerLink}>
+              소개
+            </Link>
+            <span style={styles.separator}>|</span>
+            <Link href="/privacy" style={styles.footerLink}>
+              개인정보처리방침
+            </Link>
+          </div>
         </div>
 
         <div className="footer-right" style={styles.right}>
@@ -92,5 +102,21 @@ const styles = {
   heart: {
     color: 'var(--accent-rose)',
     fill: 'var(--accent-rose)',
+  },
+  linksRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginTop: '12px',
+  },
+  footerLink: {
+    color: 'var(--text-secondary)',
+    fontSize: '0.8rem',
+    textDecoration: 'none',
+    transition: 'color 0.2s ease',
+  },
+  separator: {
+    color: 'rgba(255, 255, 255, 0.1)',
+    fontSize: '0.75rem',
   },
 };

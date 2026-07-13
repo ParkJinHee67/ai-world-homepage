@@ -48,7 +48,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   
   // Passcode login states
-  const [emailInput, setEmailInput] = useState('jhpa670211@gmail.com');
+  const [emailInput, setEmailInput] = useState('');
   const [passcodeInput, setPasscodeInput] = useState('');
   const [loginError, setLoginError] = useState('');
   

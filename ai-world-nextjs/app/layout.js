@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export const metadata = {
+  metadataBase: new URL("https://ai.jinheestate.blog"),
   title: "톱니바꿈 AI월드",
   description: "AI 기술을 활용하여 제작한 혁신적인 어플리케이션과 기술적 인사이트를 만나보세요.",
   icons: {
@@ -15,14 +16,14 @@ export default function RootLayout({ children }) {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "톱니바꿈 AI월드",
-    "url": "https://ai-world-homepage.vercel.app/",
+    "url": "https://ai.jinheestate.blog/",
     "description": "AI 기술을 활용하여 제작한 혁신적인 어플리케이션과 가치 있는 기술적 인사이트를 만나보세요.",
     "publisher": {
       "@type": "Organization",
       "name": "톱니바꿈 AI월드",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://ai-world-homepage.vercel.app/favicon.svg"
+        "url": "https://ai.jinheestate.blog/favicon.svg"
       }
     }
   };

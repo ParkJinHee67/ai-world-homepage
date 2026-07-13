@@ -1,5 +1,5 @@
 export default function robots() {
-  const baseUrl = 'https://ai-world-homepage.vercel.app';
+  const baseUrl = 'https://ai.jinheestate.blog';
   return {
     rules: {
       userAgent: '*',

@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = 'https://ai-world-homepage.vercel.app';
+  const baseUrl = 'https://ai.jinheestate.blog';
   
   const routes = [
     '',
@@ -8,6 +8,8 @@ export default function sitemap() {
     '/download',
     '/homepage',
     '/insights',
+    '/about',
+    '/privacy',
   ];
 
   return routes.map((route) => ({
