@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Link2, Share2, Check, X } from 'lucide-react';
-import { formatKSTDate } from '../supabaseClient';
+import { formatKSTDate, db, mapNewsItem } from '../supabaseClient';
 
 // Custom lightweight Markdown/Rich text Parser
 const parseRichText = (text) => {
@@ -317,6 +317,22 @@ export default function AINewsClient({ initialNews, highlightId }) {
   const [loading, setLoading] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  
+  // Sync edits/caching dynamically from server
+  useEffect(() => {
+    async function loadNews() {
+      try {
+        const { data, error } = await db.getNews();
+        if (error) throw error;
+        if (data) {
+          setNews(data.map(mapNewsItem));
+        }
+      } catch (e) {
+        console.error('Failed to load news:', e);
+      }
+    }
+    loadNews();
+  }, []);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
