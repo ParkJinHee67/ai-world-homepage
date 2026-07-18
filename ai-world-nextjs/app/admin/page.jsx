@@ -609,8 +609,13 @@ export default function Admin() {
       if (data) {
         const populated = [1, 2, 3, 4].map(pos => {
           const found = data.find(ad => ad.position === pos);
-          if (found) return found;
-          return { position: pos, type: 'coupang-iframe', title: '', html: '', image_url: '', link_url: '', price: '', enabled: true };
+          if (found) {
+            return {
+              ...found,
+              desc: found.description || found.desc || ''
+            };
+          }
+          return { position: pos, type: 'coupang-iframe', title: '', description: '', desc: '', html: '', image_url: '', link_url: '', price: '', enabled: true };
         });
         setAdFormList(populated);
       }

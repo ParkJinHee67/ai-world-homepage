@@ -6,7 +6,11 @@ import Link from 'next/link';
 export default function AdSlot({ ad }) {
   if (!ad) return null;
 
-  const { type, html, title, price, imageUrl, link, desc, label } = ad;
+  const { type, html, title, price, imageUrl, link_url, link, desc, description } = ad;
+
+  // 실제 이동용 링크 필드 결합
+  const targetLink = link_url || link || '#';
+  const displayDesc = description || desc;
 
   // 1. 쿠팡 다이나믹 배너 iframe 렌더링 (설명 라벨 지원 및 반응형 축소)
   if (type === 'coupang-iframe') {
@@ -18,14 +22,26 @@ export default function AdSlot({ ad }) {
     return (
       <div style={wrapperStyle}>
         <div style={styles.iframeInner}>
-          {label && <div style={styles.adLabel}>{label}</div>}
+          {title && <div style={styles.adLabel}>{title}</div>}
           <div 
             style={styles.iframeContent}
             dangerouslySetInnerHTML={{ __html: html }} 
           />
         </div>
-        {/* iframe 태그에 강제 max-width: 100%를 먹여 가로 폭 안으로 유연하게 스케일 다운되도록 조치 */}
+        {/* iframe 태그에 강제 max-width: 100% 및 고유 비율(aspect-ratio)을 먹여 하단 불필요한 여백/공백을 완벽 제거 */}
         <style dangerouslySetInnerHTML={{ __html: `
+          iframe[width="492"] {
+            aspect-ratio: 1 / 1 !important;
+            height: auto !important;
+            width: 100% !important;
+            max-width: 492px !important;
+          }
+          iframe[width="120"] {
+            aspect-ratio: 120 / 240 !important;
+            height: auto !important;
+            width: 120px !important;
+            max-width: 100% !important;
+          }
           iframe {
             max-width: 100% !important;
             display: block !important;
@@ -40,7 +56,7 @@ export default function AdSlot({ ad }) {
   if (type === 'product-card') {
     return (
       <a 
-        href={link || '#'} 
+        href={targetLink} 
         target="_blank" 
         rel="noopener sponsored" 
         style={styles.productCard}
@@ -62,11 +78,11 @@ export default function AdSlot({ ad }) {
 
   // 3. 자체 하우스 광고 배너
   if (type === 'house') {
-    const isInternal = link && link.startsWith('/');
+    const isInternal = targetLink && targetLink.startsWith('/');
     
     if (isInternal) {
       return (
-        <Link href={link} style={styles.houseCard}>
+        <Link href={targetLink} style={styles.houseCard}>
           <div style={styles.imageContainer}>
             <img 
               src={imageUrl || 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600&auto=format&fit=crop'} 
@@ -77,7 +93,7 @@ export default function AdSlot({ ad }) {
           </div>
           <div style={styles.productInfo}>
             <h5 style={styles.productTitle}>{title}</h5>
-            <p style={styles.houseDesc}>{desc}</p>
+            {displayDesc && <p style={styles.houseDesc}>{displayDesc}</p>}
           </div>
         </Link>
       );
@@ -85,7 +101,7 @@ export default function AdSlot({ ad }) {
 
     return (
       <a 
-        href={link || '#'} 
+        href={targetLink} 
         target="_blank" 
         rel="noopener sponsored" 
         style={styles.houseCard}
@@ -100,33 +116,11 @@ export default function AdSlot({ ad }) {
         </div>
         <div style={styles.productInfo}>
           <h5 style={styles.productTitle}>{title}</h5>
-          <p style={styles.houseDesc}>{desc}</p>
+          {displayDesc && <p style={styles.houseDesc}>{displayDesc}</p>}
         </div>
       </a>
     );
   }
-
-  // 4. 구글 애드센스 (추후 활성화 대비 스켈레톤 주석 처리)
-  /*
-  if (type === 'adsense') {
-    return (
-      <div style={styles.adsensePlaceholder}>
-        {ad.client && ad.slot ? (
-          <ins 
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client={ad.client}
-            data-ad-slot={ad.slot}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
-        ) : (
-          <span style={{ fontSize: '11px', color: '#6b7684' }}>Google AdSense Skeleton</span>
-        )}
-      </div>
-    );
-  }
-  */
 
   return null;
 }
@@ -135,7 +129,6 @@ const styles = {
   iframeWrapper: {
     width: '100%',
     maxWidth: '100%',
-    overflowX: 'auto',
     backgroundColor: '#0a090f',
     border: '1px solid rgba(255, 255, 255, 0.05)',
     borderRadius: '12px',
@@ -144,7 +137,8 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     boxSizing: 'border-box',
-    WebkitOverflowScrolling: 'touch',
+    alignSelf: 'start', // 그리드 내 강제 늘어남(stretch) 방지
+    height: 'fit-content',
   },
   iframeInner: {
     width: '100%',
@@ -163,7 +157,8 @@ const styles = {
   },
   iframeContent: {
     maxWidth: '100%',
-    display: 'inline-flex',
+    width: '100%',
+    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -178,6 +173,8 @@ const styles = {
     color: '#fff',
     transition: 'transform 0.2s, border-color 0.2s',
     boxSizing: 'border-box',
+    alignSelf: 'start', // 그리드 내 강제 늘어남(stretch) 방지
+    height: 'fit-content',
   },
   imageContainer: {
     position: 'relative',
@@ -227,6 +224,8 @@ const styles = {
     color: '#fff',
     transition: 'transform 0.2s, border-color 0.2s',
     boxSizing: 'border-box',
+    alignSelf: 'start', // 그리드 내 강제 늘어남(stretch) 방지
+    height: 'fit-content',
   },
   houseBadge: {
     position: 'absolute',
@@ -243,21 +242,11 @@ const styles = {
     fontSize: '12px',
     color: '#aab4c8',
     lineHeight: '1.4',
-    margin: 0,
+    margin: '6px 0 0 0',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
-  },
-  adsensePlaceholder: {
-    width: '100%',
-    minHeight: '100px',
-    border: '1px dashed rgba(255, 255, 255, 0.15)',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
   }
 };

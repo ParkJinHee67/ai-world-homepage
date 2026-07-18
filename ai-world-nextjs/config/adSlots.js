@@ -37,7 +37,9 @@ export const adSlots = [
     type: 'house',
     title: 'TimeBox Daily Planner',
     desc: '하루 계획과 집중을 돕는 심플하고 강력한 데일리 타임박스 플래너를 무료로 체험해 보세요!',
+    description: '하루 계획과 집중을 돕는 심플하고 강력한 데일리 타임박스 플래너를 무료로 체험해 보세요!',
     imageUrl: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600&auto=format&fit=crop',
-    link: 'https://my-timebox-planner.vercel.app'
+    link: 'https://my-timebox-planner.vercel.app',
+    link_url: 'https://my-timebox-planner.vercel.app'
   }
 ];

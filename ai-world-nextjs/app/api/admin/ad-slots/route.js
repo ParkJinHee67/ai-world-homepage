@@ -67,6 +67,7 @@ export async function POST(req) {
       position: ad.position,
       type: ad.type,
       title: ad.title || null,
+      description: ad.description || ad.desc || null,
       html: ad.html || null,
       image_url: ad.image_url || null,
       link_url: ad.link_url || null,
