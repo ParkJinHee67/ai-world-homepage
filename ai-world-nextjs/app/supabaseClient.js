@@ -837,7 +837,7 @@ export const db = {
     }
   },
 
-  // 광고 슬롯 API 연동
+  // 광고 슬롯 API 연동 (서버 Route Handler 경유로 보안 극대화)
   async getAdSlots() {
     try {
       const res = await fetch('/api/admin/ad-slots', { cache: 'no-store' });

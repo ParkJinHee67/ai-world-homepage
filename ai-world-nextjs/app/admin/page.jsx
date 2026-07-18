@@ -1550,7 +1550,7 @@ def register_ai_news(title, summary_points, article_url):
                           type="password"
                           value={adminPublishKey}
                           onChange={(e) => setAdminPublishKey(e.target.value)}
-                          placeholder="발행 비밀번호(예: qkrwlsgml67!)를 입력하세요."
+                          placeholder="보안 인증을 위한 발행 비밀번호를 입력하세요."
                           className="input-field"
                           style={{ margin: 0, width: '100%', boxSizing: 'border-box' }}
                         />

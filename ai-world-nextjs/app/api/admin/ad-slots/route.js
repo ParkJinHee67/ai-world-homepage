@@ -16,10 +16,10 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseU
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const password = searchParams.get('password');
-  const correctPassword = process.env.CARDNEWS_PUBLISH_KEY || 'aimax123';
+  const correctPassword = process.env.CARDNEWS_PUBLISH_KEY;
 
-  // 관리자 인증 여부 확인
-  const isAdmin = password === correctPassword;
+  // 관리자 인증 여부 확인 (환경변수 설정이 유효할 때만 검증 통과)
+  const isAdmin = correctPassword && password === correctPassword;
 
   try {
     if (!supabaseAdmin) {
@@ -44,15 +44,15 @@ export async function GET(req) {
 
 // 2. 광고 슬롯 저장/수정 API
 export async function POST(req) {
-  const correctPassword = process.env.CARDNEWS_PUBLISH_KEY || 'aimax123';
+  const correctPassword = process.env.CARDNEWS_PUBLISH_KEY;
 
   try {
     const body = await req.json();
     const { ad, password } = body;
 
     // 관리자 비밀번호 검증
-    if (password !== correctPassword) {
-      return NextResponse.json({ error: '관리자 인증 비밀번호가 일치하지 않습니다.' }, { status: 403 });
+    if (!correctPassword || password !== correctPassword) {
+      return NextResponse.json({ error: '관리자 인증 비밀번호가 일치하지 않거나 서버 키가 설정되지 않았습니다.' }, { status: 403 });
     }
 
     if (!supabaseAdmin) {
