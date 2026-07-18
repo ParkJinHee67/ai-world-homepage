@@ -3,9 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Layers } from 'lucide-react';
+import AdSlot from '../../components/AdSlot';
+import { adSlots } from '../../config/adSlots';
 
 export default function CardNewsClient({ initialDecks = [] }) {
   const [decks, setDecks] = useState(initialDecks);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     try {
@@ -113,8 +125,20 @@ export default function CardNewsClient({ initialDecks = [] }) {
                 본 페이지는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
               </p>
             </div>
-            <div style={styles.bannerAdSlot}>
-              <span style={styles.bannerAdPlaceholder}>[쿠팡 파트너스 광고 배너 영역]</span>
+            
+            <div style={styles.adContentWrapper}>
+              {/* 1번 슬롯: 쿠팡 다이나믹 배너 */}
+              {adSlots[0] && <AdSlot ad={adSlots[0]} />}
+              
+              {/* 2, 3, 4번 슬롯: 상품 카드 및 하우스 배너 */}
+              <div style={{
+                ...styles.adGrid,
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              }}>
+                {adSlots.slice(1, 4).map((ad) => (
+                  <AdSlot key={ad.id} ad={ad} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -439,5 +463,17 @@ const styles = {
     color: '#aab4c8',
     marginBottom: '40px',
     maxWidth: '600px',
+  },
+  adContentWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+    width: '100%',
+    marginTop: '20px',
+  },
+  adGrid: {
+    display: 'grid',
+    gap: '24px',
+    width: '100%',
   }
 };
