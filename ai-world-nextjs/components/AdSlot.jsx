@@ -14,23 +14,14 @@ export default function AdSlot({ ad }) {
 
   // 1. 쿠팡 다이나믹 배너 iframe 렌더링 (설명 라벨 지원 및 반응형 축소)
   if (type === 'coupang-iframe') {
+    const isSlot1 = ad.id === 'ad-slot-1' || ad.position === 1;
+
     const wrapperStyle = {
       ...styles.iframeWrapper,
-      ...(ad.id === 'ad-slot-1' ? { gridColumn: 'span 4' } : {})
-    };
-
-    // 2, 3번 슬롯 판정
-    const isSlot2or3 = ad.position === 2 || ad.position === 3 || ad.id === 'ad-slot-2' || ad.id === 'ad-slot-3';
-
-    // 2, 3번 슬롯인 경우 고정 높이 335px을 부여하고 아래 여백을 overflow: hidden으로 잘라냄
-    const contentStyle = {
-      ...styles.iframeContent,
-      ...(isSlot2or3 ? {
-        height: '335px',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
+      ...(isSlot1 ? { 
+        gridColumn: 'span 4',
+        maxWidth: '680px', // 데스크톱에서 680px 초과하여 늘어나는 것 방지
+        margin: '0 auto',
       } : {})
     };
 
@@ -39,23 +30,35 @@ export default function AdSlot({ ad }) {
         <div style={styles.iframeInner}>
           {title && <div style={styles.adLabel}>{title}</div>}
           <div 
-            style={contentStyle}
+            style={styles.iframeContent}
             dangerouslySetInnerHTML={{ __html: html }} 
           />
         </div>
+        {/* CSS를 통해 1번 배너가 가로 100%로 찢어지거나 깨지는 버그를 원천 원복 및 차단 */}
         <style dangerouslySetInnerHTML={{ __html: `
+          /* 1번 슬롯 가로형 캐러셀 배너 */
+          iframe[width="680"] {
+            max-width: 680px !important;
+            width: 100% !important;
+            height: 140px !important;
+          }
+          /* 2번, 3번 슬롯 (원복: 강제 높이 컷팅 걷어내고 원래 비율 유지) */
+          iframe[width="492"] {
+            max-width: 492px !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1 / 1 !important;
+          }
+          iframe[width="120"] {
+            max-width: 120px !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 120 / 240 !important;
+          }
           iframe {
-            max-width: 100% !important;
             display: block !important;
             margin: 0 auto !important;
           }
-          /* 2, 3번 슬롯의 경우, 가로폭이 축소되어도 iframe 내부 레이아웃 비율이 깨지거나 
-             쇼핑하기 버튼이 잘리지 않도록 iframe 자체 높이는 원본 492px을 그대로 유지시킵니다. */
-          ${isSlot2or3 ? `
-            iframe {
-              height: 492px !important;
-            }
-          ` : ''}
         ` }} />
       </div>
     );
@@ -122,11 +125,11 @@ export default function AdSlot({ ad }) {
             style={styles.productImage}
           />
           <span style={styles.houseBadge}>자체추천</span>
-        </div>
-        <div style={styles.productInfo}>
-          <h5 style={styles.productTitle}>{title}</h5>
-          {displayDesc && <p style={styles.houseDesc}>{displayDesc}</p>}
-        </div>
+          </div>
+          <div style={styles.productInfo}>
+            <h5 style={styles.productTitle}>{title}</h5>
+            {displayDesc && <p style={styles.houseDesc}>{displayDesc}</p>}
+          </div>
       </a>
     );
   }
