@@ -1479,10 +1479,10 @@ def register_ai_news(title, summary_points, article_url):
                   <div style={styles.formGroup}>
                     <label style={styles.label}>프로젝트/사이트 URL</label>
                     <input 
-                      type="url" 
+                      type="text" 
                       value={portfolioForm.appUrl} 
                       onChange={(e) => handleUrlChange(e.target.value, 'portfolio')} 
-                      placeholder="https://example.com"
+                      placeholder="https://example.com 또는 /cardnews"
                       className="input-field"
                     />
                   </div>
