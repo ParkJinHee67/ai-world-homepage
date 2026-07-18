@@ -835,6 +835,56 @@ export const db = {
     } catch (e) {
       return { error: e };
     }
+  },
+
+  // 광고 슬롯 API 연동
+  async getAdSlots() {
+    try {
+      const res = await fetch('/api/admin/ad-slots', { cache: 'no-store' });
+      if (!res.ok) throw new Error('API 로드 실패');
+      const { data } = await res.json();
+      if (data && data.length > 0) {
+        return { data, error: null };
+      }
+      throw new Error('데이터 없음');
+    } catch (e) {
+      // 로드 실패 시 config/adSlots.js 로컬 폴백 활용
+      try {
+        const { adSlots } = require('../../config/adSlots');
+        return { data: adSlots, error: e };
+      } catch (err) {
+        return { data: null, error: err };
+      }
+    }
+  },
+
+  async getAdSlotsAdmin(password) {
+    try {
+      const res = await fetch(`/api/admin/ad-slots?password=${encodeURIComponent(password)}`, { cache: 'no-store' });
+      if (!res.ok) {
+        const errJson = await res.json();
+        throw new Error(errJson.error || '광고 전체 목록 로드 실패');
+      }
+      const { data } = await res.json();
+      return { data, error: null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async saveAdSlotAdmin(adData, password) {
+    try {
+      const res = await fetch('/api/admin/ad-slots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ad: adData, password })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || '광고 저장 실패');
+      return { data: result.data, error: null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
   }
 };
 

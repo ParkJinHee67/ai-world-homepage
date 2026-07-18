@@ -6,16 +6,32 @@ import Link from 'next/link';
 export default function AdSlot({ ad }) {
   if (!ad) return null;
 
-  const { type, html, title, price, imageUrl, link, desc } = ad;
+  const { type, html, title, price, imageUrl, link, desc, label } = ad;
 
-  // 1. 쿠팡 다이나믹 배너 iframe 렌더링
+  // 1. 쿠팡 다이나믹 배너 iframe 렌더링 (설명 라벨 지원 및 반응형 축소)
   if (type === 'coupang-iframe') {
+    const wrapperStyle = {
+      ...styles.iframeWrapper,
+      ...(ad.id === 'ad-slot-1' ? { gridColumn: 'span 4' } : {})
+    };
+
     return (
-      <div style={styles.iframeWrapper}>
-        <div 
-          style={styles.iframeContent}
-          dangerouslySetInnerHTML={{ __html: html }} 
-        />
+      <div style={wrapperStyle}>
+        <div style={styles.iframeInner}>
+          {label && <div style={styles.adLabel}>{label}</div>}
+          <div 
+            style={styles.iframeContent}
+            dangerouslySetInnerHTML={{ __html: html }} 
+          />
+        </div>
+        {/* iframe 태그에 강제 max-width: 100%를 먹여 가로 폭 안으로 유연하게 스케일 다운되도록 조치 */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          iframe {
+            max-width: 100% !important;
+            display: block !important;
+            margin: 0 auto !important;
+          }
+        ` }} />
       </div>
     );
   }
@@ -123,18 +139,33 @@ const styles = {
     backgroundColor: '#0a090f',
     border: '1px solid rgba(255, 255, 255, 0.05)',
     borderRadius: '12px',
-    padding: '16px',
+    padding: '20px 16px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     boxSizing: 'border-box',
     WebkitOverflowScrolling: 'touch',
-    gridColumn: 'span 4', // 데스크톱에서는 4칸 공간 전체를 가로형으로 차지하게 설정
+  },
+  iframeInner: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adLabel: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: '#aab4c8',
+    marginBottom: '14px',
+    textAlign: 'center',
+    letterSpacing: '0.02em',
   },
   iframeContent: {
     maxWidth: '100%',
     display: 'inline-flex',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   productCard: {
     display: 'flex',

@@ -52,6 +52,11 @@ export default function Admin() {
   const [passcodeInput, setPasscodeInput] = useState('');
   const [loginError, setLoginError] = useState('');
   
+  // Ad Slot states
+  const [adminPublishKey, setAdminPublishKey] = useState('');
+  const [adFormList, setAdFormList] = useState([]);
+  const [adFormLoading, setAdFormLoading] = useState(false);
+  
   // Dashboard navigation
   const [currentTab, setCurrentTab] = useState('portfolio'); // 'portfolio' | 'news'
   const [portfolioFilter, setPortfolioFilter] = useState('All');
@@ -592,6 +597,60 @@ export default function Admin() {
     setShowPortfolioModal(true);
   };
 
+  const handleLoadAds = async () => {
+    if (!adminPublishKey) {
+      alert('보안 비밀번호를 입력해 주세요.');
+      return;
+    }
+    setAdFormLoading(true);
+    try {
+      const { data, error } = await db.getAdSlotsAdmin(adminPublishKey);
+      if (error) throw error;
+      if (data) {
+        const populated = [1, 2, 3, 4].map(pos => {
+          const found = data.find(ad => ad.position === pos);
+          if (found) return found;
+          return { position: pos, type: 'coupang-iframe', title: '', html: '', image_url: '', link_url: '', price: '', enabled: true };
+        });
+        setAdFormList(populated);
+      }
+    } catch (err) {
+      alert(`광고 조회 실패: ${err.message}`);
+    } finally {
+      setAdFormLoading(false);
+    }
+  };
+
+  const handleSaveAd = async (position) => {
+    if (!adminPublishKey) {
+      alert('보안 비밀번호를 입력해 주세요.');
+      return;
+    }
+    const adData = adFormList.find(ad => ad.position === position);
+    if (!adData) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await db.saveAdSlotAdmin(adData, adminPublishKey);
+      if (error) throw error;
+      alert(`${position}번 광고 슬롯 저장 성공!`);
+      handleLoadAds();
+    } catch (err) {
+      alert(`광고 저장 오류: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdFieldChange = (position, field, value) => {
+    setAdFormList(prev => prev.map(ad => {
+      if (ad.position === position) {
+        return { ...ad, [field]: value };
+      }
+      return ad;
+    }));
+  };
+
   const handlePortfolioSave = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!portfolioForm.title || !portfolioForm.category) {
@@ -891,6 +950,15 @@ def register_ai_news(title, summary_points, article_url):
                     }}
                   >
                     주인공 이미지 관리
+                  </button>
+                  <button 
+                    onClick={() => setCurrentTab('ads')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'ads' ? styles.tabBtnActiveAds : {})
+                    }}
+                  >
+                    📢 광고 슬롯 관리
                   </button>
                 </div>
 
@@ -1456,6 +1524,181 @@ def register_ai_news(title, summary_points, article_url):
                         </tbody>
                       </table>
                     </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 6: Ad Slots Management Panel */}
+                {currentTab === 'ads' && (
+                  <div style={styles.leadsContainer} className="glass-panel">
+                    <div style={styles.leadsHeader}>
+                      <h2 style={styles.leadsTitle}>📢 광고 슬롯 관리 (1~4번)</h2>
+                    </div>
+                    <p style={styles.leadsSubtitle}>
+                      카드뉴스 랜딩 페이지 하단의 광고 영역을 실시간으로 관리하는 공간입니다.
+                    </p>
+
+                    {/* 보안 비밀번호 확인 패널 */}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: '240px' }}>
+                        <label style={{ ...styles.label, marginBottom: '6px', display: 'block' }}>보안 비밀번호 확인</label>
+                        <input 
+                          type="password"
+                          value={adminPublishKey}
+                          onChange={(e) => setAdminPublishKey(e.target.value)}
+                          placeholder="발행 비밀번호(예: qkrwlsgml67!)를 입력하세요."
+                          className="input-field"
+                          style={{ margin: 0, width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <button 
+                        onClick={handleLoadAds} 
+                        style={{ ...styles.exportBtn, height: '42px', marginTop: '22px' }}
+                        disabled={adFormLoading}
+                      >
+                        {adFormLoading ? '불러오는 중...' : '🔑 인증 및 데이터 불러오기'}
+                      </button>
+                    </div>
+
+                    {adFormList.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        {adFormList.map((ad) => (
+                          <div key={ad.position} style={{ padding: '20px', backgroundColor: '#0e0c15', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>
+                              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: 'var(--accent-indigo)' }}>
+                                Slot {ad.position}번 광고 설정
+                              </h4>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', marginLeft: 'auto', color: '#fff' }}>
+                                <input 
+                                  type="checkbox"
+                                  checked={ad.enabled !== false}
+                                  onChange={(e) => handleAdFieldChange(ad.position, 'enabled', e.target.checked)}
+                                />
+                                <span>노출 활성화 (on/off)</span>
+                              </label>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                              <div style={styles.formGroup}>
+                                <label style={styles.label}>광고 타입</label>
+                                <select 
+                                  value={ad.type}
+                                  onChange={(e) => handleAdFieldChange(ad.position, 'type', e.target.value)}
+                                  className="input-field"
+                                  style={{ width: '100%', background: '#1c192c', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+                                >
+                                  <option value="coupang-iframe">쿠팡 iframe 배너 (coupang-iframe)</option>
+                                  <option value="product-card">쿠팡 상품 추천 카드 (product-card)</option>
+                                  <option value="house">자체 추천 배너 (house)</option>
+                                  <option value="adsense">구글 애드센스 (adsense)</option>
+                                </select>
+                              </div>
+
+                              <div style={styles.formGroup}>
+                                <label style={styles.label}>추천 문구 / 타이틀</label>
+                                <input 
+                                  type="text"
+                                  value={ad.title || ''}
+                                  onChange={(e) => handleAdFieldChange(ad.position, 'title', e.target.value)}
+                                  placeholder="예: 유튜브 녹음 입문용 마이크 / 상품명 기입"
+                                  className="input-field"
+                                  style={{ width: '100%' }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* 조건부 입력 필드들 */}
+                            {ad.type === 'coupang-iframe' && (
+                              <div style={styles.formGroup} style={{ marginBottom: '16px' }}>
+                                <label style={styles.label}>iframe HTML 소스코드 (다중행 입력)</label>
+                                <textarea 
+                                  value={ad.html || ''}
+                                  onChange={(e) => handleAdFieldChange(ad.position, 'html', e.target.value)}
+                                  placeholder="<iframe ...></iframe> 코드를 그대로 붙여넣으세요."
+                                  className="input-field"
+                                  rows={4}
+                                  style={{ width: '100%', fontFamily: 'monospace', height: '100px', background: '#1c192c', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '10px' }}
+                                />
+                              </div>
+                            )}
+
+                            {(ad.type === 'product-card' || ad.type === 'house') && (
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                                <div style={styles.formGroup}>
+                                  <label style={styles.label}>이미지 주소 (image_url)</label>
+                                  <input 
+                                    type="text"
+                                    value={ad.image_url || ''}
+                                    onChange={(e) => handleAdFieldChange(ad.position, 'image_url', e.target.value)}
+                                    placeholder="https://images.unsplash.com/..."
+                                    className="input-field"
+                                    style={{ width: '100%' }}
+                                  />
+                                </div>
+                                <div style={styles.formGroup}>
+                                  <label style={styles.label}>이동 경로 주소 (link_url)</label>
+                                  <input 
+                                    type="text"
+                                    value={ad.link_url || ''}
+                                    onChange={(e) => handleAdFieldChange(ad.position, 'link_url', e.target.value)}
+                                    placeholder="https://... 또는 /상대경로"
+                                    className="input-field"
+                                    style={{ width: '100%' }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {ad.type === 'product-card' && (
+                              <div style={styles.formGroup} style={{ marginBottom: '16px' }}>
+                                <label style={styles.label}>가격 / 혜택 문구</label>
+                                <input 
+                                  type="text"
+                                  value={ad.price || ''}
+                                  onChange={(e) => handleAdFieldChange(ad.position, 'price', e.target.value)}
+                                  placeholder="예: 특가 139,000원 / 무료 배송"
+                                  className="input-field"
+                                  style={{ width: '100%' }}
+                                />
+                              </div>
+                            )}
+
+                            {ad.type === 'house' && (
+                              <div style={styles.formGroup} style={{ marginBottom: '16px' }}>
+                                <label style={styles.label}>서브 설명글 (desc)</label>
+                                <input 
+                                  type="text"
+                                  value={ad.desc || ''}
+                                  onChange={(e) => handleAdFieldChange(ad.position, 'desc', e.target.value)}
+                                  placeholder="배너 카드 하단에 노출될 간단한 요약 정보"
+                                  className="input-field"
+                                  style={{ width: '100%' }}
+                                />
+                              </div>
+                            )}
+
+                            {ad.type === 'adsense' && (
+                              <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px dashed rgba(255,255,255,0.1)', color: '#6b7684', fontSize: '13px', marginBottom: '16px' }}>
+                                💡 Google AdSense 타입은 AdSlot.jsx 주석 해제 후 연동 규격에 맞게 작동합니다. 현재는 플레이스홀더로 안전 대기 처리됩니다.
+                              </div>
+                            )}
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                              <button 
+                                onClick={() => handleSaveAd(ad.position)} 
+                                style={{ ...styles.exportBtn, backgroundColor: 'var(--accent-indigo)' }}
+                              >
+                                Save Slot {ad.position} 저장하기
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '40px', textAlign: 'center', color: '#6b7684', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '8px' }}>
+                        🔒 보안 비밀번호를 입력하고 [인증 및 데이터 불러오기]를 실행해 주세요.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2635,6 +2878,11 @@ const styles = {
     background: 'var(--accent-rose)',
     color: 'white',
     boxShadow: '0 4px 12px rgba(244, 63, 94, 0.15)',
+  },
+  tabBtnActiveAds: {
+    background: 'var(--accent-teal)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(20, 184, 166, 0.15)',
   },
   leadsContainer: {
     marginTop: '20px',

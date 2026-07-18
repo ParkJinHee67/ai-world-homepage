@@ -4,11 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Layers } from 'lucide-react';
 import AdSlot from '../../components/AdSlot';
-import { adSlots } from '../../config/adSlots';
+import { adSlots as localAdSlots } from '../../config/adSlots';
+import { db } from '../../supabaseClient';
 
 export default function CardNewsClient({ initialDecks = [] }) {
   const [decks, setDecks] = useState(initialDecks);
   const [isMobile, setIsMobile] = useState(false);
+  const [activeAdSlots, setActiveAdSlots] = useState([]);
+  const [adLoading, setAdLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -17,6 +20,28 @@ export default function CardNewsClient({ initialDecks = [] }) {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchAds = async () => {
+      try {
+        const { data, error } = await db.getAdSlots();
+        if (!active) return;
+        if (data && data.length > 0) {
+          const sorted = [...data].sort((a, b) => a.position - b.position);
+          setActiveAdSlots(sorted);
+        } else {
+          setActiveAdSlots(localAdSlots);
+        }
+      } catch (err) {
+        if (active) setActiveAdSlots(localAdSlots);
+      } finally {
+        if (active) setAdLoading(false);
+      }
+    };
+    fetchAds();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -126,20 +151,26 @@ export default function CardNewsClient({ initialDecks = [] }) {
               </p>
             </div>
             
-            <div style={styles.adContentWrapper}>
-              {/* 1번 슬롯: 쿠팡 다이나믹 배너 */}
-              {adSlots[0] && <AdSlot ad={adSlots[0]} />}
-              
-              {/* 2, 3, 4번 슬롯: 상품 카드 및 하우스 배너 */}
-              <div style={{
-                ...styles.adGrid,
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              }}>
-                {adSlots.slice(1, 4).map((ad) => (
-                  <AdSlot key={ad.id} ad={ad} />
-                ))}
+            {adLoading ? (
+              <div style={styles.adLoadingPlaceholder}>
+                <span>광고를 불러오는 중입니다...</span>
               </div>
-            </div>
+            ) : (
+              <div style={styles.adContentWrapper}>
+                {/* 1번 슬롯: 쿠팡 다이나믹 배너 */}
+                {activeAdSlots[0] && <AdSlot ad={activeAdSlots[0]} />}
+                
+                {/* 2, 3, 4번 슬롯: 상품 카드 및 하우스 배너 */}
+                <div style={{
+                  ...styles.adGrid,
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                }}>
+                  {activeAdSlots.slice(1, 4).map((ad) => (
+                    <AdSlot key={ad.id || ad.position} ad={ad} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -475,5 +506,18 @@ const styles = {
     display: 'grid',
     gap: '24px',
     width: '100%',
+  },
+  adLoadingPlaceholder: {
+    width: '100%',
+    height: '140px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0a090f',
+    border: '1px dashed rgba(255, 255, 255, 0.15)',
+    borderRadius: '12px',
+    color: '#6b7684',
+    fontSize: '13px',
+    marginTop: '20px',
   }
 };
