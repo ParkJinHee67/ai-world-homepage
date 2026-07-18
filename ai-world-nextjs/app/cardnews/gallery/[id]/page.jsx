@@ -5,7 +5,7 @@ import { db } from '../../../supabaseClient';
 export const revalidate = 60; // 60초 간격 ISR (Incremental Static Regeneration)
 
 export async function generateMetadata({ params }) {
-  const { id } = params;
+  const { id } = await params;
   let deck = null;
 
   try {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function DeckDetailPage({ params }) {
-  const { id } = params;
+  const { id } = await params;
   let initialDeck = null;
 
   try {
