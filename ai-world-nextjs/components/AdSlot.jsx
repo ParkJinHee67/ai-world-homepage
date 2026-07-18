@@ -6,10 +6,11 @@ import Link from 'next/link';
 export default function AdSlot({ ad }) {
   if (!ad) return null;
 
-  const { type, html, title, price, imageUrl, link_url, link, desc, description } = ad;
+  const { type, html, title, price, imageUrl, image_url, link_url, link, desc, description } = ad;
 
-  // 실제 이동용 링크 필드 결합
+  // 실제 이동용 링크 및 이미지, 설명 결합
   const targetLink = link_url || link || '#';
+  const targetImageUrl = image_url || imageUrl;
   const displayDesc = description || desc;
 
   // 1. 쿠팡 다이나믹 배너 iframe 렌더링 (설명 라벨 지원 및 반응형 축소)
@@ -72,7 +73,7 @@ export default function AdSlot({ ad }) {
       >
         <div style={styles.imageContainer}>
           <img 
-            src={imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop'} 
+            src={targetImageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop'} 
             alt={title} 
             style={styles.productImage}
           />
@@ -94,7 +95,7 @@ export default function AdSlot({ ad }) {
         <Link href={targetLink} style={styles.houseCard}>
           <div style={styles.imageContainer}>
             <img 
-              src={imageUrl || 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600&auto=format&fit=crop'} 
+              src={targetImageUrl || 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600&auto=format&fit=crop'} 
               alt={title} 
               style={styles.productImage}
             />
@@ -117,7 +118,7 @@ export default function AdSlot({ ad }) {
       >
         <div style={styles.imageContainer}>
           <img 
-            src={imageUrl || 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600&auto=format&fit=crop'} 
+            src={targetImageUrl || 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=600&auto=format&fit=crop'} 
             alt={title} 
             style={styles.productImage}
           />
