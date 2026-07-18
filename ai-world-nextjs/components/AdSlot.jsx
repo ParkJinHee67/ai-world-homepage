@@ -19,34 +19,43 @@ export default function AdSlot({ ad }) {
       ...(ad.id === 'ad-slot-1' ? { gridColumn: 'span 4' } : {})
     };
 
+    // 2, 3번 슬롯 판정
+    const isSlot2or3 = ad.position === 2 || ad.position === 3 || ad.id === 'ad-slot-2' || ad.id === 'ad-slot-3';
+
+    // 2, 3번 슬롯인 경우 고정 높이 335px을 부여하고 아래 여백을 overflow: hidden으로 잘라냄
+    const contentStyle = {
+      ...styles.iframeContent,
+      ...(isSlot2or3 ? {
+        height: '335px',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+      } : {})
+    };
+
     return (
       <div style={wrapperStyle}>
         <div style={styles.iframeInner}>
           {title && <div style={styles.adLabel}>{title}</div>}
           <div 
-            style={styles.iframeContent}
+            style={contentStyle}
             dangerouslySetInnerHTML={{ __html: html }} 
           />
         </div>
-        {/* iframe 태그에 강제 max-width: 100% 및 고유 비율(aspect-ratio)을 먹여 하단 불필요한 여백/공백을 완벽 제거 */}
         <style dangerouslySetInnerHTML={{ __html: `
-          iframe[width="492"] {
-            aspect-ratio: 1 / 1 !important;
-            height: auto !important;
-            width: 100% !important;
-            max-width: 492px !important;
-          }
-          iframe[width="120"] {
-            aspect-ratio: 120 / 240 !important;
-            height: auto !important;
-            width: 120px !important;
-            max-width: 100% !important;
-          }
           iframe {
             max-width: 100% !important;
             display: block !important;
             margin: 0 auto !important;
           }
+          /* 2, 3번 슬롯의 경우, 가로폭이 축소되어도 iframe 내부 레이아웃 비율이 깨지거나 
+             쇼핑하기 버튼이 잘리지 않도록 iframe 자체 높이는 원본 492px을 그대로 유지시킵니다. */
+          ${isSlot2or3 ? `
+            iframe {
+              height: 492px !important;
+            }
+          ` : ''}
         ` }} />
       </div>
     );
