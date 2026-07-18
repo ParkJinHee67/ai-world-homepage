@@ -24,22 +24,37 @@ export default function AdSlot({ ad }) {
       } : {})
     };
 
+    const isSlot2or3 = ad.position === 2 || ad.position === 3 || ad.id === 'ad-slot-2' || ad.id === 'ad-slot-3';
+    const contentClassName = isSlot2or3 ? 'cut-ad-content' : '';
+
     return (
       <div style={wrapperStyle}>
         <div style={styles.iframeInner}>
           {title && <div style={styles.adLabel}>{title}</div>}
           <div 
+            className={contentClassName}
             style={styles.iframeContent}
             dangerouslySetInnerHTML={{ __html: html }} 
           />
         </div>
-        {/* iframe에 width: 100%를 강제하지 않고, max-width: 100%만 주어 
-            데스크톱 넓은 화면에서 거대하게 찢어지며 깨지는 문제를 완벽 차단합니다. */}
+        {/* 미디어 쿼리를 활용해 데스크톱은 335px로 아래 흰 여백을 자르고, 모바일은 쇼핑하기 버튼이 잘리지 않게 높이를 완화 */}
         <style dangerouslySetInnerHTML={{ __html: `
           iframe {
             max-width: 100% !important;
             display: block !important;
             margin: 0 auto !important;
+          }
+          @media (min-width: 769px) {
+            .cut-ad-content {
+              height: 335px !important;
+              overflow: hidden !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .cut-ad-content {
+              height: auto !important;
+              overflow: visible !important;
+            }
           }
         ` }} />
       </div>
