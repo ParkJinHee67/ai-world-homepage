@@ -850,7 +850,7 @@ export const db = {
     } catch (e) {
       // 로드 실패 시 config/adSlots.js 로컬 폴백 활용
       try {
-        const { adSlots } = require('../../config/adSlots');
+        const { adSlots } = require('../config/adSlots');
         return { data: adSlots, error: e };
       } catch (err) {
         return { data: null, error: err };

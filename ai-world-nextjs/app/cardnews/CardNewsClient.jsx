@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Layers } from 'lucide-react';
 import AdSlot from '../../components/AdSlot';
 import { adSlots as localAdSlots } from '../../config/adSlots';
-import { db } from '../../supabaseClient';
+import { db } from '../supabaseClient';
 
 export default function CardNewsClient({ initialDecks = [] }) {
   const [decks, setDecks] = useState(initialDecks);

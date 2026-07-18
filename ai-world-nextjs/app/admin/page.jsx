@@ -1524,7 +1524,6 @@ def register_ai_news(title, summary_points, article_url):
                         </tbody>
                       </table>
                     </div>
-                    </div>
                   </div>
                 )}
 
@@ -1609,7 +1608,7 @@ def register_ai_news(title, summary_points, article_url):
 
                             {/* 조건부 입력 필드들 */}
                             {ad.type === 'coupang-iframe' && (
-                              <div style={styles.formGroup} style={{ marginBottom: '16px' }}>
+                              <div style={{ ...styles.formGroup, marginBottom: '16px' }}>
                                 <label style={styles.label}>iframe HTML 소스코드 (다중행 입력)</label>
                                 <textarea 
                                   value={ad.html || ''}
@@ -1650,7 +1649,7 @@ def register_ai_news(title, summary_points, article_url):
                             )}
 
                             {ad.type === 'product-card' && (
-                              <div style={styles.formGroup} style={{ marginBottom: '16px' }}>
+                              <div style={{ ...styles.formGroup, marginBottom: '16px' }}>
                                 <label style={styles.label}>가격 / 혜택 문구</label>
                                 <input 
                                   type="text"
@@ -1664,7 +1663,7 @@ def register_ai_news(title, summary_points, article_url):
                             )}
 
                             {ad.type === 'house' && (
-                              <div style={styles.formGroup} style={{ marginBottom: '16px' }}>
+                              <div style={{ ...styles.formGroup, marginBottom: '16px' }}>
                                 <label style={styles.label}>서브 설명글 (desc)</label>
                                 <input 
                                   type="text"
