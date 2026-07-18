@@ -28,12 +28,7 @@ export const adSlots = [
     id: 'ad-slot-1',
     type: 'coupang-iframe',
     html: `
-      <div style="width: 100%; height: 90px; background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6b7684; font-size: 12px; text-align: center; padding: 10px; box-sizing: border-box;">
-        <div>
-          [쿠팡 다이나믹 배너 iframe 코드 교체 영역]<br/>
-          <span style="font-size: 10px; color: #4b5563;">adSlots.js의 1번 슬롯 html 필드에 iframe 소스코드를 기입해 주세요.</span>
-        </div>
-      </div>
+      <iframe src="https://ads-partners.coupang.com/widgets.html?id=1008054&template=carousel&trackingCode=AF8988181&subId=&width=680&height=140&tsource=" width="680" height="140" frameborder="0" scrolling="no" referrerpolicy="unsafe-url" browsingtopics></iframe>
     `
   },
   {
