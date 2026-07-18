@@ -52,6 +52,18 @@ const defaultPortfolioItems = [
     category: 'AI Recommend',
     sort_order: 3,
     created_at: '2026-06-19'
+  },
+  {
+    id: 'p5',
+    title: '카드뉴스 자동화 도구',
+    description: '글(기사·대본·메모)을 붙여넣으면 AI가 인스타그램 카드뉴스(1080×1350 PNG 세트)를 자동으로 만들어주는 브라우저 에디터입니다.',
+    imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop',
+    appUrl: '/cardnews',
+    notionUrl: '',
+    youtubeUrl: '',
+    category: 'AI Recommend',
+    sort_order: 4,
+    created_at: '2026-07-18'
   }
 ];
 
@@ -745,6 +757,80 @@ export const db = {
       const { data } = await supabase.from('downloadable_resources').select('download_count').eq('id', id).maybeSingle();
       const currentCount = data ? (Number(data.download_count) || 0) : 0;
       const { error } = await supabase.from('downloadable_resources').update({ download_count: currentCount + 1 }).eq('id', id);
+      return { error };
+    } catch (e) {
+      return { error: e };
+    }
+  },
+
+  // CardNews Decks
+  async getCardNewsDecks(limit = 20) {
+    if (this.isMock) {
+      const decks = getMockData('mock_cardnews_decks', []);
+      return { data: decks.filter(d => d.status === 'published').sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, limit), error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('cardnews_decks')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async getCardNewsDeckById(id) {
+    if (this.isMock) {
+      const decks = getMockData('mock_cardnews_decks', []);
+      const deck = decks.find(d => d.id === id);
+      return { data: deck || null, error: deck ? null : new Error('Not found') };
+    }
+    try {
+      const { data, error } = await supabase.from('cardnews_decks')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      return { data, error };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  },
+
+  async incrementDeckViewCount(id) {
+    if (this.isMock) {
+      const decks = getMockData('mock_cardnews_decks', []);
+      const idx = decks.findIndex(d => d.id === id);
+      if (idx !== -1) {
+        decks[idx].view_count = (decks[idx].view_count || 0) + 1;
+        saveMockData('mock_cardnews_decks', decks);
+      }
+      return { error: null };
+    }
+    try {
+      const { data, error } = await supabase.rpc('increment_view_count', { deck_id: id });
+      if (error) {
+        const { data: deck } = await supabase.from('cardnews_decks').select('view_count').eq('id', id).single();
+        if (deck) {
+          await supabase.from('cardnews_decks').update({ view_count: (deck.view_count || 0) + 1 }).eq('id', id);
+        }
+      }
+      return { error: null };
+    } catch (e) {
+      return { error: e };
+    }
+  },
+
+  async deleteCardNewsDeck(id) {
+    if (this.isMock) {
+      const decks = getMockData('mock_cardnews_decks', []);
+      const filtered = decks.filter(d => d.id !== id);
+      saveMockData('mock_cardnews_decks', filtered);
+      return { error: null };
+    }
+    try {
+      const { error } = await supabase.from('cardnews_decks').delete().eq('id', id);
       return { error };
     } catch (e) {
       return { error: e };

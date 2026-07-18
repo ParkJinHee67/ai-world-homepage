@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카드뉴스 에디터 — M6</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Black+Han+Sans&display=swap">
+<style>
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+}
+:root{
+  --bg-app:#eef1f6; --panel:#ffffff; --ink:#1a2233; --muted:#6b7684; --line:#e3e7ee;
+  --accent:#2f5bff; --brandacc:#1a3fd6; --hl:#2f5bff; --glow:rgba(47,91,255,.18);
+  --card-bg:#ffffff; --card-ink:#101625; --card-sub:#5b6577;
+  --grad-a:#2f5bff; --grad-b:#6db3ff;
+  --head-font:'Pretendard',sans-serif; --body-font:'Pretendard',sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;background:var(--bg-app);color:var(--ink);height:100vh;overflow:hidden;}
+
+/* ---------- 3열 레이아웃 ---------- */
+.app{display:flex;height:100vh;}
+.filmstrip{width:168px;flex:none;background:var(--panel);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:14px 12px;gap:10px;overflow-y:auto;}
+.stage-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:28px 20px;gap:14px;overflow-y:auto;}
+.field-col{width:340px;flex:none;background:var(--panel);border-left:1px solid var(--line);
+  padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+
+h1{font-size:15px;margin:0 0 2px;letter-spacing:-.02em;}
+.tagline{font-size:11px;color:var(--muted);margin:0 0 6px;}
+.hint{font-size:11px;color:var(--muted);line-height:1.5;}
+.status{font-size:12px;color:var(--muted);min-height:16px;}
+
+/* filmstrip */
+.fs-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.thumb{width:100%;aspect-ratio:1080/1350;border-radius:8px;overflow:hidden;position:relative;
+  border:2px solid transparent;cursor:grab;box-shadow:0 1px 4px rgba(20,30,60,.12);background:#000;}
+.thumb.active{border-color:var(--accent);}
+.thumb .thumb-scaler{width:1080px;height:1350px;transform:scale(0.1111);transform-origin:top left;pointer-events:none;}
+.thumb-badge{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;
+  padding:1px 5px;border-radius:4px;font-weight:700;z-index:2;}
+.thumb-del{position:absolute;right:4px;top:4px;background:rgba(220,40,50,.85);color:#fff;font-size:10px;
+  width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:2;line-height:1;}
+.thumb.dragover{outline:2px dashed var(--accent);outline-offset:2px;}
+.add-slide{width:100%;border:1.5px dashed var(--line);border-radius:8px;padding:10px;
+  background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;}
+.add-slide:hover{border-color:var(--accent);color:var(--accent);}
+
+/* stage */
+.stage-frame{width:400px;height:500px;border-radius:12px;overflow:hidden;
+  box-shadow:0 8px 30px rgba(20,30,60,.15);position:relative;background:#000;flex:none;}
+.stage-scaler{width:1080px;height:1350px;transform:scale(0.37037);transform-origin:top left;}
+.deck-actions{display:flex;gap:8px;width:400px;}
+
+button{cursor:pointer;border:none;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12.5px;font-weight:600;}
+.btn-primary{background:linear-gradient(135deg,var(--grad-a),var(--grad-b));color:#fff;}
+.btn-primary:hover{filter:brightness(1.05);}
+.btn-secondary{background:#f1f3f8;color:var(--ink);}
+.btn-secondary:hover{background:#e6e9f2;}
+.btn-danger{background:#fdeceb;color:#c22a2a;}
+.btn-danger:hover{background:#fbdbd9;}
+
+/* field panel */
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-group label{font-size:12px;font-weight:600;color:var(--muted);}
+.field-group textarea,.field-group input[type=text]{
+  width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;
+  font-family:inherit;font-size:13px;resize:vertical;min-height:38px;color:var(--ink);}
+select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);
+  font-family:inherit;font-size:13px;background:#fff;}
+.accent-row{display:flex;align-items:center;gap:10px;}
+.accent-row input[type=color]{width:40px;height:34px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;}
+.divider{height:1px;background:var(--line);margin:2px 0;}
+input[type=file]{font-size:11px;width:100%;}
+
+/* palette swatches */
+.swatches{display:flex;flex-wrap:wrap;gap:8px;}
+.swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid #fff;
+  box-shadow:0 0 0 1px var(--line);}
+.swatch.selected{box-shadow:0 0 0 2px var(--ink);}
+
+/* photo upload zone */
+.photo-zone{border:1.5px dashed var(--line);border-radius:10px;padding:12px;display:flex;
+  flex-direction:column;gap:8px;align-items:center;text-align:center;}
+.photo-zone img{max-width:100%;border-radius:8px;max-height:120px;object-fit:cover;}
+.photo-zone .zone-hint{font-size:11px;color:var(--muted);}
+.style-badge{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--accent);
+  padding:2px 8px;border-radius:999px;margin-left:6px;}
+
+/* ---------- 카드 공통 (스타일 변수 기반) ---------- */
+.card{width:1080px;height:1350px;position:relative;overflow:hidden;background:var(--card-bg);
+  color:var(--card-ink);font-family:var(--body-font);display:flex;flex-direction:column;}
+.card .hl{color:var(--hl);font-weight:800;} .card b{font-weight:800;}
+.pad{padding:80px 76px;flex:1;display:flex;flex-direction:column;position:relative;z-index:1;}
+.chip{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:10px 22px;border-radius:999px;
+  font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--grad-a),var(--grad-b));color:#fff;letter-spacing:-.01em;}
+.gradbar{height:14px;width:100%;background:linear-gradient(90deg,var(--grad-a),var(--grad-b));position:relative;z-index:1;}
+
+/* 사진 배경 + 가독성 스크림 */
+.card.has-photo{background-size:cover;background-position:center;}
+.card.has-photo::before{content:'';position:absolute;inset:0;z-index:0;
+  background:linear-gradient(180deg, rgba(0,0,0,.30) 0%, rgba(0,0,0,.05) 28%, rgba(0,0,0,var(--scrim-a,0.85)) 100%);}
+.card.has-photo .card-cover .title, .card.has-photo .title,
+.card.has-photo .sub, .card.has-photo .head, .card.has-photo .desc,
+.card.has-photo .tag, .card.has-photo .idx{ color:#fff; }
+.card.needs-photo:not(.has-photo){display:flex;align-items:center;justify-content:center;}
+.card.needs-photo:not(.has-photo) .pad{background:linear-gradient(160deg,var(--grad-a),var(--grad-b));
+  align-items:center;justify-content:center;text-align:center;}
+.card.needs-photo:not(.has-photo) .photo-placeholder-note{display:block;}
+.photo-placeholder-note{display:none;font-size:22px;color:rgba(255,255,255,.85);font-weight:600;
+  border:2px dashed rgba(255,255,255,.5);border-radius:16px;padding:24px 32px;}
+
+/* cover */
+.card-cover .pad{justify-content:center;gap:28px;}
+.card-cover .title{font-family:var(--head-font);font-size:76px;font-weight:800;line-height:1.22;letter-spacing:-.03em;color:var(--card-ink);}
+.card-cover .sub{font-size:32px;font-weight:500;color:var(--card-sub);line-height:1.5;}
+.card-cover .corner{position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,var(--grad-b),var(--grad-a));opacity:.15;z-index:0;}
+
+/* content */
+.card-content .pad{justify-content:flex-start;gap:22px;}
+.card-content .top-row{display:flex;align-items:center;justify-content:space-between;}
+.card-content .tag{font-size:26px;font-weight:700;color:var(--accent);}
+.card-content .idx{font-size:24px;font-weight:600;color:var(--card-sub);}
+.card-content .num{font-size:150px;font-weight:800;line-height:1;-webkit-text-stroke:2px var(--accent);color:transparent;}
+.card-content .head{font-family:var(--head-font);font-size:56px;font-weight:800;line-height:1.28;letter-spacing:-.02em;margin-top:4px;}
+.card-content .desc{font-size:30px;line-height:1.6;color:var(--card-sub);margin-top:6px;}
+
+/* quote */
+.card-quote{background:linear-gradient(160deg,var(--grad-a),var(--grad-b));color:#fff;}
+.card-quote .pad{justify-content:center;align-items:flex-start;gap:36px;}
+.card-quote .mark{font-size:120px;font-weight:800;line-height:.6;opacity:.5;}
+.card-quote .quote{font-family:var(--head-font);font-size:52px;font-weight:700;line-height:1.5;letter-spacing:-.02em;}
+.card-quote .by{font-size:28px;font-weight:500;opacity:.85;}
+
+/* table */
+.card-table .pad{justify-content:flex-start;gap:30px;}
+.card-table .title{font-family:var(--head-font);font-size:50px;font-weight:800;letter-spacing:-.02em;}
+.card-table table{width:100%;border-collapse:collapse;font-size:26px;}
+.card-table th{background:var(--accent);color:#fff;padding:18px 16px;text-align:left;font-weight:700;}
+.card-table th:first-child{border-radius:12px 0 0 0;} .card-table th:last-child{border-radius:0 12px 0 0;}
+.card-table td{padding:18px 16px;border-bottom:1px solid var(--line,#e3e7ee);}
+.card-table tr:nth-child(even) td{background:rgba(0,0,0,.03);}
+
+/* closing */
+.card-closing{background:linear-gradient(170deg,#101625,#1a2740);color:#fff;}
+.card-closing .pad{justify-content:center;align-items:center;text-align:center;gap:22px;}
+.card-closing .head{font-family:var(--head-font);font-size:58px;font-weight:800;line-height:1.3;letter-spacing:-.02em;}
+.card-closing .desc{font-size:28px;line-height:1.6;color:#c3cbe0;}
+.card-closing .ctas{display:flex;gap:16px;margin-top:12px;}
+.card-closing .cta{padding:20px 36px;border-radius:14px;font-size:28px;font-weight:700;}
+.card-closing .cta.cta1{background:linear-gradient(135deg,var(--grad-a),var(--grad-b));color:#fff;}
+.card-closing .cta.cta2{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);}
+.card-closing .hint{font-size:22px;color:#8b96b3;margin-top:18px;}
+
+/* ============ 스타일 정체성별 오버라이드 ============ */
+/* mag — 매거진 형광: 깃발형 라벨 + 노랑 형광펜 강조 */
+.card.style-mag .chip{ clip-path:polygon(0 0,100% 0,92% 50%,100% 100%,0 100%); border-radius:0;
+  background:#ffe400; color:#111; }
+.card.style-mag .hl{ background:#ffe400; color:#111; padding:0 6px; border-radius:3px; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.card.style-mag .card-content .tag{ background:#ffe400; color:#111; padding:4px 12px; border-radius:0 8px 0 8px; }
+
+/* manga — 만화 오버레이: 세로바 라벨 + 텍스트 섀도 */
+.card.style-manga .chip{ border-radius:0; border-left:10px solid #fff; background:rgba(0,0,0,.55); clip-path:none; }
+.card.style-manga .title, .card.style-manga .head, .card.style-manga .quote{
+  text-shadow:3px 3px 0 rgba(0,0,0,.55); }
+.card.style-manga .card-content .num{ -webkit-text-stroke:2px var(--accent); }
+
+/* pixel — 픽셀 인포: 청키 배지 + Black Han Sans 헤드라인 */
+.card.style-pixel .chip{ border:4px solid var(--card-ink); border-radius:10px; box-shadow:5px 5px 0 var(--card-ink);
+  background:var(--accent); }
+.card.style-pixel .card-content .tag{ border:3px solid var(--accent); padding:2px 10px; border-radius:6px; }
+.card.style-pixel .cta1{ border:3px solid #fff; box-shadow:4px 4px 0 rgba(255,255,255,.4); }
+
+/* doodle — 손글씨: 비정형 라운드 + 파스텔 */
+.card.style-doodle{ border-radius:48px 64px 40px 72px/64px 40px 72px 48px; }
+.card.style-doodle .chip{ border-radius:40px 12px 40px 12px; border:3px solid var(--card-ink); background:transparent; color:var(--card-ink); }
+.card.style-doodle .card-quote{ background:linear-gradient(160deg,var(--grad-a),var(--grad-b)); }
+.card.style-doodle .cta{ border-radius:40px 12px 40px 12px; }
+
+/* cine — 시네마틱: 미니멀 다크 (변수만으로 대부분 표현, 라벨은 얇게) */
+.card.style-cine .chip{ background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.4); backdrop-filter:blur(2px); }
+.card.style-cine .card-content .tag{ letter-spacing:.08em; text-transform:uppercase; font-size:22px; }
+
+#exportStage{position:fixed;left:-4000px;top:0;width:1080px;height:1350px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="filmstrip" id="filmstrip">
+    <div class="fs-title">슬라이드</div>
+    <div id="thumbList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="add-slide" id="addSlideBtn">＋ 카드 추가</button>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;">
+      <div id="capsBadges" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+      <button class="btn-secondary" id="keySettingsBtn" style="font-size:11px;">⚙ API 키 설정</button>
+    </div>
+  </aside>
+
+  <main class="stage-col">
+    <div>
+      <h1>📇 카드뉴스 에디터 — M6 <span class="style-badge" id="styleBadge"></span></h1>
+      <p class="tagline">글 → AI 변환 · 6종 스타일 · localStorage 자동저장</p>
+    </div>
+    <button class="btn-primary" id="openConvertBtn" style="align-self:flex-start;">✨ 글로 카드 만들기</button>
+    <div id="convertPanel" style="display:none;width:400px;flex-direction:column;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;">
+      <label style="font-size:12px;font-weight:600;color:var(--muted);">글 전체 붙여넣기</label>
+      <textarea id="convertText" rows="10" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" id="aiConvertBtn" style="flex:1;">✨ AI로 변환</button>
+        <button class="btn-secondary" id="quickConvertBtn">빠른변환</button>
+        <button class="btn-secondary" id="closeConvertBtn">닫기</button>
+      </div>
+      <p class="hint" id="convertStatus"></p>
+    </div>
+    <div class="stage-frame">
+      <div class="stage-scaler"><div class="card" id="previewCard"></div></div>
+    </div>
+    <div class="deck-actions">
+      <button class="btn-primary" id="publishBtn" style="flex:1.2; background:linear-gradient(135deg, #818cf8, #6366f1);">🚀 발행</button>
+      <button class="btn-primary" id="exportZipBtn" style="flex:1;">⬇ 전체 ZIP</button>
+      <button class="btn-secondary" id="exportJsonBtn">💾 JSON</button>
+      <label class="btn-secondary" style="display:flex;align-items:center;justify-content:center;">📂
+        <input type="file" id="importJsonInput" accept="application/json" style="display:none;">
+      </label>
+      <button class="btn-danger" id="resetBtn">🗑 초기화</button>
+    </div>
+    <p class="status" id="statusMsg"></p>
+  </main>
+
+  <aside class="field-col">
+    <div class="field-group">
+      <label>스타일 정체성</label>
+      <select id="styleSelect"></select>
+      <p class="hint" id="styleDesc"></p>
+    </div>
+
+    <div class="field-group">
+      <label>포인트 색</label>
+      <div class="swatches" id="swatchRow"></div>
+      <div class="accent-row">
+        <input type="color" id="accentPicker">
+        <span class="hint" id="accentHex" style="margin:0;"></span>
+      </div>
+    </div>
+
+    <div id="photoZoneHost"></div>
+
+    <div class="divider"></div>
+    <div class="field-group">
+      <label>이 카드 타입</label>
+      <select id="typeSelect"></select>
+    </div>
+    <div id="fieldsHost" style="display:flex;flex-direction:column;gap:14px;"></div>
+    <div class="divider"></div>
+    <p class="hint">편집 문법 — <b>Enter</b>: 줄바꿈 · <b>*단어*</b>: 포인트색 강조 · <b>**단어**</b>: 굵게</p>
+  </aside>
+</div>
+<div id="exportStage"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ============ 스타일 정체성 6종 ============ */
+const STYLE_PRESETS = {
+  cine:   { label:'시네마틱', desc:'다크 전면 · 블루 포인트 · 사진 배경 필수', needsPhoto:true, scrimBot:88, pool:['assets/pool/cine/1.svg','assets/pool/cine/2.svg','assets/pool/cine/3.svg','assets/pool/cine/4.svg'], headFont:"'Pretendard',sans-serif", bodyFont:"'Pretendard',sans-serif",
+    vars:{ accent:'#4d8dff', cardBg:'#0c0f16', cardInk:'#f3f5fa', cardSub:'#aab4c8', gradB:'#8fc0ff' } },
+  mag:    { label:'매거진 형광', desc:'깃발형 라벨 · 노랑 형광펜 강조 · 백지 본문 · 사진 배경', needsPhoto:true, scrimBot:70, pool:['assets/pool/mag/1.svg','assets/pool/mag/2.svg','assets/pool/mag/3.svg','assets/pool/mag/4.svg'], headFont:"'Pretendard',sans-serif", bodyFont:"'Pretendard',sans-serif",
+    vars:{ accent:'#111111', cardBg:'#ffffff', cardInk:'#111111', cardSub:'#555555', gradB:'#fff58a' } },
+  manga:  { label:'만화 오버레이', desc:'세로바 라벨 · 텍스트 섀도 · 일러스트 배경', needsPhoto:true, scrimBot:80, pool:['assets/pool/manga/1.svg','assets/pool/manga/2.svg','assets/pool/manga/3.svg','assets/pool/manga/4.svg'], headFont:"'Pretendard',sans-serif", bodyFont:"'Pretendard',sans-serif",
+    vars:{ accent:'#ff3b3b', cardBg:'#111111', cardInk:'#ffffff', cardSub:'#e5e5e5', gradB:'#ff9142' } },
+  pixel:  { label:'픽셀 인포', desc:'Black Han Sans 헤드라인 · 청키 배지 · 주황 포인트', needsPhoto:false, headFont:"'Black Han Sans',sans-serif", bodyFont:"'Pretendard',sans-serif",
+    vars:{ accent:'#ff7a1a', cardBg:'#fff7ef', cardInk:'#231a12', cardSub:'#7a6a58', gradB:'#ffc45c' } },
+  doodle: { label:'도들(손글씨)', desc:'Gaegu 폰트 전면 · 비정형 라운드 테두리 · 파스텔 핑크', needsPhoto:false, headFont:"'Gaegu',cursive", bodyFont:"'Gaegu',cursive",
+    vars:{ accent:'#ff6fa5', cardBg:'#fff0f5', cardInk:'#3a2a33', cardSub:'#8a6b78', gradB:'#ffd4e5' } },
+  blue:   { label:'화이트 & 블루', desc:'블루 그라데이션 · 사진 미사용', needsPhoto:false, headFont:"'Pretendard',sans-serif", bodyFont:"'Pretendard',sans-serif",
+    vars:{ accent:'#2f5bff', cardBg:'#ffffff', cardInk:'#101625', cardSub:'#5b6577', gradB:'#6db3ff' } },
+};
+const PALETTE_11 = ['#2f5bff','#ff3b3b','#ff7a1a','#ffb703','#2ec4b6','#06a77d','#8338ec','#ff6fa5','#111111','#5b6577','#0ea5e9'];
+
+/* ============ 카드 타입 스키마 & 샘플 ============ */
+const CARD_SCHEMAS = {
+  cover: { label:'표지', fields:[
+      {k:'badge',label:'배지',type:'text'},{k:'title',label:'제목',type:'textarea'},{k:'sub',label:'부제',type:'textarea'}],
+    sample:{badge:'AI 카드뉴스 자동화',title:'글만 붙여넣으면\n*8장*의 카드뉴스가 완성됩니다',sub:'요약부터 배경까지, 로컬에서 한 번에'} },
+  content: { label:'본문/단계', fields:[
+      {k:'idx',label:'순번',type:'text'},{k:'total',label:'전체',type:'text'},{k:'tag',label:'태그',type:'text'},
+      {k:'num',label:'큰 번호',type:'text'},{k:'head',label:'헤드라인',type:'textarea'},{k:'desc',label:'본문',type:'textarea'}],
+    sample:{idx:'01',total:'06',tag:'핵심 원칙',num:'01',head:'텍스트는 *HTML*, 이미지는 배경',
+      desc:'한글 텍스트를 AI 이미지에 굽지 않아 **선명도와 수정 가능성**을 항상 보장합니다.'} },
+  quote: { label:'인용', fields:[{k:'quote',label:'인용문',type:'textarea'},{k:'by',label:'출처',type:'text'}],
+    sample:{quote:'디자이너 없이도, *5분* 안에 완성되는 카드뉴스',by:'— 카드뉴스 에디터 M3'} },
+  table: { label:'비교표', fields:[{k:'title',label:'표 제목',type:'text'},{k:'rows',label:'행 (항목 | 전통 | AI)',type:'textarea'}],
+    sample:{title:'제작 방식 비교',rows:'항목 | 전통 | AI\n소요 시간 | 1~2시간 | 5분\n필요 툴 | 포토샵/캔바 | 브라우저\n한글 텍스트 | 이미지 합성 | HTML 오버레이'} },
+  closing: { label:'마무리 CTA', fields:[
+      {k:'head',label:'헤드라인',type:'textarea'},{k:'desc',label:'본문',type:'textarea'},
+      {k:'cta1',label:'버튼1',type:'text'},{k:'cta2',label:'버튼2',type:'text'},{k:'hint',label:'힌트',type:'text'}],
+    sample:{head:'지금 바로\n*카드뉴스*를 만들어보세요',desc:'글 하나만 있으면 됩니다. 나머지는 자동입니다.',
+      cta1:'AI 커뮤니티 참여',cta2:'댓글 AIMAX',hint:'설치 없이 URL 접속만으로 시작하세요'} },
+};
+
+const STORAGE_KEY = 'cardnews-editor-v3';
+
+function defaultDeck(){
+  return {
+    handle: 'draft-' + Date.now().toString(36),
+    preset: 'blue',
+    accent: STYLE_PRESETS.blue.vars.accent,
+    activeIdx: 0,
+    slides: [
+      { type:'cover',   f:{...CARD_SCHEMAS.cover.sample},   bgByStyle:{} },
+      { type:'content', f:{...CARD_SCHEMAS.content.sample}, bgByStyle:{} },
+      { type:'closing', f:{...CARD_SCHEMAS.closing.sample}, bgByStyle:{} },
+    ]
+  };
+}
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultDeck();
+    const parsed = JSON.parse(raw);
+    if(!parsed.slides || !parsed.slides.length) return defaultDeck();
+    if(typeof parsed.activeIdx !== 'number') parsed.activeIdx = 0;
+    if(!parsed.preset || !STYLE_PRESETS[parsed.preset]) parsed.preset = 'blue';
+    parsed.slides.forEach(s => { if(!s.bgByStyle) s.bgByStyle = {}; });
+    return parsed;
+  }catch(e){ return defaultDeck(); }
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+/* ============ 텍스트 포맷터 (XSS 안전) ============ */
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(raw){
+  let s = esc(raw);
+  s = s.replace(/\n/g,'<br>');
+  s = s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  s = s.replace(/\*(.+?)\*/g,'<span class="hl">$1</span>');
+  return s;
+}
+
+/* ============ 카드 렌더러 ============ */
+function cardInnerHTML(type, f){
+  switch(type){
+    case 'cover': return `<div class="corner"></div><div class="pad">
+        <span class="chip">${esc(f.badge||'')}</span>
+        <div class="title">${fmt(f.title)}</div>
+        <div class="sub">${fmt(f.sub)}</div>
+        <div class="photo-placeholder-note">📷 배경 사진을 업로드하면 이 자리에 표시됩니다</div>
+      </div>`;
+    case 'content': return `<div class="gradbar"></div><div class="pad">
+        <div class="top-row"><span class="tag">${esc(f.tag||'')}</span><span class="idx">${esc(f.idx||'')} / ${esc(f.total||'')}</span></div>
+        <div class="num">${esc(f.num||'')}</div>
+        <div class="head js-head">${fmt(f.head)}</div>
+        <div class="desc js-body">${fmt(f.desc)}</div>
+      </div>`;
+    case 'quote': return `<div class="pad">
+        <div class="mark">"</div>
+        <div class="quote js-head">${fmt(f.quote)}</div>
+        <div class="by">${fmt(f.by)}</div>
+      </div>`;
+    case 'table': {
+      const lines = (f.rows||'').split('\n').map(l=>l.split('|').map(c=>c.trim())).filter(r=>r.length>1);
+      const [header, ...body] = lines;
+      const headHTML = header ? `<tr>${header.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>` : '';
+      const bodyHTML = body.map(r=>`<tr>${r.map(c=>`<td>${fmt(c)}</td>`).join('')}</tr>`).join('');
+      return `<div class="pad">
+          <div class="title js-head">${esc(f.title||'')}</div>
+          <table>${headHTML}${bodyHTML}</table>
+        </div>`;
+    }
+    case 'closing': return `<div class="pad">
+        <div class="head js-head">${fmt(f.head)}</div>
+        <div class="desc js-body">${fmt(f.desc)}</div>
+        <div class="ctas"><span class="cta cta1">${esc(f.cta1||'')}</span><span class="cta cta2">${esc(f.cta2||'')}</span></div>
+        <div class="hint">${esc(f.hint||'')}</div>
+      </div>`;
+    default: return `<div class="pad">알 수 없는 카드 타입</div>`;
+  }
+}
+
+function renderCardHTML(type, f, styleKey, bgUrl, scrimVal){
+  const preset = STYLE_PRESETS[styleKey] || STYLE_PRESETS.blue;
+  const classes = ['card', `card-${type}`, `style-${styleKey}`];
+  const styleDecls = [];
+  if (preset.needsPhoto){
+    classes.push('needs-photo');
+    if (bgUrl){
+      classes.push('has-photo');
+      const scrim = (typeof scrimVal === 'number' ? scrimVal : preset.scrimBot) / 100;
+      styleDecls.push(`background-image:url('${bgUrl}')`, `--scrim-a:${scrim}`);
+    }
+  }
+  const styleAttr = styleDecls.length ? ` style="${styleDecls.join(';')}"` : '';
+  return `<div class="${classes.join(' ')}"${styleAttr}>${cardInnerHTML(type, f)}</div>`;
+}
+
+/* ============ fit() — 오버플로 자동 축소 ============ */
+function fitCard(cardEl){
+  const headEl = cardEl.querySelector('.js-head');
+  const bodyEls = cardEl.querySelectorAll('.js-body');
+  let headSize = headEl ? parseFloat(getComputedStyle(headEl).fontSize) : null;
+  let bodySize = bodyEls.length ? parseFloat(getComputedStyle(bodyEls[0]).fontSize) : null;
+  let guard = 0;
+  while (cardEl.scrollHeight > cardEl.clientHeight && guard < 60) {
+    guard++;
+    let shrunk = false;
+    if (headSize !== null && headSize > 40){ headSize = Math.max(40, headSize-3); headEl.style.fontSize = headSize+'px'; shrunk = true; }
+    if (bodySize !== null && bodySize > 23){ bodySize = Math.max(23, bodySize-2); bodyEls.forEach(b=>b.style.fontSize=bodySize+'px'); shrunk = true; }
+    if (!shrunk) break;
+  }
+}
+
+/* ============ 색상 유틸 ============ */
+function hexToRgb(hex){ const m = hex.replace('#','').match(/.{1,2}/g).map(x=>parseInt(x,16)); return {r:m[0],g:m[1],b:m[2]}; }
+function rgbToHex(r,g,b){ return '#' + [r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+function shade(hex, percent){
+  const {r,g,b} = hexToRgb(hex); const t = percent < 0 ? 0 : 255; const p = Math.abs(percent)/100;
+  return rgbToHex(r+(t-r)*p, g+(t-g)*p, b+(t-b)*p);
+}
+function applyAccent(hex){
+  const root = document.documentElement.style;
+  const {r,g,b} = hexToRgb(hex);
+  root.setProperty('--accent', hex);
+  root.setProperty('--brandacc', shade(hex, -20));
+  root.setProperty('--hl', hex);
+  root.setProperty('--glow', `rgba(${r},${g},${b},.18)`);
+  root.setProperty('--grad-a', hex);
+}
+
+/* ============ 스타일 적용 ============ */
+function applyStyleVars(){
+  const preset = STYLE_PRESETS[state.preset];
+  const root = document.documentElement.style;
+  root.setProperty('--card-bg', preset.vars.cardBg);
+  root.setProperty('--card-ink', preset.vars.cardInk);
+  root.setProperty('--card-sub', preset.vars.cardSub);
+  root.setProperty('--grad-b', preset.vars.gradB);
+  root.setProperty('--head-font', preset.headFont);
+  root.setProperty('--body-font', preset.bodyFont);
+  applyAccent(state.accent);
+  document.getElementById('styleBadge').textContent = preset.label;
+  document.getElementById('styleDesc').textContent = preset.desc;
+}
+
+/* ============ 렌더: 스테이지 ============ */
+function currentBg(slide){ return slide.bgByStyle ? slide.bgByStyle[state.preset] : null; }
+
+function renderStage(){
+  const slide = state.slides[state.activeIdx];
+  const host = document.getElementById('previewCard');
+  const html = renderCardHTML(slide.type, slide.f, state.preset, currentBg(slide), slide.scrim).trim();
+  host.outerHTML = html.replace(/^<div class="card/, '<div id="previewCard" class="card');
+  const fresh = document.getElementById('previewCard');
+  requestAnimationFrame(() => fitCard(fresh));
+}
+
+/* ============ 렌더: 필름스트립 ============ */
+function renderFilmstrip(){
+  const list = document.getElementById('thumbList');
+  list.innerHTML = state.slides.map((slide, i) => `
+    <div class="thumb ${i===state.activeIdx?'active':''}" draggable="true" data-idx="${i}">
+      <span class="thumb-badge">${i+1}. ${CARD_SCHEMAS[slide.type]?.label || slide.type}</span>
+      <span class="thumb-del" data-del="${i}" title="삭제">✕</span>
+      <div class="thumb-scaler">${renderCardHTML(slide.type, slide.f, state.preset, currentBg(slide), slide.scrim)}</div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.thumb').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('[data-del]')) return;
+      state.activeIdx = parseInt(el.dataset.idx);
+      onStateChanged({ skipFilmstrip:true });
+    });
+    el.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', el.dataset.idx); });
+    el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('dragover'); });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', (e) => {
+      e.preventDefault(); el.classList.remove('dragover');
+      const from = parseInt(e.dataTransfer.getData('text/plain'));
+      const to = parseInt(el.dataset.idx);
+      if (from === to || isNaN(from)) return;
+      const [moved] = state.slides.splice(from, 1);
+      state.slides.splice(to, 0, moved);
+      state.activeIdx = to;
+      onStateChanged();
+    });
+  });
+
+  list.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (state.slides.length <= 1){ alert('최소 1장은 있어야 합니다.'); return; }
+      const idx = parseInt(el.dataset.del);
+      if (!confirm(`${idx+1}번 카드를 삭제할까요?`)) return;
+      state.slides.splice(idx, 1);
+      if (state.activeIdx >= state.slides.length) state.activeIdx = state.slides.length - 1;
+      onStateChanged();
+    });
+  });
+}
+
+/* ============ 렌더: 스타일/팔레트/배경 UI ============ */
+function buildStyleSelect(){
+  const sel = document.getElementById('styleSelect');
+  sel.innerHTML = Object.entries(STYLE_PRESETS).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+  sel.value = state.preset;
+  sel.addEventListener('change', () => {
+    state.preset = sel.value;
+    state.accent = STYLE_PRESETS[state.preset].vars.accent;
+    onStateChanged();
+  });
+}
+function buildSwatches(){
+  const row = document.getElementById('swatchRow');
+  row.innerHTML = PALETTE_11.map(c => `<span class="swatch" data-c="${c}" style="background:${c}"></span>`).join('');
+  row.querySelectorAll('.swatch').forEach(el => {
+    el.addEventListener('click', () => {
+      state.accent = el.dataset.c;
+      onStateChanged();
+    });
+  });
+}
+function renderPhotoZone(){
+  const host = document.getElementById('photoZoneHost');
+  const preset = STYLE_PRESETS[state.preset];
+  if (!preset.needsPhoto){ host.innerHTML = ''; return; }
+  const slide = state.slides[state.activeIdx];
+  const bg = currentBg(slide);
+  const scrimVal = typeof slide.scrim === 'number' ? slide.scrim : preset.scrimBot;
+
+  host.innerHTML = `
+    <div class="field-group">
+      <label>이 카드의 배경 사진 (${preset.label} 전용, 스타일별로 따로 저장됨)</label>
+      <div class="photo-zone">
+        ${bg ? `<img src="${bg}">` : `<span class="zone-hint">아직 배경 사진이 없습니다 — 업로드 전까지는 그라데이션 플레이스홀더가 보입니다</span>`}
+        <div style="display:flex;gap:6px;width:100%;">
+          <button class="btn-secondary" id="shuffleOneBtn" type="button" style="flex:1;">🎲 이 카드</button>
+          <button class="btn-secondary" id="shuffleAllBtn" type="button" style="flex:1;">🎲 전체</button>
+        </div>
+        <input type="file" id="bgUploadInput" accept="image/*">
+        ${bg ? `<button class="btn-secondary" id="bgRemoveBtn" type="button">배경 제거</button>` : ''}
+      </div>
+      ${bg ? `
+      <label style="margin-top:4px;">배경 하단 어둡기 (가독성 스크림 ${scrimVal}%)</label>
+      <input type="range" id="scrimSlider" min="0" max="100" value="${scrimVal}">` : ''}
+    </div>
+
+    <div class="field-group">
+      <label>무료 사진 검색 (Pexels/Openverse)</label>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="imgSearchInput" placeholder="예: coffee morning" style="flex:1;">
+        <button class="btn-secondary" id="imgSearchBtn" type="button">검색</button>
+      </div>
+      <div id="imgSearchResults" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
+      <p class="hint" id="imgSearchStatus"></p>
+    </div>
+
+    <div class="field-group">
+      <label>AI 배경 생성 (Gemini 또는 OpenAI 키 필요)</label>
+      <textarea id="imgGenPrompt" rows="2" placeholder="예: a foggy mountain village at dawn, no text">${esc(slide.bgPrompt || '')}</textarea>
+      <button class="btn-primary" id="imgGenBtn" type="button">✨ AI로 배경 생성</button>
+      <p class="hint" id="imgGenStatus"></p>
+    </div>
+  `;
+
+  document.getElementById('bgUploadInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const dataUrl = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    state.slides[state.activeIdx].bgByStyle[state.preset] = dataUrl;
+    onStateChanged();
+  });
+  const rmBtn = document.getElementById('bgRemoveBtn');
+  if (rmBtn) rmBtn.addEventListener('click', () => {
+    delete state.slides[state.activeIdx].bgByStyle[state.preset];
+    onStateChanged();
+  });
+
+  document.getElementById('shuffleOneBtn').addEventListener('click', () => {
+    shuffleSlideBg(state.slides[state.activeIdx]);
+    onStateChanged();
+  });
+  document.getElementById('shuffleAllBtn').addEventListener('click', () => {
+    state.slides.forEach(shuffleSlideBg);
+    onStateChanged();
+  });
+
+  const scrimSlider = document.getElementById('scrimSlider');
+  if (scrimSlider) scrimSlider.addEventListener('input', () => {
+    state.slides[state.activeIdx].scrim = parseInt(scrimSlider.value, 10);
+    saveState();
+    renderStage();
+    renderFilmstrip();
+  });
+
+  document.getElementById('imgSearchBtn').addEventListener('click', () => runImgSearch());
+  document.getElementById('imgSearchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') runImgSearch(); });
+
+  document.getElementById('imgGenBtn').addEventListener('click', () => runImgGen());
+}
+
+function shuffleSlideBg(slide){
+  const preset = STYLE_PRESETS[state.preset];
+  if (!preset.needsPhoto || !preset.pool || !preset.pool.length) return;
+  const pick = preset.pool[Math.floor(Math.random() * preset.pool.length)];
+  slide.bgByStyle[state.preset] = pick;
+}
+
+async function runImgSearch(){
+  const q = document.getElementById('imgSearchInput').value.trim();
+  const statusEl = document.getElementById('imgSearchStatus');
+  const resultsEl = document.getElementById('imgSearchResults');
+  if (!q) { statusEl.textContent = '검색어를 입력하세요.'; return; }
+  statusEl.textContent = '검색 중...';
+  resultsEl.innerHTML = '';
+  try {
+    const res = await fetch(`/api/cardnews/img-search?q=${encodeURIComponent(q)}`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `검색 실패 (${res.status})`);
+    if (!data.results || !data.results.length) { statusEl.textContent = '결과가 없습니다.'; return; }
+    statusEl.textContent = `${data.source} 검색 결과 ${data.results.length}건`;
+    resultsEl.innerHTML = data.results.slice(0, 12).map((r, i) =>
+      `<img src="${r.thumb}" data-url="${r.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer;">`
+    ).join('');
+    resultsEl.querySelectorAll('img').forEach(img => {
+      img.addEventListener('click', () => {
+        const proxied = `/api/cardnews/img?url=${encodeURIComponent(img.dataset.url)}`;
+        state.slides[state.activeIdx].bgByStyle[state.preset] = proxied;
+        onStateChanged();
+      });
+    });
+  } catch (err) {
+    statusEl.textContent = '⚠️ ' + err.message + ' — 설정에서 API 키를 확인해주세요.';
+  }
+}
+
+async function runImgGen(){
+  const prompt = document.getElementById('imgGenPrompt').value.trim();
+  const statusEl = document.getElementById('imgGenStatus');
+  const btn = document.getElementById('imgGenBtn');
+  if (!prompt) { statusEl.textContent = '장면 설명을 입력하세요.'; return; }
+  btn.disabled = true;
+  statusEl.textContent = '생성 중... (수 초~1분 소요될 수 있어요)';
+  try {
+    const res = await fetch('/api/cardnews/img-gen', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `생성 실패 (${res.status})`);
+    state.slides[state.activeIdx].bgByStyle[state.preset] = data.path;
+    state.slides[state.activeIdx].bgPrompt = prompt;
+    onStateChanged();
+    statusEl.textContent = `✅ ${data.provider}로 생성 완료`;
+  } catch (err) {
+    statusEl.textContent = '⚠️ ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ============ 렌더: 필드 패널 ============ */
+function buildTypeSelect(){
+  const sel = document.getElementById('typeSelect');
+  sel.innerHTML = Object.entries(CARD_SCHEMAS).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+}
+function renderFieldPanel(){
+  const slide = state.slides[state.activeIdx];
+  document.getElementById('typeSelect').value = slide.type;
+
+  const host = document.getElementById('fieldsHost');
+  const schema = CARD_SCHEMAS[slide.type];
+  host.innerHTML = schema.fields.map(fld => `
+    <div class="field-group">
+      <label>${fld.label}</label>
+      ${fld.type === 'textarea'
+        ? `<textarea data-key="${fld.k}" rows="3">${slide.f[fld.k] ?? ''}</textarea>`
+        : `<input type="text" data-key="${fld.k}" value="${(slide.f[fld.k] ?? '').toString().replace(/"/g,'&quot;')}">`}
+    </div>`).join('');
+
+  host.querySelectorAll('[data-key]').forEach(el => {
+    el.addEventListener('input', () => {
+      state.slides[state.activeIdx].f[el.dataset.key] = el.value;
+      onStateChanged({ skipFieldPanel:true, skipPhotoZone:true });
+    });
+  });
+}
+
+/* ============ 통합 상태 변경 핸들러 ============ */
+function onStateChanged(opts = {}){
+  saveState();
+  applyStyleVars();
+  renderStage();
+  if (!opts.skipFilmstrip) renderFilmstrip();
+  if (!opts.skipFieldPanel) renderFieldPanel();
+  if (!opts.skipPhotoZone) renderPhotoZone();
+  document.getElementById('accentPicker').value = state.accent;
+  document.getElementById('accentHex').textContent = state.accent;
+  document.querySelectorAll('.swatch').forEach(sw => sw.classList.toggle('selected', sw.dataset.c.toLowerCase() === state.accent.toLowerCase()));
+  document.getElementById('styleSelect').value = state.preset;
+  document.getElementById('statusMsg').textContent = '자동 저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+}
+
+/* ============ 이벤트 바인딩 ============ */
+document.getElementById('typeSelect').addEventListener('change', (e) => {
+  const newType = e.target.value;
+  state.slides[state.activeIdx] = { type:newType, f:{...CARD_SCHEMAS[newType].sample}, bgByStyle:{} };
+  onStateChanged();
+});
+
+document.getElementById('addSlideBtn').addEventListener('click', () => {
+  state.slides.push({ type:'content', f:{...CARD_SCHEMAS.content.sample}, bgByStyle:{} });
+  state.activeIdx = state.slides.length - 1;
+  onStateChanged();
+});
+
+const accentPicker = document.getElementById('accentPicker');
+accentPicker.addEventListener('input', () => {
+  state.accent = accentPicker.value;
+  onStateChanged();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('모든 슬라이드와 저장된 상태를 초기화할까요? 되돌릴 수 없습니다.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = defaultDeck();
+  bootUI();
+});
+
+/* ---- JSON 내보내기/불러오기 ---- */
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${state.handle || 'deck'}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  document.getElementById('statusMsg').textContent = '✅ JSON 내보내기 완료';
+});
+
+document.getElementById('importJsonInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if (!parsed.slides || !Array.isArray(parsed.slides) || !parsed.slides.length) throw new Error('slides 배열이 없습니다.');
+    parsed.activeIdx = 0;
+    if (!parsed.preset || !STYLE_PRESETS[parsed.preset]) parsed.preset = 'blue';
+    parsed.slides.forEach(s => { if(!s.bgByStyle) s.bgByStyle = {}; });
+    state = parsed;
+    bootUI();
+    document.getElementById('statusMsg').textContent = '✅ JSON 불러오기 완료';
+  } catch (err) {
+    alert('불러오기 실패: ' + err.message);
+  } finally {
+    e.target.value = '';
+  }
+});
+
+/* ---- 전체 ZIP 내보내기 ---- */
+async function exportZIP(){
+  const statusEl = document.getElementById('statusMsg');
+  const btn = document.getElementById('exportZipBtn');
+  btn.disabled = true;
+  try {
+    await document.fonts.ready;
+    const zip = new JSZip();
+    const exportStage = document.getElementById('exportStage');
+
+    for (let i = 0; i < state.slides.length; i++){
+      statusEl.textContent = `캡처 중... (${i+1}/${state.slides.length})`;
+      const slide = state.slides[i];
+      exportStage.innerHTML = renderCardHTML(slide.type, slide.f, state.preset, currentBg(slide), slide.scrim);
+      const cardEl = exportStage.querySelector('.card');
+      fitCard(cardEl);
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const canvas = await html2canvas(cardEl, { width:1080, height:1350, scale:1, useCORS:true, backgroundColor:'#ffffff' });
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const num = String(i+1).padStart(2,'0');
+      zip.file(`${num}.png`, blob);
+    }
+
+    statusEl.textContent = '압축 중...';
+    const zipBlob = await zip.generateAsync({ type:'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${state.handle || 'deck'}.zip`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = `✅ ZIP 내보내기 완료 (${state.slides.length}장)`;
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = '⚠️ ZIP 내보내기 실패: ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+document.getElementById('exportZipBtn').addEventListener('click', exportZIP);
+
+/* ============ API 키 설정 & 기능 감지 ============ */
+function getAuthHeaders() {
+  return {
+    'x-user-anthropic-key': localStorage.getItem('cn-key-anthropic') || '',
+    'x-user-gemini-key': localStorage.getItem('cn-key-gemini') || '',
+    'x-user-openai-key': localStorage.getItem('cn-key-openai') || '',
+    'x-user-pexels-key': localStorage.getItem('cn-key-pexels') || '',
+  };
+}
+
+let CAPS = { anthropic: false, gemini: false, openai: false, pexels: false };
+async function refreshCaps(){
+  CAPS = {
+    anthropic: !!localStorage.getItem('cn-key-anthropic'),
+    gemini: !!localStorage.getItem('cn-key-gemini'),
+    openai: !!localStorage.getItem('cn-key-openai'),
+    pexels: !!localStorage.getItem('cn-key-pexels')
+  };
+  renderCapsBadges();
+}
+
+function renderCapsBadges(){
+  const host = document.getElementById('capsBadges');
+  if (!host) return;
+  const items = [
+    ['anthropic', 'Anthropic'], ['gemini', 'Gemini'], ['openai', 'OpenAI'], ['pexels', 'Pexels'],
+  ];
+  host.innerHTML = items.map(([k, label]) => {
+    const ok = !!CAPS[k];
+    return `<span title="${label}" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;
+      background:${ok ? '#e6f9ee' : '#f4f4f6'};color:${ok ? '#0a9d5c' : '#9aa2af'};">${ok ? '✅' : '⭘'} ${label}</span>`;
+  }).join('');
+}
+
+// 모달 및 설정 로직 바인딩
+const modal = document.getElementById('keySettingsModal');
+document.getElementById('keySettingsBtn').addEventListener('click', () => {
+  document.getElementById('keyAnthropic').value = localStorage.getItem('cn-key-anthropic') || '';
+  document.getElementById('keyGemini').value = localStorage.getItem('cn-key-gemini') || '';
+  document.getElementById('keyOpenAI').value = localStorage.getItem('cn-key-openai') || '';
+  document.getElementById('keyPexels').value = localStorage.getItem('cn-key-pexels') || '';
+  
+  const modelChoice = localStorage.getItem('cn-model-choice') || 'haiku';
+  document.querySelectorAll('input[name="modelChoice"]').forEach(r => {
+    r.checked = r.value === modelChoice;
+  });
+  
+  modal.style.display = 'flex';
+});
+
+function saveModalKeys() {
+  localStorage.setItem('cn-key-anthropic', document.getElementById('keyAnthropic').value.trim());
+  localStorage.setItem('cn-key-gemini', document.getElementById('keyGemini').value.trim());
+  localStorage.setItem('cn-key-openai', document.getElementById('keyOpenAI').value.trim());
+  localStorage.setItem('cn-key-pexels', document.getElementById('keyPexels').value.trim());
+  
+  const selectedModel = document.querySelector('input[name="modelChoice"]:checked')?.value || 'haiku';
+  localStorage.setItem('cn-model-choice', selectedModel);
+  
+  refreshCaps();
+}
+
+document.getElementById('closeKeyModalBtn').addEventListener('click', () => {
+  saveModalKeys();
+  modal.style.display = 'none';
+});
+document.getElementById('closeKeyModalSaveBtn').addEventListener('click', () => {
+  saveModalKeys();
+  modal.style.display = 'none';
+});
+
+async function testKey(vendor, inputId, statusId) {
+  const key = document.getElementById(inputId).value.trim();
+  const statusEl = document.getElementById(statusId);
+  if (!key) { statusEl.textContent = '⚠️ 키를 입력하세요.'; statusEl.style.color = '#ef4444'; return; }
+  
+  statusEl.textContent = '검증 중...';
+  statusEl.style.color = '#6b7684';
+  try {
+    const res = await fetch('/api/cardnews/validate-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendor, key })
+    });
+    const data = await res.json();
+    if (data.valid) {
+      statusEl.textContent = '✅ 유효한 키입니다.';
+      statusEl.style.color = '#10b981';
+    } else {
+      statusEl.textContent = '⚠️ ' + (data.message || '인증 실패');
+      statusEl.style.color = '#ef4444';
+    }
+  } catch (err) {
+    statusEl.textContent = '⚠️ 검증 서버 에러: ' + err.message;
+    statusEl.style.color = '#ef4444';
+  }
+}
+
+document.getElementById('checkAnthropicBtn').addEventListener('click', () => testKey('anthropic', 'keyAnthropic', 'statusAnthropic'));
+document.getElementById('checkGeminiBtn').addEventListener('click', () => testKey('gemini', 'keyGemini', 'statusGemini'));
+document.getElementById('checkOpenAIBtn').addEventListener('click', () => testKey('openai', 'keyOpenAI', 'statusOpenAI'));
+document.getElementById('checkPexelsBtn').addEventListener('click', () => testKey('pexels', 'keyPexels', 'statusPexels'));
+
+/* ============ 카드뉴스 갤러리 발행 ============ */
+const pubModal = document.getElementById('publishModal');
+document.getElementById('publishBtn').addEventListener('click', () => {
+  const coverSlide = state.slides.find(s => s.type === 'cover');
+  const defaultTitle = coverSlide ? (coverSlide.f.title || '').replace(/\*/g, '').replace(/\n/g, ' ') : '';
+  document.getElementById('pubTitle').value = defaultTitle;
+  document.getElementById('pubDesc').value = '';
+  document.getElementById('pubPassword').value = '';
+  document.getElementById('pubStatus').textContent = '';
+  document.getElementById('pubStatus').style.color = 'var(--muted)';
+  pubModal.style.display = 'flex';
+});
+
+document.getElementById('closePublishModalBtn').addEventListener('click', () => { pubModal.style.display = 'none'; });
+document.getElementById('cancelPublishBtn').addEventListener('click', () => { pubModal.style.display = 'none'; });
+
+document.getElementById('confirmPublishBtn').addEventListener('click', async () => {
+  const title = document.getElementById('pubTitle').value.trim();
+  const description = document.getElementById('pubDesc').value.trim();
+  const password = document.getElementById('pubPassword').value.trim();
+  const statusEl = document.getElementById('pubStatus');
+  const confirmBtn = document.getElementById('confirmPublishBtn');
+
+  if (!title) { statusEl.textContent = '⚠️ 제목을 입력해주세요.'; statusEl.style.color = '#ef4444'; return; }
+  if (!password) { statusEl.textContent = '⚠️ 발행 비밀번호를 입력해주세요.'; statusEl.style.color = '#ef4444'; return; }
+
+  confirmBtn.disabled = true;
+  statusEl.style.color = '#6366f1';
+  statusEl.textContent = '발행 준비 중...';
+
+  try {
+    await document.fonts.ready;
+    const deckId = 'deck-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now().toString(36);
+    const imageUrls = [];
+    const exportStage = document.getElementById('exportStage');
+
+    for (let i = 0; i < state.slides.length; i++) {
+      statusEl.textContent = `카드 캡처 및 업로드 중... (${i+1}/${state.slides.length})`;
+      const slide = state.slides[i];
+      let bgUrl = currentBg(slide);
+
+      exportStage.innerHTML = renderCardHTML(slide.type, slide.f, state.preset, bgUrl, slide.scrim);
+      const cardEl = exportStage.querySelector('.card');
+      fitCard(cardEl);
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(cardEl, { width: 1080, height: 1350, scale: 1, useCORS: true, backgroundColor: '#ffffff' });
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/webp', 0.8));
+
+      const formData = new FormData();
+      formData.append('action', 'upload_image');
+      formData.append('password', password);
+      formData.append('deckId', deckId);
+      formData.append('index', i);
+      formData.append('file', blob, `${i}.webp`);
+
+      const res = await fetch('/api/cardnews/publish', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `업로드 실패 (카드 ${i+1})`);
+      imageUrls.push(data.url);
+    }
+
+    statusEl.textContent = '갤러리에 정보 등록 중...';
+    const metadataRes = await fetch('/api/cardnews/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create_deck',
+        password,
+        deckId,
+        title,
+        description,
+        style: state.preset,
+        cardCount: state.slides.length,
+        coverUrl: imageUrls[0],
+        imageUrls
+      })
+    });
+
+    const metadataData = await metadataRes.json();
+    if (!metadataRes.ok) throw new Error(metadataData.error || '메타데이터 등록 실패');
+
+    // Mock 환경(어드민 연결이 없을 때) 대응을 위한 로컬 스토리지 보완 기록
+    const isMockResponse = metadataData.deck && !metadataData.deck.created_at;
+    if (isMockResponse) {
+      const mockDecks = JSON.parse(localStorage.getItem('mock_cardnews_decks') || '[]');
+      const newDeck = {
+        id: deckId,
+        title,
+        description,
+        style: state.preset,
+        card_count: state.slides.length,
+        cover_url: imageUrls[0],
+        image_urls: imageUrls,
+        status: 'published',
+        view_count: 0,
+        created_at: new Date().toISOString()
+      };
+      mockDecks.push(newDeck);
+      localStorage.setItem('mock_cardnews_decks', JSON.stringify(mockDecks));
+    }
+
+    statusEl.style.color = '#10b981';
+    statusEl.innerHTML = `🎉 발행 완료!<br>잠시 후 갤러리로 이동합니다.`;
+
+    setTimeout(() => {
+      window.top.location.href = `/cardnews/gallery/${deckId}`;
+    }, 2500);
+
+  } catch (err) {
+    statusEl.textContent = '⚠️ 발행 에러: ' + err.message;
+    statusEl.style.color = '#ef4444';
+  } finally {
+    confirmBtn.disabled = false;
+  }
+});
+
+/* ============ AI 변환 / 빠른변환 (글 → 덱) ============ */
+document.getElementById('openConvertBtn').addEventListener('click', () => {
+  document.getElementById('convertPanel').style.display = 'flex';
+});
+document.getElementById('closeConvertBtn').addEventListener('click', () => {
+  document.getElementById('convertPanel').style.display = 'none';
+});
+
+function sentenceClip(text, maxLen=90){
+  text = (text||'').trim();
+  if (text.length <= maxLen) return text;
+  const cut = text.slice(0, maxLen);
+  const cutPoints = ['. ', '다. ', '요. ', '다.', '요.'].map(m => cut.lastIndexOf(m)).filter(i => i > 20);
+  const last = cutPoints.length ? Math.max(...cutPoints) : -1;
+  return (last > -1 ? cut.slice(0, last+1) : cut) + (last > -1 ? '' : '…');
+}
+
+/* ---- 빠른변환(오프라인 폴백): AI 없이 규칙 기반 파서 ---- */
+function quickConvertToSlides(text){
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length);
+  if (!lines.length) throw new Error('붙여넣은 내용이 비어있습니다.');
+
+  const title = lines[0];
+  const rest = lines.slice(1);
+
+  const tableLines = [];
+  const bodyLines = [];
+  rest.forEach(l => {
+    if ((l.match(/\|/g) || []).length >= 2) tableLines.push(l);
+    else bodyLines.push(l);
+  });
+
+  const sections = [];
+  let current = null;
+  bodyLines.forEach(l => {
+    const headMatch = l.match(/^#{1,3}\s*(.+)/) || l.match(/^\d+[\.\)]\s*(.+)/);
+    if (headMatch) {
+      if (current) sections.push(current);
+      current = { head: headMatch[1], desc: [] };
+    } else if (current) {
+      current.desc.push(l);
+    } else {
+      current = { head: null, desc: [l] };
+    }
+  });
+  if (current) sections.push(current);
+
+  const slides = [];
+  slides.push({ type:'cover', f:{ badge:'요약 카드뉴스', title, sub:'' }, bgByStyle:{} });
+
+  let stepSections = sections;
+  if (sections.length && !sections[0].head) {
+    const intro = sections[0];
+    slides.push({ type:'content', f:{ idx:'', total:'', tag:'들어가며', num:'', head:'', desc: sentenceClip(intro.desc.join(' ')) }, bgByStyle:{} });
+    stepSections = sections.slice(1);
+  }
+
+  const total = String(stepSections.length || 1).padStart(2,'0');
+  stepSections.forEach((s, i) => {
+    const idx = String(i+1).padStart(2,'0');
+    slides.push({ type:'content', f:{ idx, total, tag:`STEP ${idx}`, num: idx, head: s.head || '', desc: sentenceClip(s.desc.join(' ')) }, bgByStyle:{} });
+  });
+
+  if (tableLines.length >= 2) {
+    const rows = tableLines.map(l => l.split('|').map(c=>c.trim()).filter(Boolean).join(' | ')).join('\n');
+    slides.push({ type:'table', f:{ title:'요약 비교', rows }, bgByStyle:{} });
+  }
+
+  slides.push({ type:'closing', f:{ head:'지금 바로\n*확인*해보세요', desc:'',
+    cta1:'AI 커뮤니티 참여', cta2:'댓글 AIMAX', hint:'' }, bgByStyle:{} });
+
+  return slides;
+}
+
+/* ---- 고정 CTA 강제 (AI가 다르게 내놓아도 항상 동일하게 고정) ---- */
+function enforceClosingCTA(slides){
+  const last = slides[slides.length - 1];
+  if (last && last.type === 'closing') {
+    last.f.cta1 = 'AI 커뮤니티 참여';
+    last.f.cta2 = '댓글 AIMAX';
+  }
+  return slides;
+}
+
+function applyConvertedSlides(rawSlides){
+  const slides = rawSlides.map(s => ({ type:s.type, f:{...s.f}, bgByStyle:{}, bgPrompt: s.bg || null }));
+  enforceClosingCTA(slides);
+  state.slides = slides;
+  state.activeIdx = 0;
+  document.getElementById('convertPanel').style.display = 'none';
+  document.getElementById('convertText').value = '';
+  onStateChanged();
+}
+
+/* ---- AI 변환 직후 자동 배경: ①즉시 풀 셔플 → ②생성 수단 있으면 표지/인용/마무리 순차 교체 ---- */
+async function autoBackgroundAfterConvert(){
+  const preset = STYLE_PRESETS[state.preset];
+  if (!preset.needsPhoto) return; // 사진 스타일에서만 동작
+
+  // ① 즉시 풀 셔플로 고정 기본값 탈출
+  state.slides.forEach(shuffleSlideBg);
+  onStateChanged();
+
+  // ② 생성 수단 감지되면 표지·인용·마무리를 주제 맞춤 배경으로 순차 교체
+  await refreshCaps();
+  const hasGenMeans = CAPS.gemini || CAPS.openai;
+  if (!hasGenMeans) return;
+
+  const statusEl = document.getElementById('statusMsg');
+  const targets = state.slides.filter(s => ['cover','quote','closing'].includes(s.type) && s.bgPrompt);
+  for (let i = 0; i < targets.length; i++){
+    const slide = targets[i];
+    statusEl.textContent = `배경 자동 생성 중... (${i+1}/${targets.length})`;
+    try {
+      const res = await fetch('/api/cardnews/img-gen', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ prompt: slide.bgPrompt })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '생성 실패');
+      slide.bgByStyle[state.preset] = data.path;
+      onStateChanged({ skipFieldPanel:true });
+    } catch (e) {
+      console.warn('자동 배경 생성 실패, 셔플 상태 유지:', e.message); // 그레이스풀 디그레이드
+    }
+  }
+  statusEl.textContent = `✅ 자동 배경 적용 완료`;
+}
+
+document.getElementById('quickConvertBtn').addEventListener('click', () => {
+  const statusEl = document.getElementById('convertStatus');
+  try {
+    const text = document.getElementById('convertText').value;
+    const slides = quickConvertToSlides(text);
+    applyConvertedSlides(slides);
+    statusEl.textContent = `✅ 빠른변환 완료 (${slides.length}장, AI 미사용)`;
+  } catch (err) {
+    statusEl.textContent = '⚠️ ' + err.message;
+  }
+});
+
+document.getElementById('aiConvertBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('convertStatus');
+  const btn = document.getElementById('aiConvertBtn');
+  const text = document.getElementById('convertText').value;
+  if (!text.trim()) { statusEl.textContent = '⚠️ 붙여넣은 글이 비어있습니다.'; return; }
+
+  btn.disabled = true;
+  statusEl.textContent = 'AI 변환 중입니다... (20~40초 정도 걸려요)';
+  try {
+    const modelChoice = localStorage.getItem('cn-model-choice') || 'haiku';
+    const res = await fetch('/api/cardnews/convert', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ text, model: modelChoice })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `서버 오류 (${res.status})`);
+    if (!data.slides || !Array.isArray(data.slides) || !data.slides.length) throw new Error('변환 결과에 slides가 없습니다.');
+    applyConvertedSlides(data.slides);
+    statusEl.textContent = `✅ AI 변환 완료 (${data.slides.length}장)`;
+    autoBackgroundAfterConvert();
+  } catch (err) {
+    statusEl.textContent = '⚠️ AI 변환 실패: ' + err.message + ' — 설정에서 Anthropic API 키를 확인해주세요. (서버 없이는 "빠른변환"만 가능합니다)';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============ 부팅 ============ */
+function bootUI(){
+  buildStyleSelect();
+  buildSwatches();
+  buildTypeSelect();
+  applyStyleVars();
+  renderFilmstrip();
+  renderStage();
+  renderFieldPanel();
+  renderPhotoZone();
+  accentPicker.value = state.accent;
+  document.getElementById('accentHex').textContent = state.accent;
+  document.querySelectorAll('.swatch').forEach(sw => sw.classList.toggle('selected', sw.dataset.c.toLowerCase() === state.accent.toLowerCase()));
+  document.getElementById('statusMsg').textContent = '';
+  renderCapsBadges();
+}
+bootUI();
+refreshCaps();
+</script>
+
+<!-- API Key 설정 모달 마크업 -->
+<div id="keySettingsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#ffffff; color:#1a2233; width:100%; max-width:480px; border-radius:14px; box-shadow:0 10px 40px rgba(0,0,0,0.25); display:flex; flex-direction:column; overflow:hidden; font-family:'Pretendard', sans-serif;">
+    <div style="padding:18px 20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+      <h3 style="margin:0; font-size:15px; font-weight:700;">⚙ API 키 설정</h3>
+      <span id="closeKeyModalBtn" style="cursor:pointer; font-size:18px; font-weight:700; color:#9aa2af;">✕</span>
+    </div>
+    <div style="padding:20px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; max-height:calc(100vh - 120px);">
+      <p class="hint" style="margin:0 0 4px; line-height:1.5;">입력하신 API 키는 브라우저 로컬(localStorage)에만 안전하게 저장되며, 요청 헤더를 통해 해당 AI 서비스로 직접 전송됩니다. 서버 측에는 일절 저장되지 않습니다.</p>
+      
+      <div class="field-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <label style="font-size:12px; font-weight:600;">Anthropic API 키 (AI 요약 변환용)</label>
+          <a href="https://console.anthropic.com/" target="_blank" style="font-size:11px; color:#2f5bff; text-decoration:underline;">발급 ➜</a>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="keyAnthropic" placeholder="sk-ant-..." style="flex:1; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px;">
+          <button class="btn-secondary" id="checkAnthropicBtn" style="padding:6px 12px; font-size:11px; width:60px;">검사</button>
+        </div>
+        <span id="statusAnthropic" style="font-size:11px; color:var(--muted);"></span>
+      </div>
+
+      <div class="field-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <label style="font-size:12px; font-weight:600;">Gemini API 키 (AI 배경 생성용)</label>
+          <a href="https://aistudio.google.com/" target="_blank" style="font-size:11px; color:#2f5bff; text-decoration:underline;">발급 ➜</a>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="keyGemini" placeholder="AIzaSy..." style="flex:1; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px;">
+          <button class="btn-secondary" id="checkGeminiBtn" style="padding:6px 12px; font-size:11px; width:60px;">검사</button>
+        </div>
+        <span id="statusGemini" style="font-size:11px; color:var(--muted);"></span>
+      </div>
+
+      <div class="field-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <label style="font-size:12px; font-weight:600;">OpenAI API 키 (AI 배경 생성용)</label>
+          <a href="https://platform.openai.com/" target="_blank" style="font-size:11px; color:#2f5bff; text-decoration:underline;">발급 ➜</a>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="keyOpenAI" placeholder="sk-proj-..." style="flex:1; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px;">
+          <button class="btn-secondary" id="checkOpenAIBtn" style="padding:6px 12px; font-size:11px; width:60px;">검사</button>
+        </div>
+        <span id="statusOpenAI" style="font-size:11px; color:var(--muted);"></span>
+      </div>
+
+      <div class="field-group">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <label style="font-size:12px; font-weight:600;">Pexels API 키 (고화질 사진 검색용)</label>
+          <a href="https://www.pexels.com/api/" target="_blank" style="font-size:11px; color:#2f5bff; text-decoration:underline;">발급 ➜</a>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="keyPexels" placeholder="Pexels API Key" style="flex:1; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px;">
+          <button class="btn-secondary" id="checkPexelsBtn" style="padding:6px 12px; font-size:11px; width:60px;">검사</button>
+        </div>
+        <span id="statusPexels" style="font-size:11px; color:var(--muted);"></span>
+      </div>
+
+      <div class="field-group" style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--line); display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:12px; font-weight:700; display:block;">AI 변환 모델 설정</label>
+        <div style="display:flex; gap:16px; align-items:center;">
+          <label style="font-size:12px; font-weight:500; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="radio" name="modelChoice" value="haiku" checked> Haiku (claude-haiku-4-5)
+          </label>
+          <label style="font-size:12px; font-weight:500; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="radio" name="modelChoice" value="sonnet"> Sonnet (claude-sonnet-4-6)
+          </label>
+        </div>
+        <p class="hint" style="margin:4px 0 0; font-size:10px; line-height:1.4;">
+          * Haiku: 매우 신속한 변환, 회당 예상 비용 약 30원<br>
+          * Sonnet: 디테일하고 정교한 요약, 회당 예상 비용 약 100원
+        </p>
+      </div>
+    </div>
+    <div style="padding:16px 20px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px; background:#f8fafc;">
+      <button class="btn-secondary" id="closeKeyModalSaveBtn" style="font-size:12px; padding:8px 16px;">닫기 및 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 발행 모달 마크업 -->
+<div id="publishModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#ffffff; color:#1a2233; width:100%; max-width:440px; border-radius:14px; box-shadow:0 10px 40px rgba(0,0,0,0.25); display:flex; flex-direction:column; overflow:hidden; font-family:'Pretendard', sans-serif;">
+    <div style="padding:18px 20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+      <h3 style="margin:0; font-size:15px; font-weight:700;">🚀 카드뉴스 갤러리 발행</h3>
+      <span id="closePublishModalBtn" style="cursor:pointer; font-size:18px; font-weight:700; color:#9aa2af;">✕</span>
+    </div>
+    <div style="padding:20px; display:flex; flex-direction:column; gap:14px;">
+      <p class="hint" style="margin:0 0 4px; line-height:1.5;">완성하신 카드뉴스를 AI월드 갤러리에 발행하여 다른 방문자들과 공유합니다.</p>
+      
+      <div class="field-group">
+        <label style="font-size:12px; font-weight:600;">카드뉴스 제목 <span style="color:#ef4444;">*</span></label>
+        <input type="text" id="pubTitle" placeholder="예: 초지능 AI 아키텍처 공식 발표 요약" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px; background:#fff; color:#1a2233;">
+      </div>
+
+      <div class="field-group">
+        <label style="font-size:12px; font-weight:600;">한 줄 소개 (선택)</label>
+        <textarea id="pubDesc" rows="2" placeholder="이 카드뉴스에 대한 가벼운 설명을 적어주세요." style="width:100%; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px; resize:none; background:#fff; color:#1a2233;"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label style="font-size:12px; font-weight:600;">발행 비밀번호 <span style="color:#ef4444;">*</span></label>
+        <input type="password" id="pubPassword" placeholder="발행 승인 비밀번호 입력" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:8px; font-size:12px; background:#fff; color:#1a2233;">
+      </div>
+
+      <div id="pubStatus" style="font-size:12px; color:var(--muted); min-height:16px; line-height:1.5; margin-top:4px;"></div>
+    </div>
+    <div style="padding:16px 20px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px; background:#f8fafc;">
+      <button class="btn-secondary" id="cancelPublishBtn" style="font-size:12px; padding:8px 16px;">취소</button>
+      <button class="btn-primary" id="confirmPublishBtn" style="font-size:12px; padding:8px 16px; background:linear-gradient(135deg, #6366f1, #4f46e5);">발행하기</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
