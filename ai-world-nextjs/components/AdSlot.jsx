@@ -20,7 +20,6 @@ export default function AdSlot({ ad }) {
       ...styles.iframeWrapper,
       ...(isSlot1 ? { 
         gridColumn: 'span 4',
-        maxWidth: '680px', // 데스크톱에서 680px 초과하여 늘어나는 것 방지
         margin: '0 auto',
       } : {})
     };
@@ -34,28 +33,11 @@ export default function AdSlot({ ad }) {
             dangerouslySetInnerHTML={{ __html: html }} 
           />
         </div>
-        {/* CSS를 통해 1번 배너가 가로 100%로 찢어지거나 깨지는 버그를 원천 원복 및 차단 */}
+        {/* iframe에 width: 100%를 강제하지 않고, max-width: 100%만 주어 
+            데스크톱 넓은 화면에서 거대하게 찢어지며 깨지는 문제를 완벽 차단합니다. */}
         <style dangerouslySetInnerHTML={{ __html: `
-          /* 1번 슬롯 가로형 캐러셀 배너 */
-          iframe[width="680"] {
-            max-width: 680px !important;
-            width: 100% !important;
-            height: 140px !important;
-          }
-          /* 2번, 3번 슬롯 (원복: 강제 높이 컷팅 걷어내고 원래 비율 유지) */
-          iframe[width="492"] {
-            max-width: 492px !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 1 / 1 !important;
-          }
-          iframe[width="120"] {
-            max-width: 120px !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 120 / 240 !important;
-          }
           iframe {
+            max-width: 100% !important;
             display: block !important;
             margin: 0 auto !important;
           }
@@ -169,7 +151,6 @@ const styles = {
   },
   iframeContent: {
     maxWidth: '100%',
-    width: '100%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
