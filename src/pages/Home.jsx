@@ -487,7 +487,7 @@ export default function Home() {
         .channel('site-stats-changes')
         .on(
           'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'site_stats' },
+          { event: '*', schema: 'public', table: 'site_stats' },
           (payload) => {
             const updatedRow = payload.new;
             if (updatedRow && updatedRow.key) {

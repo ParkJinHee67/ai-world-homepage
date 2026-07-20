@@ -447,8 +447,32 @@ export const db = {
       return { data: stats, error: null };
     }
     try {
-      const { data, error } = await supabase.rpc('increment_stat', { stat_key: key });
-      return { data, error };
+      // Check if key exists
+      const { data: existingData, error: checkError } = await supabase
+        .from('site_stats')
+        .select('key')
+        .eq('key', key);
+        
+      if (checkError) {
+        console.error('Error checking stat key:', checkError);
+      }
+
+      if (!existingData || existingData.length === 0) {
+        // Key does not exist, insert it
+        const { data, error } = await supabase
+          .from('site_stats')
+          .insert({ key, value: 1 })
+          .select();
+        if (error) {
+          // If insert fails (concurrency), fallback to RPC
+          return await supabase.rpc('increment_stat', { stat_key: key });
+        }
+        return { data, error };
+      } else {
+        // Key exists, increment using RPC
+        const { data, error } = await supabase.rpc('increment_stat', { stat_key: key });
+        return { data, error };
+      }
     } catch (e) {
       return { data: null, error: e };
     }
