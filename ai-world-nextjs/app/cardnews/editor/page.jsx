@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '../../LanguageContext';
 
 export default function EditorPage() {
   const [isMobile, setIsMobile] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -19,18 +21,18 @@ export default function EditorPage() {
       {isMobile && (
         <div style={styles.mobileOverlay}>
           <div style={styles.mobileAlert}>
-            <h2 style={styles.alertTitle}>💻 PC 환경 권장</h2>
+            <h2 style={styles.alertTitle}>{t('editor.warning.title', '💻 PC 환경 권장')}</h2>
             <p style={styles.alertText}>
-              카드뉴스 에디터는 화면 배치를 실시간으로 편집하는 도구로, **PC 및 데스크톱 브라우저**에 최적화되어 있습니다.
+              {t('editor.warning.text', '카드뉴스 에디터는 화면 배치를 실시간으로 편집하는 도구로, PC 및 데스크톱 브라우저에 최적화되어 있습니다.')}
             </p>
             <p style={styles.alertSubText}>
-              모바일 기기에서는 편집 화면이 정상적으로 표시되지 않거나 불편할 수 있으니 가급적 PC로 접속해 주시기 바랍니다.
+              {t('editor.warning.sub', '모바일 기기에서는 편집 화면이 정상적으로 표시되지 않거나 불편할 수 있으니 가급적 PC로 접속해 주시기 바랍니다.')}
             </p>
             <button 
               onClick={() => setIsMobile(false)} 
               style={styles.alertBtn}
             >
-              계속 진행하기
+              {t('editor.warning.continue', '계속 진행하기')}
             </button>
           </div>
         </div>
@@ -39,7 +41,7 @@ export default function EditorPage() {
       <iframe
         src="/cardnews-editor/index.html"
         style={styles.iframe}
-        title="카드뉴스 에디터"
+        title={t('editor.iframe.title', '카드뉴스 에디터')}
         id="cardnews-editor-iframe"
       />
     </div>

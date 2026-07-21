@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db, mapPortfolioItem } from '../supabaseClient';
 import PortfolioCard from '../../components/PortfolioCard';
 import { Video } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const ApertureCanvas = () => {
   const canvasRef = useRef(null);
@@ -270,6 +271,7 @@ const ApertureCanvas = () => {
 };
 
 export default function AIRecommendClient({ initialItems, highlightId }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(false);
   const [highlightCardId, setHighlightCardId] = useState(null);
@@ -328,9 +330,9 @@ export default function AIRecommendClient({ initialItems, highlightId }) {
             <div style={styles.iconContainer}>
               <Video size={24} color="var(--accent-emerald)" />
             </div>
-            <h1 className="recommend-title" style={styles.title}>영상제작 포트폴리오</h1>
+            <h1 className="recommend-title" style={styles.title}>{t('video.title', '영상제작 포트폴리오')}</h1>
             <p className="recommend-subtitle" style={styles.subtitle}>
-              유튜브 롱폼/쇼츠, 인트로, 브랜드 홍보 영상 등 AI 자동화 편집 기술이 가미된 풍부한 비디오 제작 포트폴리오입니다.
+              {t('video.subtitle', '유튜브 롱폼/쇼츠, 인트로, 브랜드 홍보 영상 등 AI 자동화 편집 기술이 가미된 풍부한 비디오 제작 포트폴리오입니다.')}
             </p>
           </div>
           <div className="recommend-header-img-container" style={styles.headerImageContainer}>
@@ -361,7 +363,7 @@ export default function AIRecommendClient({ initialItems, highlightId }) {
 
         {!loading && items.length === 0 && (
           <div style={styles.emptyContainer}>
-            등록된 영상제작 포트폴리오가 없습니다.
+            {t('video.no_portfolio', '등록된 영상제작 포트폴리오가 없습니다.')}
           </div>
         )}
       </section>

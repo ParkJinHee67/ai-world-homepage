@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db, mapPortfolioItem } from '../supabaseClient';
 import PortfolioCard from '../../components/PortfolioCard';
 import { Layout } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const WebDevCanvas = () => {
   const canvasRef = useRef(null);
@@ -229,6 +230,7 @@ const WebDevCanvas = () => {
 };
 
 export default function WebsitesClient({ initialItems, highlightId }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(false);
   const [highlightCardId, setHighlightCardId] = useState(null);
@@ -287,9 +289,9 @@ export default function WebsitesClient({ initialItems, highlightId }) {
             <div style={styles.iconContainer}>
               <Layout size={24} color="var(--accent-indigo)" />
             </div>
-            <h1 className="websites-title" style={styles.title}>제작 홈페이지</h1>
+            <h1 className="websites-title" style={styles.title}>{t('websites.title', '제작 홈페이지')}</h1>
             <p className="websites-subtitle" style={styles.subtitle}>
-              반응형 모던 인터페이스 디자인, Supabase 백엔드 데이터 연동, 그리고 편리한 관리 기능이 통합된 차별화된 홈페이지 제작 사례입니다.
+              {t('websites.subtitle', '반응형 모던 인터페이스 디자인, Supabase 백엔드 데이터 연동, 그리고 편리한 관리 기능이 통합된 차별화된 홈페이지 제작 사례입니다.')}
             </p>
           </div>
           <div className="websites-header-img-container" style={styles.headerImageContainer}>
@@ -320,7 +322,7 @@ export default function WebsitesClient({ initialItems, highlightId }) {
 
         {!loading && items.length === 0 && (
           <div style={styles.emptyContainer}>
-            등록된 홈페이지 포트폴리오가 없습니다.
+            {t('websites.no_portfolio', '등록된 홈페이지 포트폴리오가 없습니다.')}
           </div>
         )}
       </section>

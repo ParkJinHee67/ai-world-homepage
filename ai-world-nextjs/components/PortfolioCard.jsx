@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { ExternalLink, BookOpen, Video, Share2, Check } from 'lucide-react';
 import VideoModal from './VideoModal';
+import { useLanguage } from '../app/LanguageContext';
 
 export default function PortfolioCard({ item, index, isHighlighted = false }) {
   const [copied, setCopied] = useState(false);
   const [showVideos, setShowVideos] = useState(false);
+  const { t, translateDb } = useLanguage();
 
   // Parse youtube links
   const youtubeUrls = item.youtubeUrl 
@@ -67,7 +69,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
         <div style={styles.imgContainer}>
           <Image 
             src={item.imageUrl || 'https://images.unsplash.com/photo-1678326210200-default'} 
-            alt={item.title} 
+            alt={translateDb(item.title, 'title')} 
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
             style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
@@ -75,15 +77,15 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
           <div style={styles.imageOverlay} />
           <div style={styles.badgeContainer}>
             <span className={`badge ${getBadgeClass()}`}>
-              {item.category === 'App' ? '홈페이지' : (item.category === 'Insight' ? '인사이트' : '영상제작')}
+              {item.category === 'App' ? t('cat.app', '홈페이지') : (item.category === 'Insight' ? t('cat.insight', '인사이트') : t('cat.recommend', '영상제작'))}
             </span>
           </div>
         </div>
 
         {/* Content details */}
         <div style={styles.content}>
-          <h3 style={styles.title}>{item.title}</h3>
-          <p style={styles.description}>{item.description}</p>
+          <h3 style={styles.title}>{translateDb(item.title, 'title')}</h3>
+          <p style={styles.description}>{translateDb(item.title, 'description', item.description)}</p>
 
           {/* Action Links */}
           <div style={styles.actionsContainer}>
@@ -94,7 +96,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 rel="noopener noreferrer" 
                 className="action-btn primary"
                 style={styles.actionBtnPrimary}
-                title="앱 실행하기"
+                title={t('card.launch_tooltip', '앱 실행하기')}
               >
                 <ExternalLink size={13} />
                 <span>Launch</span>
@@ -108,7 +110,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 rel="noopener noreferrer" 
                 className="action-btn outline"
                 style={styles.actionBtnOutline}
-                title="노션 가이드 및 매뉴얼 보기"
+                title={t('card.manual_tooltip', '노션 가이드 및 매뉴얼 보기')}
               >
                 <BookOpen size={13} />
                 <span>Manual</span>
@@ -120,7 +122,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 onClick={handleVideoClick} 
                 className="action-btn video-btn"
                 style={styles.actionBtnVideo}
-                title="유튜브 영상 가이드 보기"
+                title={t('card.video_tooltip', '유튜브 영상 가이드 보기')}
               >
                 <Video size={13} />
                 <span>
@@ -136,7 +138,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 ...styles.actionBtnShare,
                 ...(copied ? styles.actionBtnShareCopied : {})
               }}
-              title="공유 링크 복사"
+              title={t('card.share_tooltip', '공유 링크 복사')}
             >
               {copied ? <Check size={13} /> : <Share2 size={13} />}
             </button>

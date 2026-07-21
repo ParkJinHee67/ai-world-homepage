@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Link2, Share2, Check, X } from 'lucide-react';
 import { formatKSTDate, db, mapNewsItem } from '../supabaseClient';
+import { useLanguage } from '../LanguageContext';
 
 // Custom lightweight Markdown/Rich text Parser
 const parseRichText = (text) => {
@@ -313,6 +314,7 @@ const PlexusCanvas = () => {
 };
 
 export default function AINewsClient({ initialNews, highlightId }) {
+  const { t, translateDb } = useLanguage();
   const [news, setNews] = useState(initialNews);
   const [loading, setLoading] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
@@ -414,10 +416,9 @@ export default function AINewsClient({ initialNews, highlightId }) {
       <section className="container-max" style={styles.headerSection}>
         <div className="news-header-flex" style={styles.headerFlexContainer}>
           <div style={styles.headerInner}>
-            <h1 className="news-title" style={styles.title}>Daily AI News</h1>
+            <h1 className="news-title" style={styles.title}>{t('news.title', 'Daily AI News')}</h1>
             <p className="news-subtitle" style={styles.subtitle}>
-              인공지능 모델 및 플랫폼 트렌드를 실시간 수집 및 요약하여 전달합니다.<br className="desktop-br" />
-              카드를 클릭하시면 상세 분석 리포트를 확인하실 수 있습니다.
+              {t('news.subtitle', '인공지능 모델 및 플랫폼 트렌드를 실시간 수집 및 요약하여 전달합니다. 카드를 클릭하시면 상세 분석 리포트를 확인하실 수 있습니다.')}
             </p>
           </div>
           <div className="news-header-img-container" style={styles.headerImageContainer}>
@@ -448,7 +449,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                   <div style={styles.cardImageContainer}>
                     <img
                       src={item.imageUrl || 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop'}
-                      alt={item.title}
+                      alt={translateDb(item.title, 'title')}
                       loading="lazy"
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop';
@@ -472,14 +473,14 @@ export default function AINewsClient({ initialNews, highlightId }) {
                           ...styles.shareBtn,
                           ...(copiedId === item.id ? styles.shareBtnCopied : {})
                         }}
-                        title="공유 링크 복사"
+                        title={t('news.share', '공유 링크 복사')}
                       >
                         {copiedId === item.id ? <Check size={11} /> : <Share2 size={11} />}
                       </button>
                     </div>
 
-                    <h3 style={styles.cardTitle}>{item.title}</h3>
-                    <p style={styles.cardDesc}>{item.description}</p>
+                    <h3 style={styles.cardTitle}>{translateDb(item.title, 'title')}</h3>
+                    <p style={styles.cardDesc}>{translateDb(item.title, 'description', item.description)}</p>
                   </div>
                 </div>
               ))}
@@ -493,7 +494,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
                     style={styles.pagerBtn}
-                    title="첫 페이지"
+                    title={t('news.first_page', '첫 페이지')}
                   >
                     <ChevronsLeft size={16} />
                   </button>
@@ -501,7 +502,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     style={styles.pagerBtn}
-                    title="이전 페이지"
+                    title={t('news.prev_page', '이전 페이지')}
                   >
                     <ChevronLeft size={16} />
                   </button>
@@ -523,7 +524,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     style={styles.pagerBtn}
-                    title="다음 페이지"
+                    title={t('news.next_page', '다음 페이지')}
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -531,7 +532,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
                     style={styles.pagerBtn}
-                    title="마지막 페이지"
+                    title={t('news.last_page', '마지막 페이지')}
                   >
                     <ChevronsRight size={16} />
                   </button>
@@ -544,7 +545,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     style={styles.mobilePageBtn}
                   >
                     <ChevronLeft size={14} style={{ marginRight: '4px' }} />
-                    이전
+                    {t('news.prev', '이전')}
                   </button>
                   <span style={styles.mobilePageIndicator}>
                     <span style={{ color: 'var(--accent-rose)', fontWeight: 800 }}>{currentPage}</span> / {totalPages}
@@ -554,7 +555,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     disabled={currentPage === totalPages}
                     style={styles.mobilePageBtn}
                   >
-                    다음
+                    {t('news.next', '다음')}
                     <ChevronRight size={14} style={{ marginLeft: '4px' }} />
                   </button>
                 </div>
@@ -565,7 +566,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
 
         {!loading && news.length === 0 && (
           <div style={styles.emptyContainer}>
-            등록된 AI 뉴스가 없습니다.
+            {t('news.no_news', '등록된 AI 뉴스가 없습니다.')}
           </div>
         )}
       </section>
@@ -584,7 +585,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
               <div style={styles.popupBannerContainer}>
                 <img 
                   src={selectedNews.imageUrl} 
-                  alt={selectedNews.title} 
+                  alt={translateDb(selectedNews.title, 'title')} 
                   onError={(e) => e.target.style.display='none'}
                   style={styles.popupBanner}
                 />
@@ -601,12 +602,12 @@ export default function AINewsClient({ initialNews, highlightId }) {
                 </span>
               </div>
 
-              <h2 className="news-popup-title" style={styles.popupTitle}>{selectedNews.title}</h2>
+              <h2 className="news-popup-title" style={styles.popupTitle}>{translateDb(selectedNews.title, 'title')}</h2>
               
               <div style={styles.popupDivider} />
               
               <div style={styles.popupMarkdownBody}>
-                {renderMarkdown(selectedNews.content)}
+                {renderMarkdown(translateDb(selectedNews.title, 'content', selectedNews.content))}
               </div>
 
               {/* Action Buttons */}
@@ -620,7 +621,7 @@ export default function AINewsClient({ initialNews, highlightId }) {
                     style={styles.popupSourceBtn}
                   >
                     <Link2 size={14} style={{ marginRight: '6px' }} />
-                    원문 출처 방문
+                    {t('news.visit_source', '원문 출처 방문')}
                   </a>
                 ) : null}
                 
@@ -635,12 +636,12 @@ export default function AINewsClient({ initialNews, highlightId }) {
                   {copiedId === selectedNews.id ? (
                     <>
                       <Check size={14} style={{ marginRight: '6px' }} />
-                      링크 복사 완료
+                      {t('news.copy_success', '링크 복사 완료')}
                     </>
                   ) : (
                     <>
                       <Share2 size={14} style={{ marginRight: '6px' }} />
-                      기사 공유하기
+                      {t('news.share', '기사 공유하기')}
                     </>
                   )}
                 </button>
@@ -650,13 +651,13 @@ export default function AINewsClient({ initialNews, highlightId }) {
                   className="news-popup-close-action-btn"
                   style={styles.popupCloseActionBtn}
                 >
-                  닫기
+                  {t('news.close', '닫기')}
                 </button>
               </div>
 
               {selectedNews.sourceUrl && (
                 <div style={styles.sourceFooter}>
-                  <strong>출처 URL:</strong>{' '}
+                  <strong>{t('news.source_url', '출처 URL:')}</strong>{' '}
                   <a
                     href={selectedNews.sourceUrl}
                     target="_blank"

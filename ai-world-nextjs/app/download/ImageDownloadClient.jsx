@@ -4,10 +4,12 @@ import { db } from '../supabaseClient';
 import { Download, Mail, User, CheckCircle, ArrowLeft, Loader2, Sparkles, Image as ImageIcon, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '../LanguageContext';
 
 function ResourceCard({ image, openDownloadModal }) {
   const [imageSrc, setImageSrc] = useState(image.file_content || image.fileContent || image.filePath || '');
   const [loadingImg, setLoadingImg] = useState(!imageSrc);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!imageSrc) {
@@ -34,7 +36,7 @@ function ResourceCard({ image, openDownloadModal }) {
         {loadingImg ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <Loader2 size={24} className="spin-loader" style={{ color: 'var(--accent-indigo)' }} />
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>이미지 불러오는 중...</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('download.loading', '이미지 불러오는 중...')}</span>
           </div>
         ) : (
           <Image src={imageSrc || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop'} alt={image.title} fill sizes="(max-width: 768px) 100vw, 30vw" style={{ objectFit: 'cover' }} />
@@ -48,12 +50,12 @@ function ResourceCard({ image, openDownloadModal }) {
         <h3 style={styles.cardTitle}>{image.title}</h3>
         <p style={styles.cardDesc}>{image.description}</p>
         <div style={styles.cardMeta}>
-          <span>다운로드: <strong>{image.download_count || 0}회</strong></span>
-          <span>파일 크기: <strong>{image.file_size || image.fileSize}</strong></span>
+          <span>{t('download.count', '다운로드: ')}<strong>{image.download_count || 0}{t('download.count_unit', '회')}</strong></span>
+          <span>{t('download.file_size', '파일 크기: ')}<strong>{image.file_size || image.fileSize}</strong></span>
         </div>
         <button onClick={() => openDownloadModal({ ...image, file_content: imageSrc })} style={styles.downloadBtn}>
           <Download size={16} />
-          <span>다운로드 신청하기</span>
+          <span>{t('download.action', '다운로드 신청하기')}</span>
         </button>
       </div>
     </div>
@@ -61,6 +63,7 @@ function ResourceCard({ image, openDownloadModal }) {
 }
 
 export default function ImageDownloadClient({ initialResources, downloadId }) {
+  const { t } = useLanguage();
   const [resources, setResources] = useState(initialResources);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -114,7 +117,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
                 document.body.removeChild(link);
               } catch (dlErr) {
                 console.error('Failed to auto-download:', dlErr);
-                alert('이미지 파일 다운로드에 실패했습니다. 관리자에게 문의해 주세요.');
+                alert(t('download.err_fail', '이미지 파일 다운로드에 실패했습니다. 관리자에게 문의해 주세요.'));
               }
               
               // Clear search parameters immediately to prevent download on page refresh
@@ -143,11 +146,11 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      setErrorMsg('이름 또는 닉네임을 입력해주세요.');
+       setErrorMsg(t('download.err_name', '이름 또는 닉네임을 입력해주세요.'));
       return;
     }
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      setErrorMsg('유효한 이메일 주소를 입력해주세요.');
+       setErrorMsg(t('download.err_email', '유효한 이메일 주소를 입력해주세요.'));
       return;
     }
 
@@ -214,7 +217,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
 
     } catch (err) {
       console.error('Download submission failed:', err);
-      setErrorMsg('다운로드 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      setErrorMsg(t('download.err_process', '다운로드 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -226,7 +229,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
       <div style={styles.backWrapper}>
         <Link href="/" style={styles.backLink}>
           <ArrowLeft size={16} />
-          <span>메인 화면으로 가기</span>
+          <span>{t('download.go_main', '메인 화면으로 가기')}</span>
         </Link>
       </div>
 
@@ -236,10 +239,9 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
           <Sparkles size={12} style={{ color: 'var(--accent-purple)' }} />
           <span>MARKETING RESOURCE</span>
         </div>
-        <h1 style={styles.title}>영상 주인공 이미지 리소스</h1>
+        <h1 style={styles.title}>{t('download.title', '영상 주인공 이미지 리소스')}</h1>
         <p style={styles.subtitle}>
-          영상 자동화 제작 및 유튜브, 카카오톡 홍보에 자유롭게 활용할 수 있는 고품질 디자인 템플릿입니다.<br />
-          간단한 성함과 이메일 정보를 입력하시면 즉시 다운로드가 시작되고, 메일로도 평생 영구 보관용 링크를 발송해 드립니다.
+          {t('download.subtitle', '영상 자동화 제작 및 유튜브, 카카오톡 홍보에 자유롭게 활용할 수 있는 고품질 디자인 템플릿입니다. 간단한 성함과 이메일 정보를 입력하시면 즉시 다운로드가 시작되고, 메일로도 평생 영구 보관용 링크를 발송해 드립니다.')}
         </p>
       </div>
 
@@ -250,7 +252,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
             <Search size={18} style={styles.searchIcon} />
             <input
               type="text"
-              placeholder="주인공 이미지 제목 검색 (예: 철학, 건강, 노인...)"
+              placeholder={t('download.search_placeholder', '주인공 이미지 제목 검색 (예: 철학, 건강, 노인...)')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={styles.searchInput}
@@ -261,7 +263,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
                 onClick={() => setSearchTerm('')} 
                 style={styles.clearSearchBtn}
                 className="clear-search-btn"
-                title="검색어 초기화"
+                title={t('download.reset_search', '검색어 초기화')}
               >
                 &times;
               </button>
@@ -283,7 +285,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
         </div>
       ) : (
         <div style={styles.emptyContainer}>
-          {searchTerm ? '검색어와 일치하는 주인공 이미지가 없습니다.' : '등록된 주인공 이미지 리소스가 없습니다. 관리자 대시보드에서 등록해 주세요.'}
+          {searchTerm ? t('download.no_results_search', '검색어와 일치하는 주인공 이미지가 없습니다.') : t('download.no_resources', '등록된 주인공 이미지 리소스가 없습니다. 관리자 대시보드에서 등록해 주세요.')}
         </div>
       )}
 
@@ -293,19 +295,19 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
           <div style={styles.modalContent} className="glass-panel" onClick={(e) => e.stopPropagation()}>
             {!submitSuccess ? (
               <>
-                <h3 style={styles.modalTitle}>리소스 무료 다운로드 신청</h3>
+                <h3 style={styles.modalTitle}>{t('download.modal_title', '리소스 무료 다운로드 신청')}</h3>
                 <p style={styles.modalSubtitle}>
-                  선택하신 <strong>[{selectedImage.title}]</strong> 리소스 다운로드를 위해 아래 정보를 입력해 주세요.
+                  {t('download.modal_desc', '선택하신 [{title}] 리소스 다운로드를 위해 아래 정보를 입력해 주세요.').replace('{title}', selectedImage.title)}
                 </p>
 
                 <form onSubmit={handleFormSubmit} style={styles.form}>
                   <div style={styles.inputGroup}>
-                    <label style={styles.label}>이름 / 닉네임</label>
+                    <label style={styles.label}>{t('download.name_label', '이름 / 닉네임')}</label>
                     <div style={styles.inputWrapper}>
                       <User size={16} style={styles.inputIcon} />
                       <input
                         type="text"
-                        placeholder="홍길동"
+                        placeholder={t('download.name_placeholder', '홍길동')}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         style={styles.input}
@@ -316,7 +318,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
                   </div>
 
                   <div style={styles.inputGroup}>
-                    <label style={styles.label}>이메일 주소</label>
+                    <label style={styles.label}>{t('download.email_label', '이메일 주소')}</label>
                     <div style={styles.inputWrapper}>
                       <Mail size={16} style={styles.inputIcon} />
                       <input
@@ -340,7 +342,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
                       style={styles.cancelBtn}
                       disabled={isSubmitting}
                     >
-                      취소
+                      {t('download.cancel', '취소')}
                     </button>
                     <button
                       type="submit"
@@ -350,12 +352,12 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
                       {isSubmitting ? (
                         <>
                           <Loader2 size={16} className="spin-loader" />
-                          <span>신청 처리 중...</span>
+                          <span>{t('download.processing', '신청 처리 중...')}</span>
                         </>
                       ) : (
                         <>
                           <Download size={16} />
-                          <span>이메일 전송 & 다운로드</span>
+                          <span>{t('download.submit', '이메일 전송 & 다운로드')}</span>
                         </>
                       )}
                     </button>
@@ -365,9 +367,9 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
             ) : (
               <div style={styles.successWrapper}>
                 <CheckCircle size={56} style={{ color: 'var(--accent-emerald)', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.4))' }} />
-                <h3 style={styles.successTitle}>이메일 발송 완료!</h3>
+                <h3 style={styles.successTitle}>{t('download.success_title', '이메일 발송 완료!')}</h3>
                 <p style={styles.successText}>
-                  입력하신 이메일(<strong>{email}</strong>)로 다운로드 링크를 발송해 드렸습니다. 메일함(또는 스팸함)을 확인하여 다운로드해 주세요.
+                  {t('download.success_desc', '입력하신 이메일(<strong>{email}</strong>)로 다운로드 링크를 발송해 드렸습니다. 메일함(또는 스팸함)을 확인하여 다운로드해 주세요.').replace('{email}', email)}
                 </p>
                 <button 
                   onClick={() => {
@@ -377,7 +379,7 @@ export default function ImageDownloadClient({ initialResources, downloadId }) {
                   }}
                   style={{ ...styles.submitBtn, marginTop: '24px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                 >
-                  확인
+                  {t('download.confirm', '확인')}
                 </button>
               </div>
             )}

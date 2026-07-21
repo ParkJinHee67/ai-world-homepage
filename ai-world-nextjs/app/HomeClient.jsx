@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { db, mapPortfolioItem, supabase } from './supabaseClient';
 import PortfolioCard from '../components/PortfolioCard';
 import { MessageSquare, Star, Sparkles } from 'lucide-react';
+import { useLanguage } from './LanguageContext';
 
 function CloudWordCanvas() {
   const canvasRef = useRef(null);
@@ -327,6 +328,7 @@ function CloudWordCanvas() {
 }
 
 export default function HomeClient({ initialItems, initialStats, highlightId }) {
+  const { t, translateDb } = useLanguage();
   const [filter, setFilter] = useState('All');
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(false);
@@ -514,31 +516,30 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
           <div className="hero-left" style={styles.heroLeft}>
             <div style={styles.heroBadge}>
               <Sparkles size={14} color="var(--accent-indigo)" />
-              <span>PORTFOLIO & INSIGHTS</span>
+              <span>{t('hero.badge', 'PORTFOLIO & INSIGHTS')}</span>
             </div>
             <h1 className="hero-title" style={styles.heroTitle}>
-              톱니바꿈<span style={styles.heroGradient}>AI월드</span>
+              {t('hero.title_pre', '톱니바꿈')}<span style={styles.heroGradient}>{t('hero.title_post', 'AI월드')}</span>
             </h1>
             <p className="hero-desc" style={styles.heroDesc}>
-              실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여<br className="desktop-br" />
-              업무의 한계를 넓혀보세요.
+              {t('hero.desc', '실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여 업무의 한계를 넓혀보세요.')}
             </p>
 
             {/* Real-time Stats Widget */}
             <div style={styles.statsContainer}>
               <div style={styles.statBox}>
-                <span style={styles.statLabel}>오늘 방문자</span>
-                <span style={styles.statValue}>{stats.visitorsToday.toLocaleString()}명</span>
+                <span style={styles.statLabel}>{t('hero.stat.today', '오늘 방문자')}</span>
+                <span style={styles.statValue}>{stats.visitorsToday.toLocaleString()}{t('hero.stat.visitors_unit', '명')}</span>
               </div>
               <div style={styles.statDivider} />
               <div style={styles.statBox}>
-                <span style={styles.statLabel}>누적 방문자</span>
-                <span style={styles.statValue}>{stats.visitors.toLocaleString()}명</span>
+                <span style={styles.statLabel}>{t('hero.stat.total', '누적 방문자')}</span>
+                <span style={styles.statValue}>{stats.visitors.toLocaleString()}{t('hero.stat.visitors_unit', '명')}</span>
               </div>
               <div style={styles.statDivider} />
               <div style={styles.statBox}>
-                <span style={styles.statLabel}>주인공 이미지 다운로드</span>
-                <span style={styles.statValue}>{stats.downloads.toLocaleString()}회</span>
+                <span style={styles.statLabel}>{t('hero.stat.downloads', '주인공 이미지 다운로드')}</span>
+                <span style={styles.statValue}>{stats.downloads.toLocaleString()}{t('hero.stat.downloads_unit', '회')}</span>
               </div>
             </div>
 
@@ -551,7 +552,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
                 className="hero-action-btn primary"
                 style={styles.btnPrimary}
               >
-                <span>프로젝트 탐색</span>
+                <span>{t('hero.action.explore', '프로젝트 탐색')}</span>
               </button>
               <a
                 href="https://open.kakao.com/o/si1c9OAi"
@@ -560,7 +561,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
                 className="hero-action-btn secondary"
                 style={styles.btnSecondary}
               >
-                <span>프로그램 문의</span>
+                <span>{t('hero.action.inquire', '프로그램 문의')}</span>
               </a>
             </div>
           </div>
@@ -579,7 +580,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
         <div className="grid-header" style={styles.gridHeader}>
           <h2 style={styles.gridTitle}>
             <Star size={20} color="var(--accent-amber)" style={{ marginRight: '8px' }} />
-            Featured Projects
+            {t('projects.title', 'Featured Projects')}
           </h2>
           
           <div className="filters-wrapper" style={styles.filtersWrapper}>
@@ -591,7 +592,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
               style={styles.kakaoInquiry}
             >
               <MessageSquare size={14} fill="currentColor" />
-              <span>프로그램 문의</span>
+              <span>{t('projects.inquire', '프로그램 문의')}</span>
             </a>
 
             <div style={styles.filterBtns}>
@@ -604,7 +605,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
                     ...(filter === cat ? styles.filterBtnActive : {})
                   }}
                 >
-                  {cat === 'All' ? '전체보기' : (cat === 'AI Recommend' ? '영상제작' : (cat === 'App' ? '홈페이지' : '인사이트'))}
+                  {cat === 'All' ? t('cat.all', '전체') : (cat === 'AI Recommend' ? t('cat.recommend', '영상제작') : (cat === 'App' ? t('cat.app', '홈페이지') : t('cat.insight', '인사이트')))}
                 </button>
               ))}
             </div>
@@ -650,7 +651,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
 
         {!loading && displayItems.length === 0 && (
           <div style={styles.emptyContainer}>
-            등록된 프로젝트가 없습니다.
+            {t('projects.no_projects', '등록된 프로젝트가 없습니다.')}
           </div>
         )}
       </section>

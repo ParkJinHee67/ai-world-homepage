@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Calendar, Trash2, ShieldAlert } from 'lucide-react';
+import { useLanguage } from '../../../LanguageContext';
 
 export default function DeckViewerClient({ deckId, initialDeck }) {
   const router = useRouter();
   const [deck, setDeck] = useState(initialDeck);
+  const { t } = useLanguage();
   const [activeIndex, setActiveIndex] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -56,10 +58,10 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
     return (
       <div style={styles.container}>
         <div style={styles.errorBox}>
-          <h2 style={{ color: '#ef4444', marginBottom: '16px' }}>⚠️ 카드뉴스를 찾을 수 없습니다</h2>
-          <p style={{ color: '#aab4c8', marginBottom: '24px' }}>존재하지 않는 덱이거나 삭제 처리되었을 수 있습니다.</p>
+          <h2 style={{ color: '#ef4444', marginBottom: '16px' }}>{t('deck.not_found', '⚠️ 카드뉴스를 찾을 수 없습니다')}</h2>
+          <p style={{ color: '#aab4c8', marginBottom: '24px' }}>{t('deck.not_found_desc', '존재하지 않는 덱이거나 삭제 처리되었을 수 있습니다.')}</p>
           <Link href="/cardnews/gallery" style={styles.btnSecondary}>
-            <ArrowLeft size={16} /> 갤러리로 돌아가기
+            <ArrowLeft size={16} /> {t('deck.back_to_gallery', '갤러리로 돌아가기')}
           </Link>
         </div>
       </div>
@@ -103,12 +105,12 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
   // 삭제 처리 핸들러
   const handleDelete = async () => {
     if (!deletePassword.trim()) {
-      setDeleteStatus('비밀번호를 입력해주세요.');
+      setDeleteStatus(t('deck.delete_status.enter_pwd', '비밀번호를 입력해주세요.'));
       return;
     }
 
     setIsDeleting(true);
-    setDeleteStatus('삭제 진행 중...');
+    setDeleteStatus(t('deck.delete_status.deleting', '삭제 진행 중...'));
 
     try {
       // 1. API를 찔러 서버/스토리지 삭제 시도
@@ -134,13 +136,13 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
         console.warn('Failed to clean mock local storage:', e);
       }
 
-      setDeleteStatus('✅ 삭제되었습니다. 갤러리로 리다이렉트합니다.');
+      setDeleteStatus(t('deck.delete_status.success', '✅ 삭제되었습니다. 갤러리로 리다이렉트합니다.'));
       setTimeout(() => {
         router.push('/cardnews/gallery');
       }, 1500);
 
     } catch (err) {
-      setDeleteStatus('⚠️ 에러: ' + err.message);
+      setDeleteStatus(t('deck.delete_status.error', '⚠️ 에러: ') + err.message);
       setIsDeleting(false);
     }
   };
@@ -152,10 +154,10 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
         {/* Header Action Row */}
         <div style={styles.actionHeader}>
           <Link href="/cardnews/gallery" style={styles.backLink}>
-            <ArrowLeft size={16} /> 갤러리 목록으로
+            <ArrowLeft size={16} /> {t('deck.back_to_list', '갤러리 목록으로')}
           </Link>
-          <button onClick={() => setShowDeleteModal(true)} style={styles.deleteBtn} title="발행물 삭제">
-            <Trash2 size={16} /> 삭제하기
+          <button onClick={() => setShowDeleteModal(true)} style={styles.deleteBtn} title={t('deck.delete_tooltip', '발행물 삭제')}>
+            <Trash2 size={16} /> {t('deck.delete', '삭제하기')}
           </button>
         </div>
 
@@ -195,11 +197,11 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
             {imageUrls.length > 0 ? (
               <img 
                 src={imageUrls[activeIndex]} 
-                alt={`${deck.title} - 카드 ${activeIndex + 1}`}
+                alt={`${deck.title} - ${activeIndex + 1}`}
                 style={styles.cardImg}
               />
             ) : (
-              <div style={styles.noCardPlaceholder}>불러온 이미지가 없습니다.</div>
+              <div style={styles.noCardPlaceholder}>{t('deck.no_image', '불러온 이미지가 없습니다.')}</div>
             )}
           </div>
 
@@ -241,18 +243,17 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
           <div style={styles.modalContent}>
             <div style={styles.modalHeader}>
               <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ff3b30' }}>
-                <ShieldAlert size={18} /> 발행물 삭제 인증
+                <ShieldAlert size={18} /> {t('deck.delete_modal.title', '발행물 삭제 인증')}
               </h3>
               <span onClick={() => setShowDeleteModal(false)} style={{ cursor: 'pointer', color: '#6b7684', fontWeight: '700' }}>✕</span>
             </div>
             <div style={{ padding: '20px' }}>
               <p style={{ margin: '0 0 16px', fontSize: '13.5px', color: '#5b6577', lineHeight: '1.5' }}>
-                발행물을 삭제하려면 에디터 발행 시 사용했던 **발행 승인 비밀번호**를 입력해야 합니다.<br />
-                삭제 시 DB와 Storage의 백업 이미지 파일들이 모두 영구 삭제되며, 복구할 수 없습니다.
+                {t('deck.delete_modal.desc', '발행물을 삭제하려면 에디터 발행 시 사용했던 발행 승인 비밀번호를 입력해야 합니다. 삭제 시 DB와 Storage의 백업 이미지 파일들이 모두 영구 삭제되며, 복구할 수 없습니다.')}
               </p>
               <input 
                 type="password" 
-                placeholder="비밀번호 입력"
+                placeholder={t('deck.delete_modal.placeholder', '비밀번호 입력')}
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
                 style={styles.modalInput}
@@ -269,8 +270,8 @@ export default function DeckViewerClient({ deckId, initialDeck }) {
               )}
             </div>
             <div style={styles.modalFooter}>
-              <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting} style={styles.btnSecondaryModal}>취소</button>
-              <button onClick={handleDelete} disabled={isDeleting} style={styles.btnDangerModal}>삭제하기</button>
+              <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting} style={styles.btnSecondaryModal}>{t('deck.delete_modal.cancel', '취소')}</button>
+              <button onClick={handleDelete} disabled={isDeleting} style={styles.btnDangerModal}>{t('deck.delete', '삭제하기')}</button>
             </div>
           </div>
         </div>

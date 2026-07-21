@@ -3,23 +3,25 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download } from 'lucide-react';
+import { useLanguage } from '../app/LanguageContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
   const navItems = [
-    { path: '/', label: '홈', icon: Terminal },
-    { path: '/ai-news', label: 'AI 뉴스', icon: Newspaper },
-    { path: '/ai-recommend', label: '영상제작', icon: Video },
-    { path: '/download', label: '주인공 이미지', icon: Download },
-    { path: '/homepage', label: '홈페이지', icon: Layout },
-    { path: '/insights', label: '인사이트', icon: Lightbulb },
-    { path: '/admin', label: '관리자', icon: ShieldAlert },
+    { path: '/', label: t('nav.home', '홈'), icon: Terminal },
+    { path: '/ai-news', label: t('nav.news', 'AI 뉴스'), icon: Newspaper },
+    { path: '/ai-recommend', label: t('nav.video', '영상제작'), icon: Video },
+    { path: '/download', label: t('nav.download', '주인공 이미지'), icon: Download },
+    { path: '/homepage', label: t('nav.homepage', '홈페이지'), icon: Layout },
+    { path: '/insights', label: t('nav.insights', '인사이트'), icon: Lightbulb },
+    { path: '/admin', label: t('nav.admin', '관리자'), icon: ShieldAlert },
   ];
 
   return (
@@ -28,7 +30,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" style={styles.logo}>
           <Cog className="gear-logo" size={20} style={{ color: 'var(--accent-indigo)', filter: 'drop-shadow(0 0 5px var(--accent-indigo))' }} />
-          <span style={styles.logoText}>톱니바꿈 <span style={{color: 'var(--accent-indigo)'}}>AI월드</span></span>
+          <span style={styles.logoText}>{t('brand.title', '톱니바꿈')} <span style={{color: 'var(--accent-indigo)'}}>{t('brand.subtitle', 'AI월드')}</span></span>
         </Link>
 
         {/* Desktop Nav Links */}
@@ -48,6 +50,11 @@ export default function Navbar() {
               </Link>
             );
           })}
+          
+          {/* Language Toggle Button */}
+          <button onClick={toggleLanguage} style={styles.langToggleBtn} className="lang-toggle-btn">
+            {language === 'ko' ? 'EN' : 'KO'}
+          </button>
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -75,6 +82,14 @@ export default function Navbar() {
               </Link>
             );
           })}
+          
+          {/* Mobile Language Toggle */}
+          <button 
+            onClick={() => { toggleLanguage(); setIsOpen(false); }} 
+            style={styles.mobileLangToggleBtn}
+          >
+            Language: {language === 'ko' ? 'English (EN)' : '한국어 (KO)'}
+          </button>
         </div>
       )}
     </nav>
@@ -144,6 +159,31 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '12px 16px',
+    width: '100%',
+  },
+  langToggleBtn: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: 'var(--text-primary)',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    marginLeft: '12px',
+    transition: 'background-color 0.2s, border-color 0.2s',
+  },
+  mobileLangToggleBtn: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: 'var(--text-primary)',
+    padding: '12px',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    marginTop: '8px',
+    textAlign: 'center',
     width: '100%',
   },
 };

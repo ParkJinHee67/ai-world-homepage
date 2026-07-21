@@ -1,6 +1,7 @@
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { LanguageProvider } from "./LanguageContext";
 
 export const metadata = {
   metadataBase: new URL("https://ai.jinheestate.blog"),
@@ -37,15 +38,17 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <div style={styles.appWrapper}>
-          <Navbar />
-          
-          <main style={styles.mainContent}>
-            {children}
-          </main>
+        <LanguageProvider>
+          <div style={styles.appWrapper}>
+            <Navbar />
+            
+            <main style={styles.mainContent}>
+              {children}
+            </main>
 
-          <Footer />
-        </div>
+            <Footer />
+          </div>
+        </LanguageProvider>
       </body>
     </html>
   );

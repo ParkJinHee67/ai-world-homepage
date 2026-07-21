@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Layers, Calendar, Eye, Grid } from 'lucide-react';
+import { useLanguage } from '../../LanguageContext';
 
 export default function GalleryClient({ initialDecks = [] }) {
   const [decks] = useState(initialDecks);
+  const { t } = useLanguage();
 
   return (
     <div style={styles.container}>
@@ -13,11 +15,11 @@ export default function GalleryClient({ initialDecks = [] }) {
         {/* Navigation / Header */}
         <div style={styles.header}>
           <Link href="/cardnews" style={styles.backLink}>
-            <ArrowLeft size={16} /> 소개 페이지로 돌아가기
+            <ArrowLeft size={16} /> {t('gallery.back', '소개 페이지로 돌아가기')}
           </Link>
           <div style={styles.titleRow}>
-            <h1 style={styles.title}><Grid size={24} style={{ color: '#6366f1', verticalAlign: 'middle', marginRight: '8px' }} /> 발행 갤러리</h1>
-            <p style={styles.subtitle}>사용자들이 에디터에서 완성하여 공유한 생생한 카드뉴스 포트폴리오입니다.</p>
+            <h1 style={styles.title}><Grid size={24} style={{ color: '#6366f1', verticalAlign: 'middle', marginRight: '8px' }} /> {t('gallery.title', '발행 갤러리')}</h1>
+            <p style={styles.subtitle}>{t('gallery.subtitle', '사용자들이 에디터에서 완성하여 공유한 생생한 카드뉴스 포트폴리오입니다.')}</p>
           </div>
         </div>
 
@@ -25,10 +27,10 @@ export default function GalleryClient({ initialDecks = [] }) {
         {decks.length === 0 ? (
           <div style={styles.emptyState}>
             <BookOpen size={48} style={{ color: '#4b5563', marginBottom: '16px' }} />
-            <p style={styles.emptyText}>아직 발행된 카드뉴스가 없습니다.</p>
-            <p style={styles.emptySub}>첫 번째로 멋진 카드뉴스를 만들어 갤러리에 공유해 보세요!</p>
+            <p style={styles.emptyText}>{t('gallery.empty.title', '아직 발행된 카드뉴스가 없습니다.')}</p>
+            <p style={styles.emptySub}>{t('gallery.empty.sub', '첫 번째로 멋진 카드뉴스를 만들어 갤러리에 공유해 보세요!')}</p>
             <Link href="/cardnews/editor" style={styles.btnPrimary}>
-              에디터로 카드뉴스 만들기
+              {t('gallery.empty.action', '에디터로 카드뉴스 만들기')}
             </Link>
           </div>
         ) : (
@@ -42,7 +44,7 @@ export default function GalleryClient({ initialDecks = [] }) {
                     style={styles.thumb}
                   />
                   <div style={styles.cardBadge}>
-                    <Layers size={12} /> {deck.card_count}장
+                    <Layers size={12} /> {deck.card_count}{t('cardnews.card_unit', '장')}
                   </div>
                 </div>
                 <div style={styles.cardInfo}>

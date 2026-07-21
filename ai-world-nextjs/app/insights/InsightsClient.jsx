@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db, mapPortfolioItem } from '../supabaseClient';
 import PortfolioCard from '../../components/PortfolioCard';
 import { Lightbulb } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const NeuralCanvas = () => {
   const canvasRef = useRef(null);
@@ -263,6 +264,7 @@ const NeuralCanvas = () => {
 };
 
 export default function InsightsClient({ initialItems, highlightId }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState(initialItems);
   const [loading, setLoading] = useState(false);
   const [highlightCardId, setHighlightCardId] = useState(null);
@@ -321,9 +323,9 @@ export default function InsightsClient({ initialItems, highlightId }) {
             <div style={styles.iconContainer}>
               <Lightbulb size={24} color="var(--accent-amber)" />
             </div>
-            <h1 className="insights-title" style={styles.title}>기술 인사이트</h1>
+            <h1 className="insights-title" style={styles.title}>{t('insights.title', '기술 인사이트')}</h1>
             <p className="insights-subtitle" style={styles.subtitle}>
-              프롬프트 엔지니어링 템플릿, 비즈니스 자동화 워크플로우 설계서, AI 개발 지침 가이드 등 가치 있는 지식형 인사이트 자산군입니다.
+              {t('insights.subtitle', '프롬프트 엔지니어링 템플릿, 비즈니스 자동화 워크플로우 설계서, AI 개발 지침 가이드 등 가치 있는 지식형 인사이트 자산군입니다.')}
             </p>
           </div>
           <div className="insights-header-img-container" style={styles.headerImageContainer}>
@@ -354,7 +356,7 @@ export default function InsightsClient({ initialItems, highlightId }) {
 
         {!loading && items.length === 0 && (
           <div style={styles.emptyContainer}>
-            등록된 인사이트 포트폴리오가 없습니다.
+            {t('insights.no_portfolio', '등록된 인사이트 포트폴리오가 없습니다.')}
           </div>
         )}
       </section>

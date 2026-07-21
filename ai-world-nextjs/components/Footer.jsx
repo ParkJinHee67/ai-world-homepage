@@ -1,25 +1,28 @@
+"use client";
 import React from 'react';
 import Link from 'next/link';
 import { MessageSquare, Heart } from 'lucide-react';
+import { useLanguage } from '../app/LanguageContext';
 
 export default function Footer() {
+  const { t } = useLanguage();
   return (
     <footer style={styles.footerContainer}>
       <div className="container-max footer-inner" style={styles.footerInner}>
         <div style={styles.left}>
           <p style={styles.copyright}>
-            © {new Date().getFullYear()} 톱니바꿈 AI월드. All rights reserved.
+            {t('footer.copyright', `© ${new Date().getFullYear()} 톱니바꿈 AI월드. All rights reserved.`).replace('{year}', new Date().getFullYear())}
           </p>
           <p style={styles.desc}>
-            AI 기술을 활용한 혁신적인 어플리케이션과 트렌드 분석 리포트를 제공합니다.
+            {t('footer.desc', 'AI 기술을 활용한 혁신적인 어플리케이션과 트렌드 분석 리포트를 제공합니다.')}
           </p>
           <div style={styles.linksRow}>
             <Link href="/about" style={styles.footerLink}>
-              소개
+              {t('footer.link.about', '소개')}
             </Link>
             <span style={styles.separator}>|</span>
             <Link href="/privacy" style={styles.footerLink}>
-              개인정보처리방침
+              {t('footer.link.privacy', '개인정보처리방침')}
             </Link>
           </div>
         </div>
@@ -33,7 +36,7 @@ export default function Footer() {
             style={styles.kakaoBtn}
           >
             <MessageSquare size={16} fill="currentColor" />
-            <span>프로그램 및 비즈니스 문의</span>
+            <span>{t('footer.inquiry', '프로그램 및 비즈니스 문의')}</span>
           </a>
           <span style={styles.madeWith}>
             Made with <Heart size={12} style={styles.heart} /> by Antigravity

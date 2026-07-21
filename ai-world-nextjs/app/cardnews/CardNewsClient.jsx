@@ -6,8 +6,10 @@ import { ArrowRight, Layers } from 'lucide-react';
 import AdSlot from '../../components/AdSlot';
 import { adSlots as localAdSlots } from '../../config/adSlots';
 import { db } from '../supabaseClient';
+import { useLanguage } from '../LanguageContext';
 
 export default function CardNewsClient({ initialDecks = [] }) {
+  const { t } = useLanguage();
   const [decks, setDecks] = useState(initialDecks);
   const [isMobile, setIsMobile] = useState(false);
   const [activeAdSlots, setActiveAdSlots] = useState([]);
@@ -67,19 +69,18 @@ export default function CardNewsClient({ initialDecks = [] }) {
       <section style={styles.heroSection}>
         <div className="container-max" style={styles.heroInner}>
           <div style={styles.badgeWrapper}>
-            <span style={styles.heroBadge}>✨ 카드뉴스 제작의 혁명</span>
+            <span style={styles.heroBadge}>{t('cardnews.badge', '✨ 카드뉴스 제작의 혁명')}</span>
           </div>
           <h1 style={styles.heroTitle}>
-            글만 붙여넣으면,<br />
-            <span style={styles.gradientText}>인스타 카드뉴스</span> 자동 완성
+            {t('cardnews.title_pre', '글만 붙여넣으면,')}<br />
+            <span style={styles.gradientText}>{t('cardnews.title_post', '인스타 카드뉴스 자동 완성')}</span>
           </h1>
           <p style={styles.heroSub}>
-            기사 요약부터 고화질 배경 이미지 선정, 6가지 디자인 스타일 테마 적용까지.<br />
-            이제 AI 카드뉴스 자동화 도구로 SNS 콘텐츠를 5분 만에 양산하세요.
+            {t('cardnews.desc', '기사 요약부터 고화질 배경 이미지 선정, 6가지 디자인 스타일 테마 적용까지. 이제 AI 카드뉴스 자동화 도구로 SNS 콘텐츠를 5분 만에 양산하세요.')}
           </p>
           <div style={styles.heroActions}>
             <Link href="/cardnews/editor" style={styles.btnPrimary}>
-              에디터 시작하기 <ArrowRight size={16} />
+              {t('cardnews.action', '에디터 시작하기')} <ArrowRight size={16} />
             </Link>
           </div>
           
@@ -106,8 +107,8 @@ export default function CardNewsClient({ initialDecks = [] }) {
         <section style={styles.recentSection}>
           <div className="container-max">
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>최근 발행된 카드뉴스</h2>
-              <p style={styles.sectionSub}>톱니바꿈 사용자들이 완성하여 발행한 작품들을 감상해보세요.</p>
+              <h2 style={styles.sectionTitle}>{t('cardnews.recent', '최근 발행된 카드뉴스')}</h2>
+              <p style={styles.sectionSub}>{t('cardnews.recent_desc', '톱니바꿈 사용자들이 완성하여 발행한 작품들을 감상해보세요.')}</p>
             </div>
             <div style={styles.grid4}>
               {decks.map((deck) => (
@@ -118,7 +119,7 @@ export default function CardNewsClient({ initialDecks = [] }) {
                       alt={deck.title} 
                       style={styles.deckCardThumb}
                     />
-                    <div style={styles.deckCardBadge}>{deck.card_count}장</div>
+                    <div style={styles.deckCardBadge}>{deck.card_count}{t('cardnews.card_unit', '장')}</div>
                   </div>
                   <div style={styles.deckCardContent}>
                     <h3 style={styles.deckCardTitle}>{deck.title}</h3>
@@ -132,7 +133,7 @@ export default function CardNewsClient({ initialDecks = [] }) {
             </div>
             <div style={{ textAlign: 'center', marginTop: '40px' }}>
               <Link href="/cardnews/gallery" style={styles.btnSecondaryLink}>
-                갤러리 전체보기 <ArrowRight size={14} />
+                {t('cardnews.view_all', '갤러리 전체보기')} <ArrowRight size={14} />
               </Link>
             </div>
           </div>
@@ -143,17 +144,17 @@ export default function CardNewsClient({ initialDecks = [] }) {
       <section style={styles.adSection}>
         <div className="container-max">
           <div style={styles.bannerContainer}>
-            <span style={styles.bannerLabel}>광고</span>
+            <span style={styles.bannerLabel}>{t('cardnews.ad.label', '광고')}</span>
             <div style={styles.bannerContent}>
-              <h4 style={styles.bannerTitle}>톱니바꿈 추천 도서 및 장비</h4>
+              <h4 style={styles.bannerTitle}>{t('cardnews.ad_title', '톱니바꿈 추천 도서 및 장비')}</h4>
               <p style={styles.bannerDesc}>
-                본 페이지는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
+                {t('cardnews.ad_desc', '본 페이지는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.')}
               </p>
             </div>
             
             {adLoading ? (
               <div style={styles.adLoadingPlaceholder}>
-                <span>광고를 불러오는 중입니다...</span>
+                <span>{t('cardnews.ad_loading', '광고를 불러오는 중입니다...')}</span>
               </div>
             ) : (
               <div style={styles.adContentWrapper}>
