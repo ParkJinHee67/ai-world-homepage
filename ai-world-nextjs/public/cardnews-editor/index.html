@@ -827,7 +827,15 @@ function buildSwatches(){
 function renderPhotoZone(){
   const host = document.getElementById('photoZoneHost');
   const preset = STYLE_PRESETS[state.preset];
-  if (!preset.needsPhoto){ host.innerHTML = ''; return; }
+  if (!preset.needsPhoto){
+    host.innerHTML = `
+      <div class="field-group" style="background:rgba(99,102,241,0.06); border:1px dashed rgba(99,102,241,0.25); padding:10px 12px; border-radius:8px; font-size:11.5px; color:var(--muted); line-height:1.5; margin-bottom:12px;">
+        💡 <strong>${preset.label}</strong> 스타일은 깔끔한 단색/그라데이션 전용 디자인입니다.<br>
+        배경 사진(셔플 · 업로드 · 사진검색 · AI 배경생성)을 쓰시려면 상단 <strong>'스타일 정체성'</strong>을 <strong>시네마틱, 매거진 형광, 만화 오버레이</strong>로 변경해 보세요.
+      </div>
+    `;
+    return;
+  }
   const slide = state.slides[state.activeIdx];
   const bg = currentBg(slide);
   const scrimVal = typeof slide.scrim === 'number' ? slide.scrim : preset.scrimBot;
