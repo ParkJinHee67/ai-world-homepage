@@ -113,6 +113,17 @@ const defaultAINews = [
   }
 ];
 
+const defaultPromoPopup = {
+  is_active: true,
+  badge: '무료 공개 서비스',
+  title: '⚡ TimeBox Daily Planner',
+  subtitle: '하루를 통제하는 가장 확실한 방법',
+  imageUrl: '/images/timebox-promo.jpg',
+  description: '📌 [일론 머스크의 30분 시간 관리법]\n시간표 드래그 앤 드롭, 브레인덤프 정리, 구글 캘린더 연동까지! 톱니바꿈에서 제작한 타임박스 플래너를 지금 무료로 이용해보세요.',
+  buttonText: '무료로 플래너 시작하기 (Launch)',
+  linkUrl: 'https://my-timebox-planner.vercel.app/?intro=true'
+};
+
 const getMockData = (key, defaultVal) => {
   if (typeof window === 'undefined') {
     return defaultVal;
@@ -155,6 +166,39 @@ const saveMockData = (key, data) => {
 export const db = {
   isMock: !supabaseUrl || !supabaseAnonKey,
   
+  async getPromoPopup() {
+    if (this.isMock) {
+      return { data: getMockData('mock_promo_popup', defaultPromoPopup), error: null };
+    }
+    try {
+      const { data, error } = await supabase.from('site_stats').select('value').eq('key', 'promo_popup').maybeSingle();
+      if (data && data.value) {
+        try {
+          return { data: JSON.parse(data.value), error: null };
+        } catch(e) {
+          return { data: defaultPromoPopup, error: null };
+        }
+      }
+      return { data: defaultPromoPopup, error: null };
+    } catch(e) {
+      return { data: defaultPromoPopup, error: null };
+    }
+  },
+
+  async savePromoPopup(popupData) {
+    if (this.isMock) {
+      saveMockData('mock_promo_popup', popupData);
+      return { data: popupData, error: null };
+    }
+    try {
+      const jsonVal = JSON.stringify(popupData);
+      const { data, error } = await supabase.from('site_stats').upsert({ key: 'promo_popup', value: jsonVal }).select();
+      return { data, error };
+    } catch(e) {
+      return { data: null, error: e };
+    }
+  },
+
   async getPortfolio() {
     if (this.isMock) {
       return { data: getMockData('mock_portfolio', defaultPortfolioItems), error: null };

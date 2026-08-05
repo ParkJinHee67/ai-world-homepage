@@ -57,6 +57,19 @@ export default function Admin() {
   const [adFormList, setAdFormList] = useState([]);
   const [adFormLoading, setAdFormLoading] = useState(false);
   
+  // Promo Popup states
+  const [promoForm, setPromoForm] = useState({
+    is_active: true,
+    badge: '무료 공개 서비스',
+    title: '⚡ TimeBox Daily Planner',
+    subtitle: '하루를 통제하는 가장 확실한 방법',
+    imageUrl: '/images/timebox-promo.jpg',
+    description: '📌 [일론 머스크의 30분 시간 관리법]\n시간표 드래그 앤 드롭, 브레인덤프 정리, 구글 캘린더 연동까지! 톱니바꿈에서 제작한 타임박스 플래너를 지금 무료로 이용해보세요.',
+    buttonText: '무료로 플래너 시작하기 (Launch)',
+    linkUrl: 'https://my-timebox-planner.vercel.app/?intro=true'
+  });
+  const [promoSaving, setPromoSaving] = useState(false);
+  
   // Dashboard navigation
   const [currentTab, setCurrentTab] = useState('portfolio'); // 'portfolio' | 'news'
   const [portfolioFilter, setPortfolioFilter] = useState('All');
@@ -206,11 +219,30 @@ export default function Admin() {
         alert(`주인공 이미지 리소스 로딩 실패: ${rRes.error.message || JSON.stringify(rRes.error)}`);
       }
       if (rRes.data) setResources(rRes.data);
+
+      const promoRes = await db.getPromoPopup();
+      if (promoRes.data) {
+        setPromoForm(promoRes.data);
+      }
     } catch (e) {
       console.error('Failed to load admin dashboard data:', e);
       alert(`대시보드 데이터 로딩 중 예외 발생: ${e.message || e}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSavePromoPopup = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setPromoSaving(true);
+    try {
+      const { error } = await db.savePromoPopup(promoForm);
+      if (error) throw error;
+      alert('메인 프로모션 팝업 설정이 성공적으로 저장되었습니다!');
+    } catch (err) {
+      alert(`팝업 설정 저장 실패: ${err.message || err}`);
+    } finally {
+      setPromoSaving(false);
     }
   };
 
@@ -965,6 +997,15 @@ def register_ai_news(title, summary_points, article_url):
                   >
                     📢 광고 슬롯 관리
                   </button>
+                  <button 
+                    onClick={() => setCurrentTab('promo')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'promo' ? styles.tabBtnActiveAds : {})
+                    }}
+                  >
+                    ✨ 메인 팝업 관리
+                  </button>
                 </div>
 
                 <button onClick={handleLogout} style={styles.logoutBtn}>
@@ -1703,6 +1744,146 @@ def register_ai_news(title, summary_points, article_url):
                         🔒 보안 비밀번호를 입력하고 [인증 및 데이터 불러오기]를 실행해 주세요.
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Tab 7: Promo Popup Management */}
+                {currentTab === 'promo' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={styles.subHeader}>
+                      <div>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                          ✨ 메인 팝업 (Promotion Popup) 동적 관리
+                        </h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                          메인 홈페이지 접속 시 1초 뒤 노출되는 공지/프로모션 팝업의 텍스트, 이미지, 링크 및 노출 여부를 자유롭게 설정합니다.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="glass-panel" style={{ padding: '28px', borderRadius: '16px' }}>
+                      <form onSubmit={handleSavePromoPopup} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* Toggle Switch */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+                          <div>
+                            <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>팝업 노출 상태</strong>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              끄기로 설정하면 메인 화면에 팝업이 노출되지 않습니다.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPromoForm(prev => ({ ...prev, is_active: !prev.is_active }))}
+                            style={{
+                              padding: '8px 20px',
+                              borderRadius: '30px',
+                              border: 'none',
+                              fontWeight: 700,
+                              fontSize: '0.9rem',
+                              cursor: 'pointer',
+                              backgroundColor: promoForm.is_active ? 'var(--accent-indigo)' : 'rgba(255,255,255,0.1)',
+                              color: promoForm.is_active ? '#fff' : 'var(--text-muted)',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {promoForm.is_active ? '● ON (노출 중)' : '○ OFF (숨김)'}
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                          <div style={styles.formGroup}>
+                            <label style={styles.label}>상단 뱃지 텍스트</label>
+                            <input
+                              type="text"
+                              value={promoForm.badge || ''}
+                              onChange={(e) => setPromoForm(prev => ({ ...prev, badge: e.target.value }))}
+                              placeholder="예: ✨ 무료 공개 서비스"
+                              className="input-field"
+                            />
+                          </div>
+
+                          <div style={styles.formGroup}>
+                            <label style={styles.label}>팝업 제목</label>
+                            <input
+                              type="text"
+                              value={promoForm.title || ''}
+                              onChange={(e) => setPromoForm(prev => ({ ...prev, title: e.target.value }))}
+                              placeholder="예: ⚡ 카드뉴스 자동화 도구 출시"
+                              required
+                              className="input-field"
+                            />
+                          </div>
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>소제목 / 한줄 요약</label>
+                          <input
+                            type="text"
+                            value={promoForm.subtitle || ''}
+                            onChange={(e) => setPromoForm(prev => ({ ...prev, subtitle: e.target.value }))}
+                            placeholder="예: 5분 만에 인스타 카드뉴스 완벽 제작"
+                            className="input-field"
+                          />
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>이미지 URL</label>
+                          <input
+                            type="text"
+                            value={promoForm.imageUrl || ''}
+                            onChange={(e) => setPromoForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                            placeholder="예: /images/timebox-promo.jpg 또는 https://images.unsplash.com/..."
+                            className="input-field"
+                          />
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.label}>상세 설명글 (줄바꿈 가능)</label>
+                          <textarea
+                            value={promoForm.description || ''}
+                            onChange={(e) => setPromoForm(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="팝업 내부에 노출될 핵심 설명 텍스트를 기입하세요."
+                            rows={4}
+                            className="input-field"
+                            style={{ resize: 'vertical' }}
+                          />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                          <div style={styles.formGroup}>
+                            <label style={styles.label}>버튼 텍스트</label>
+                            <input
+                              type="text"
+                              value={promoForm.buttonText || ''}
+                              onChange={(e) => setPromoForm(prev => ({ ...prev, buttonText: e.target.value }))}
+                              placeholder="예: 카드뉴스 만들러 가기"
+                              className="input-field"
+                            />
+                          </div>
+
+                          <div style={styles.formGroup}>
+                            <label style={styles.label}>클릭 시 이동 URL (링크)</label>
+                            <input
+                              type="text"
+                              value={promoForm.linkUrl || ''}
+                              onChange={(e) => setPromoForm(prev => ({ ...prev, linkUrl: e.target.value }))}
+                              placeholder="예: /cardnews 또는 https://..."
+                              className="input-field"
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                          <button
+                            type="submit"
+                            disabled={promoSaving}
+                            style={{ ...styles.exportBtn, backgroundColor: 'var(--accent-indigo)', padding: '12px 28px', fontSize: '0.95rem' }}
+                          >
+                            {promoSaving ? '저장 중...' : '✨ 메인 팝업 설정 저장하기'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                 )}
               </div>

@@ -336,17 +336,29 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
   const [highlightCardId, setHighlightCardId] = useState(null);
   const [stats, setStats] = useState(initialStats);
   const [showPromoPopup, setShowPromoPopup] = useState(false);
+  const [promoConfig, setPromoConfig] = useState(null);
 
-  // TimeBox Promotion Popup logic
+  // Dynamic Promotion Popup logic
   useEffect(() => {
-    const hidePopupDate = localStorage.getItem('hideTimeBoxPromo');
-    const todayStr = new Date().toLocaleDateString('sv-SE');
-    if (hidePopupDate !== todayStr) {
-      const timer = setTimeout(() => {
-        setShowPromoPopup(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+    async function loadPromo() {
+      try {
+        const { data } = await db.getPromoPopup();
+        if (data) {
+          setPromoConfig(data);
+          const hidePopupDate = localStorage.getItem('hideTimeBoxPromo');
+          const todayStr = new Date().toLocaleDateString('sv-SE');
+          if (data.is_active !== false && hidePopupDate !== todayStr) {
+            const timer = setTimeout(() => {
+              setShowPromoPopup(true);
+            }, 1000);
+            return () => clearTimeout(timer);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load promo config:', e);
+      }
     }
+    loadPromo();
   }, []);
 
   const handleClosePromo = () => {
@@ -656,40 +668,43 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
         )}
       </section>
 
-      {/* TimeBox Promo Popup */}
-      {showPromoPopup && (
+      {/* Dynamic Promo Popup */}
+      {showPromoPopup && promoConfig && (
         <div style={styles.popupOverlay}>
           <div className="timebox-promo-card" style={styles.popupCard}>
             <div style={styles.popupTopAccent} />
             <button onClick={handleClosePromo} style={styles.popupCloseBtn}>✕</button>
-            <div style={styles.popupBadge}>
-              <Sparkles size={12} color="#FBBF24" />
-              <span>무료 공개 서비스</span>
-            </div>
-            <h3 style={styles.popupTitle}>⚡ TimeBox Daily Planner</h3>
-            <p style={styles.popupSubTitle}>하루를 통제하는 가장 확실한 방법</p>
-            <div style={styles.popupImgContainer}>
-              <Image 
-                src="/images/timebox-promo.jpg" 
-                alt="TimeBox Planner" 
-                fill
-                sizes="400px"
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <p style={styles.popupDesc}>
-              📌 <strong>[일론 머스크의 30분 시간 관리법]</strong><br />
-              시간표 드래그 앤 드롭, 브레인덤프 정리, 구글 캘린더 연동까지! 톱니바꿈에서 제작한 타임박스 플래너를 지금 무료로 이용해보세요.
-            </p>
+            {promoConfig.badge && (
+              <div style={styles.popupBadge}>
+                <Sparkles size={12} color="#FBBF24" />
+                <span>{promoConfig.badge}</span>
+              </div>
+            )}
+            <h3 style={styles.popupTitle}>{promoConfig.title || '⚡ TimeBox Daily Planner'}</h3>
+            {promoConfig.subtitle && <p style={styles.popupSubTitle}>{promoConfig.subtitle}</p>}
+            {promoConfig.imageUrl && (
+              <div style={styles.popupImgContainer}>
+                <img 
+                  src={promoConfig.imageUrl} 
+                  alt={promoConfig.title || 'Promo'} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            )}
+            {promoConfig.description && (
+              <p style={{ ...styles.popupDesc, whiteSpace: 'pre-wrap' }}>
+                {promoConfig.description}
+              </p>
+            )}
             <div style={styles.popupActions}>
               <a 
-                href="https://my-timebox-planner.vercel.app/?intro=true" 
-                target="_blank" 
+                href={promoConfig.linkUrl || 'https://my-timebox-planner.vercel.app/?intro=true'} 
+                target={promoConfig.linkUrl?.startsWith('http') ? '_blank' : '_self'} 
                 rel="noopener noreferrer" 
                 style={styles.popupLaunchBtn}
                 onClick={handleClosePromo}
               >
-                무료로 플래너 시작하기 (Launch)
+                {promoConfig.buttonText || '자세히 보기'}
               </a>
               <div style={styles.popupFooterOpts}>
                 <button onClick={handleHidePromoToday} style={styles.popupFooterLink}>
