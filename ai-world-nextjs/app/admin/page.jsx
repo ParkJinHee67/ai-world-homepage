@@ -2594,6 +2594,8 @@ const styles = {
   },
   tabBtnsContainer: {
     display: 'flex',
+    flexWrap: 'wrap',
+    gap: '4px',
     background: 'rgba(255, 255, 255, 0.03)',
     border: '1px solid rgba(255, 255, 255, 0.05)',
     padding: '4px',
