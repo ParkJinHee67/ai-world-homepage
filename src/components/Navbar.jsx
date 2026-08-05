@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download } from 'lucide-react';
+import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download, FileText } from 'lucide-react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +13,7 @@ export default function Navbar() {
     { path: '/', label: '홈', icon: Terminal },
     { path: '/ai-news', label: 'AI 뉴스', icon: Newspaper },
     { path: '/ai-recommend', label: '영상제작', icon: Video },
+    { path: 'https://ai-world-homepage-lgnr.vercel.app/cardnews', label: '카드뉴스자동화', icon: FileText, isExternal: true },
     { path: '/download', label: '주인공 이미지', icon: Download },
     { path: '/homepage', label: '홈페이지', icon: Layout },
     { path: '/insights', label: '인사이트', icon: Lightbulb },
@@ -32,6 +33,21 @@ export default function Navbar() {
         <div className="nav-desktop-links" style={styles.desktopLinks}>
           {navItems.map((item) => {
             const Icon = item.icon;
+            if (item.isExternal || item.path.startsWith('http')) {
+              return (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="nav-link"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </a>
+              );
+            }
             return (
               <NavLink
                 key={item.path}
@@ -57,6 +73,22 @@ export default function Navbar() {
         <div style={styles.mobileDrawer}>
           {navItems.map((item) => {
             const Icon = item.icon;
+            if (item.isExternal || item.path.startsWith('http')) {
+              return (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsOpen(false)}
+                  className="nav-link"
+                  style={styles.mobileNavLink}
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </a>
+              );
+            }
             return (
               <NavLink
                 key={item.path}
