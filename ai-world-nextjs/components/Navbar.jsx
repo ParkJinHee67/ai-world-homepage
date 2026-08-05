@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download } from 'lucide-react';
+import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download, FileText } from 'lucide-react';
 import { useLanguage } from '../app/LanguageContext';
 
 export default function Navbar() {
@@ -18,6 +18,7 @@ export default function Navbar() {
     { path: '/', label: t('nav.home', '홈'), icon: Terminal },
     { path: '/ai-news', label: t('nav.news', 'AI 뉴스'), icon: Newspaper },
     { path: '/ai-recommend', label: t('nav.video', '영상제작'), icon: Video },
+    { path: '/cardnews', label: t('nav.cardnews', '카드뉴스자동화'), icon: FileText },
     { path: '/download', label: t('nav.download', '주인공 이미지'), icon: Download },
     { path: '/homepage', label: t('nav.homepage', '홈페이지'), icon: Layout },
     { path: '/insights', label: t('nav.insights', '인사이트'), icon: Lightbulb },
