@@ -3,8 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "dev": "npm run dev --prefix ai-world-nextjs",
-    "build": "npm run build --prefix ai-world-nextjs",
-    "start": "npm run start --prefix ai-world-nextjs"
+    "dev": "cd ai-world-nextjs && npm run dev",
+    "build": "cd ai-world-nextjs && npm install && npx next build",
+    "start": "cd ai-world-nextjs && npm run start"
   }
 }
