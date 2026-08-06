@@ -168,20 +168,24 @@ export const db = {
   
   async getPromoPopup() {
     if (this.isMock) {
-      return { data: getMockData('mock_promo_popup', defaultPromoPopup), error: null };
+      const data = getMockData('mock_promo_popup', [defaultPromoPopup]);
+      const list = Array.isArray(data) ? data : [data];
+      return { data: list, error: null };
     }
     try {
       const { data, error } = await supabase.from('site_stats').select('value').eq('key', 'promo_popup').maybeSingle();
       if (data && data.value) {
         try {
-          return { data: JSON.parse(data.value), error: null };
+          const parsed = JSON.parse(data.value);
+          const list = Array.isArray(parsed) ? parsed : [parsed];
+          return { data: list, error: null };
         } catch(e) {
-          return { data: defaultPromoPopup, error: null };
+          return { data: [defaultPromoPopup], error: null };
         }
       }
-      return { data: defaultPromoPopup, error: null };
+      return { data: [defaultPromoPopup], error: null };
     } catch(e) {
-      return { data: defaultPromoPopup, error: null };
+      return { data: [defaultPromoPopup], error: null };
     }
   },
 

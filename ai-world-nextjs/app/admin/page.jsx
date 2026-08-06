@@ -69,6 +69,8 @@ export default function Admin() {
     linkUrl: 'https://my-timebox-planner.vercel.app/?intro=true'
   });
   const [promoSaving, setPromoSaving] = useState(false);
+  const [promoList, setPromoList] = useState([]);
+  const [editingPromoId, setEditingPromoId] = useState(null);
   
   // Dashboard navigation
   const [currentTab, setCurrentTab] = useState('portfolio'); // 'portfolio' | 'news'
@@ -147,6 +149,20 @@ export default function Admin() {
     handleAuthStateRef.current = handleAuthState;
   });
 
+  // Draft auto-save to sessionStorage to prevent data loss on page navigation
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentTab) sessionStorage.setItem('admin_current_tab', currentTab);
+    }
+  }, [currentTab]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && promoForm) {
+      sessionStorage.setItem('admin_promo_form_draft', JSON.stringify(promoForm));
+      if (editingPromoId) sessionStorage.setItem('admin_editing_promo_id', editingPromoId);
+    }
+  }, [promoForm, editingPromoId]);
+
   useEffect(() => {
     async function checkAuth() {
       const { data: { session } } = await db.getSession();
@@ -170,7 +186,7 @@ export default function Admin() {
       const isAuthorized = authorized === true || authorized?.data === true;
       if (isAuthorized) {
         setIsLoggedIn(true);
-        loadDashboardData();
+        loadDashboardData(false); // Load with cache preference (do not overwrite draft)
         return;
       }
     }
@@ -189,7 +205,39 @@ export default function Admin() {
     }
   };
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (forceRefresh = false) => {
+    // If cache/draft exists and forceRefresh is false, avoid overwriting user edits
+    if (typeof window !== 'undefined' && !forceRefresh) {
+      const isLoadedBefore = sessionStorage.getItem('admin_dashboard_loaded') === 'true';
+      const savedTab = sessionStorage.getItem('admin_current_tab');
+      const savedDraftJson = sessionStorage.getItem('admin_promo_form_draft');
+      const savedEditingId = sessionStorage.getItem('admin_editing_promo_id');
+
+      if (savedTab) setCurrentTab(savedTab);
+
+      if (isLoadedBefore && savedDraftJson) {
+        try {
+          const draftForm = JSON.parse(savedDraftJson);
+          setPromoForm(draftForm);
+          if (savedEditingId) setEditingPromoId(savedEditingId);
+          
+          const savedListJson = sessionStorage.getItem('admin_promo_list_cache');
+          if (savedListJson) setPromoList(JSON.parse(savedListJson));
+          
+          const savedPortfolioJson = sessionStorage.getItem('admin_portfolio_cache');
+          if (savedPortfolioJson) setPortfolioItems(JSON.parse(savedPortfolioJson));
+
+          const savedNewsJson = sessionStorage.getItem('admin_news_cache');
+          if (savedNewsJson) setNewsItems(JSON.parse(savedNewsJson));
+
+          setLoading(false);
+          return;
+        } catch (e) {
+          console.warn('Failed to parse draft cache, fetching fresh data:', e);
+        }
+      }
+    }
+
     setLoading(true);
     try {
       const pRes = await db.getPortfolio();
@@ -222,7 +270,52 @@ export default function Admin() {
 
       const promoRes = await db.getPromoPopup();
       if (promoRes.data) {
-        setPromoForm(promoRes.data);
+        const list = Array.isArray(promoRes.data) ? promoRes.data : [promoRes.data];
+        // Ensure each item has a unique id
+        const normalized = list.map((item, idx) => ({
+          id: item.id || `promo_${Date.now()}_${idx}`,
+          is_active: item.is_active !== undefined ? item.is_active : true,
+          badge: item.badge || '',
+          title: item.title || '',
+          subtitle: item.subtitle || '',
+          imageUrl: item.imageUrl || '',
+          description: item.description || '',
+          buttonText: item.buttonText || '',
+          linkUrl: item.linkUrl || ''
+        }));
+        setPromoList(normalized);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('admin_promo_list_cache', JSON.stringify(normalized));
+        }
+
+        // Restore draft if present, else fallback to first item
+        if (typeof window !== 'undefined') {
+          const savedDraft = sessionStorage.getItem('admin_promo_form_draft');
+          const savedEditingId = sessionStorage.getItem('admin_editing_promo_id');
+          if (savedDraft) {
+            try {
+              setPromoForm(JSON.parse(savedDraft));
+              if (savedEditingId) setEditingPromoId(savedEditingId);
+            } catch (e) {
+              if (normalized.length > 0) {
+                setPromoForm(normalized[0]);
+                setEditingPromoId(normalized[0].id);
+              }
+            }
+          } else if (normalized.length > 0) {
+            setPromoForm(normalized[0]);
+            setEditingPromoId(normalized[0].id);
+          }
+        } else if (normalized.length > 0) {
+          setPromoForm(normalized[0]);
+          setEditingPromoId(normalized[0].id);
+        }
+      }
+
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('admin_dashboard_loaded', 'true');
+        if (pRes.data) sessionStorage.setItem('admin_portfolio_cache', JSON.stringify(pRes.data.map(mapPortfolioItem)));
+        if (nRes.data) sessionStorage.setItem('admin_news_cache', JSON.stringify(nRes.data.map(mapNewsItem)));
       }
     } catch (e) {
       console.error('Failed to load admin dashboard data:', e);
@@ -236,14 +329,84 @@ export default function Admin() {
     if (e && e.preventDefault) e.preventDefault();
     setPromoSaving(true);
     try {
-      const { error } = await db.savePromoPopup(promoForm);
+      let updatedList = [...promoList];
+      if (editingPromoId) {
+        // Update existing promo item
+        updatedList = updatedList.map(item => 
+          item.id === editingPromoId ? { ...promoForm, id: editingPromoId } : item
+        );
+      } else {
+        // Add new promo item
+        const newItem = {
+          ...promoForm,
+          id: `promo_${Date.now()}`
+        };
+        updatedList.unshift(newItem);
+        setEditingPromoId(newItem.id);
+      }
+
+      const { error } = await db.savePromoPopup(updatedList);
       if (error) throw error;
-      alert('메인 프로모션 팝업 설정이 성공적으로 저장되었습니다!');
+      setPromoList(updatedList);
+      alert('메인 프로모션 팝업 목록이 성공적으로 저장되었습니다!');
     } catch (err) {
-      alert(`팝업 설정 저장 실패: ${err.message || err}`);
+      alert(`팝업 저장 실패: ${err.message || err}`);
     } finally {
       setPromoSaving(false);
     }
+  };
+
+  const handleTogglePromoStatus = async (id) => {
+    const updatedList = promoList.map(item => 
+      item.id === id ? { ...item, is_active: !item.is_active } : item
+    );
+    setPromoList(updatedList);
+    if (promoForm && promoForm.id === id) {
+      setPromoForm(prev => ({ ...prev, is_active: !prev.is_active }));
+    }
+    try {
+      await db.savePromoPopup(updatedList);
+    } catch (e) {
+      console.error('Failed to toggle status:', e);
+    }
+  };
+
+  const handleDeletePromo = async (id) => {
+    if (!confirm('이 프로모션 팝업 항목을 삭제하시겠습니까?')) return;
+    const updatedList = promoList.filter(item => item.id !== id);
+    setPromoList(updatedList);
+    if (editingPromoId === id) {
+      if (updatedList.length > 0) {
+        setPromoForm(updatedList[0]);
+        setEditingPromoId(updatedList[0].id);
+      } else {
+        handleNewPromo();
+      }
+    }
+    try {
+      await db.savePromoPopup(updatedList);
+    } catch (e) {
+      console.error('Failed to delete promo item:', e);
+    }
+  };
+
+  const handleSelectPromo = (item) => {
+    setEditingPromoId(item.id);
+    setPromoForm(item);
+  };
+
+  const handleNewPromo = () => {
+    setEditingPromoId(null);
+    setPromoForm({
+      is_active: true,
+      badge: '✨ 신규 이벤트',
+      title: '',
+      subtitle: '',
+      imageUrl: '',
+      description: '',
+      buttonText: '자세히 보기',
+      linkUrl: ''
+    });
   };
 
   const exportLeadsToCSV = () => {
@@ -1756,18 +1919,38 @@ def register_ai_news(title, summary_points, article_url):
                 {/* Tab 7: Promo Popup Management */}
                 {currentTab === 'promo' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={styles.subHeader}>
+                    <div style={{ ...styles.subHeader, justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                          ✨ 메인 팝업 (Promotion Popup) 동적 관리
+                          ✨ 메인 팝업 (Promotion Popup) 동적 목록 관리
                         </h3>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          메인 홈페이지 접속 시 1초 뒤 노출되는 공지/프로모션 팝업 데이터 및 노출 상태를 관리합니다.
+                          메인 홈페이지 접속 시 노출되는 공지/프로모션 팝업들을 등록·수정·삭제하고 활성화 상태를 제어합니다.
                         </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleNewPromo}
+                        style={{
+                          backgroundColor: 'var(--accent-purple)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '10px 18px',
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)'
+                        }}
+                      >
+                        <Plus size={15} /> 새 팝업 등록
+                      </button>
                     </div>
 
-                    {/* 1. STATUS & SUMMARY TABLE */}
+                    {/* 1. MULTI POPUP LIST TABLE */}
                     <div className="admin-table-container" style={{ marginBottom: '8px' }}>
                       <table style={styles.table}>
                         <thead>
@@ -1777,69 +1960,92 @@ def register_ai_news(title, summary_points, article_url):
                             <th style={styles.th}>팝업 제목</th>
                             <th style={styles.th}>소제목 / 요약</th>
                             <th style={styles.th}>이동 링크</th>
-                            <th style={{ ...styles.th, textAlign: 'center', width: '90px' }}>관리</th>
+                            <th style={{ ...styles.th, textAlign: 'center', width: '120px' }}>관리</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr style={styles.trBody} className="admin-table-row">
-                            <td style={{ ...styles.td, textAlign: 'center' }}>
-                              <button
-                                type="button"
-                                onClick={() => setPromoForm(prev => ({ ...prev, is_active: !prev.is_active }))}
-                                style={{
-                                  padding: '4px 12px',
-                                  borderRadius: '20px',
-                                  border: 'none',
-                                  fontWeight: 700,
-                                  fontSize: '0.75rem',
-                                  cursor: 'pointer',
-                                  backgroundColor: promoForm.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.15)',
-                                  color: promoForm.is_active ? '#10b981' : '#ef4444',
-                                  border: promoForm.is_active ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(239, 68, 68, 0.3)',
-                                  transition: 'all 0.2s ease'
-                                }}
-                              >
-                                {promoForm.is_active ? '● ON (노출)' : '○ OFF (숨김)'}
-                              </button>
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--accent-rose)', fontWeight: 600 }}>
-                                {promoForm.badge || '-'}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              <strong style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                                {promoForm.title || '-'}
-                              </strong>
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                {promoForm.subtitle || '-'}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              {promoForm.linkUrl ? (
-                                <a href={promoForm.linkUrl} target="_blank" rel="noopener noreferrer" style={styles.tableLink}>
-                                  {promoForm.linkUrl}
-                                </a>
-                              ) : (
-                                <span>-</span>
-                              )}
-                            </td>
-                            <td style={{ ...styles.td, textAlign: 'center' }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const el = document.getElementById('promo-form-card');
-                                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                }}
-                                style={styles.iconEditBtnNews}
-                                title="설정 수정하기"
-                              >
-                                <Pen size={13} />
-                              </button>
-                            </td>
-                          </tr>
+                          {promoList.map((item) => (
+                            <tr
+                              key={item.id}
+                              style={{
+                                ...styles.trBody,
+                                backgroundColor: editingPromoId === item.id ? 'rgba(168, 85, 247, 0.08)' : undefined
+                              }}
+                              className="admin-table-row"
+                            >
+                              <td style={{ ...styles.td, textAlign: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePromoStatus(item.id)}
+                                  style={{
+                                    padding: '4px 12px',
+                                    borderRadius: '20px',
+                                    border: 'none',
+                                    fontWeight: 700,
+                                    fontSize: '0.75rem',
+                                    cursor: 'pointer',
+                                    backgroundColor: item.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.15)',
+                                    color: item.is_active ? '#10b981' : '#ef4444',
+                                    border: item.is_active ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(239, 68, 68, 0.3)',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                >
+                                  {item.is_active ? '● ON (노출)' : '○ OFF (숨김)'}
+                                </button>
+                              </td>
+                              <td style={styles.td}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--accent-rose)', fontWeight: 600 }}>
+                                  {item.badge || '-'}
+                                </span>
+                              </td>
+                              <td style={styles.td}>
+                                <strong style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                                  {item.title || '-'}
+                                </strong>
+                              </td>
+                              <td style={styles.td}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                  {item.subtitle || '-'}
+                                </span>
+                              </td>
+                              <td style={styles.td}>
+                                {item.linkUrl ? (
+                                  <a href={item.linkUrl} target="_blank" rel="noopener noreferrer" style={styles.tableLink}>
+                                    {item.linkUrl}
+                                  </a>
+                                ) : (
+                                  <span>-</span>
+                                )}
+                              </td>
+                              <td style={{ ...styles.td, textAlign: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSelectPromo(item)}
+                                    style={styles.iconEditBtnNews}
+                                    title="수정하기"
+                                  >
+                                    <Pen size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeletePromo(item.id)}
+                                    style={styles.iconDeleteBtn}
+                                    title="삭제하기"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {promoList.length === 0 && (
+                            <tr>
+                              <td colSpan={6} style={styles.tdEmpty}>
+                                등록된 프로모션 팝업이 없습니다. 상단의 [+ 새 팝업 등록] 버튼을 눌러 추가하세요.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -1850,12 +2056,32 @@ def register_ai_news(title, summary_points, article_url):
                       <div id="promo-form-card" className="glass-panel" style={{ padding: '20px', borderRadius: '14px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                           <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            ⚙️ 팝업 상세 설정 편집
+                            {editingPromoId ? '✏️ 선택된 팝업 상세 수정' : '✨ 새 프로모션 팝업 작성'}
                           </h4>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>* 표시 항목 필수</span>
                         </div>
 
                         <form onSubmit={handleSavePromoPopup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>노출 여부 설정</span>
+                            <button
+                              type="button"
+                              onClick={() => setPromoForm(prev => ({ ...prev, is_active: !prev.is_active }))}
+                              style={{
+                                padding: '4px 14px',
+                                borderRadius: '20px',
+                                border: 'none',
+                                fontWeight: 700,
+                                fontSize: '0.78rem',
+                                cursor: 'pointer',
+                                backgroundColor: promoForm.is_active ? 'var(--accent-indigo)' : 'rgba(255,255,255,0.1)',
+                                color: promoForm.is_active ? '#fff' : 'var(--text-muted)'
+                              }}
+                            >
+                              {promoForm.is_active ? '● ON (메인 화면 노출)' : '○ OFF (숨김)'}
+                            </button>
+                          </div>
+
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <div style={styles.formGroup}>
                               <label style={{ ...styles.label, fontSize: '0.78rem' }}>상단 뱃지 텍스트</label>
@@ -1947,7 +2173,25 @@ def register_ai_news(title, summary_points, article_url):
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+                            {editingPromoId && (
+                              <button
+                                type="button"
+                                onClick={handleNewPromo}
+                                style={{
+                                  backgroundColor: 'rgba(255,255,255,0.08)',
+                                  color: 'var(--text-secondary)',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '10px 16px',
+                                  fontSize: '0.85rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                취소 (새 팝업)
+                              </button>
+                            )}
                             <button
                               type="submit"
                               disabled={promoSaving}
@@ -1956,14 +2200,15 @@ def register_ai_news(title, summary_points, article_url):
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '8px',
-                                padding: '10px 20px',
+                                padding: '10px 22px',
                                 fontSize: '0.85rem',
                                 fontWeight: 700,
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
                               }}
                             >
-                              {promoSaving ? '저장 중...' : '✨ 메인 팝업 설정 저장'}
+                              {promoSaving ? '저장 중...' : (editingPromoId ? '✨ 팝업 수정 사항 저장' : '✨ 새 팝업 추가 저장')}
                             </button>
                           </div>
                         </form>
@@ -1973,7 +2218,7 @@ def register_ai_news(title, summary_points, article_url):
                       <div className="glass-panel" style={{ padding: '18px', borderRadius: '14px', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                           <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-purple)' }}>
-                            👁️ 실시간 팝업 미니 미리보기
+                            👁️ 선택 팝업 실시간 미리보기
                           </span>
                           <span style={{
                             fontSize: '0.7rem',
@@ -1983,7 +2228,7 @@ def register_ai_news(title, summary_points, article_url):
                             color: promoForm.is_active ? '#10b981' : '#ef4444',
                             fontWeight: 700
                           }}>
-                            {promoForm.is_active ? '실제 노출 중' : '숨김 상태'}
+                            {promoForm.is_active ? '실제 노출 설정' : '숨김 설정'}
                           </span>
                         </div>
 
