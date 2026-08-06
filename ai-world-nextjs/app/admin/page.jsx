@@ -142,6 +142,9 @@ export default function Admin() {
     }
   };
   
+  // Prevent redundant automatic re-fetching on focus/auth changes
+  const hasLoadedDataRef = useRef(false);
+  
   // Setup authentication listener
   const handleAuthStateRef = useRef(null);
 
@@ -186,7 +189,10 @@ export default function Admin() {
       const isAuthorized = authorized === true || authorized?.data === true;
       if (isAuthorized) {
         setIsLoggedIn(true);
-        loadDashboardData(false); // Load with cache preference (do not overwrite draft)
+        if (!hasLoadedDataRef.current) {
+          hasLoadedDataRef.current = true;
+          loadDashboardData(false);
+        }
         return;
       }
     }
