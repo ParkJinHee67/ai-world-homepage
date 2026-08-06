@@ -178,7 +178,15 @@ def register_to_supabase(title, summary_points, article_url):
     if yt_match:
         capture_url = f"https://img.youtube.com/vi/{yt_match.group(1)}/mqdefault.jpg"
     else:
-        capture_url = f"https://api.microlink.io?url={urllib.parse.quote(article_url)}&embed=image.url"
+        capture_url = None
+        try:
+            m_res = requests.get(f"https://api.microlink.io?url={urllib.parse.quote(article_url)}", timeout=5)
+            if m_res.status_code == 200:
+                img_data = m_res.json().get("data", {}).get("image")
+                if img_data and isinstance(img_data, dict) and img_data.get("url"):
+                    capture_url = img_data["url"]
+        except Exception as e:
+            print(f"Microlink thumbnail extract failed: {e}")
         
     payload = {
         "title": title,
