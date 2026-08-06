@@ -1755,140 +1755,306 @@ def register_ai_news(title, summary_points, article_url):
 
                 {/* Tab 7: Promo Popup Management */}
                 {currentTab === 'promo' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div style={styles.subHeader}>
                       <div>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
                           ✨ 메인 팝업 (Promotion Popup) 동적 관리
                         </h3>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          메인 홈페이지 접속 시 1초 뒤 노출되는 공지/프로모션 팝업의 텍스트, 이미지, 링크 및 노출 여부를 자유롭게 설정합니다.
+                          메인 홈페이지 접속 시 1초 뒤 노출되는 공지/프로모션 팝업 데이터 및 노출 상태를 관리합니다.
                         </p>
                       </div>
                     </div>
 
-                    <div className="glass-panel" style={{ padding: '28px', borderRadius: '16px' }}>
-                      <form onSubmit={handleSavePromoPopup} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {/* Toggle Switch */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
-                          <div>
-                            <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>팝업 노출 상태</strong>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                              끄기로 설정하면 메인 화면에 팝업이 노출되지 않습니다.
-                            </p>
+                    {/* 1. STATUS & SUMMARY TABLE */}
+                    <div className="admin-table-container" style={{ marginBottom: '8px' }}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={styles.trHead}>
+                            <th style={{ ...styles.th, width: '130px', textAlign: 'center' }}>노출 상태</th>
+                            <th style={styles.th}>상단 뱃지</th>
+                            <th style={styles.th}>팝업 제목</th>
+                            <th style={styles.th}>소제목 / 요약</th>
+                            <th style={styles.th}>이동 링크</th>
+                            <th style={{ ...styles.th, textAlign: 'center', width: '90px' }}>관리</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr style={styles.trBody} className="admin-table-row">
+                            <td style={{ ...styles.td, textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => setPromoForm(prev => ({ ...prev, is_active: !prev.is_active }))}
+                                style={{
+                                  padding: '4px 12px',
+                                  borderRadius: '20px',
+                                  border: 'none',
+                                  fontWeight: 700,
+                                  fontSize: '0.75rem',
+                                  cursor: 'pointer',
+                                  backgroundColor: promoForm.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.15)',
+                                  color: promoForm.is_active ? '#10b981' : '#ef4444',
+                                  border: promoForm.is_active ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(239, 68, 68, 0.3)',
+                                  transition: 'all 0.2s ease'
+                                }}
+                              >
+                                {promoForm.is_active ? '● ON (노출)' : '○ OFF (숨김)'}
+                              </button>
+                            </td>
+                            <td style={styles.td}>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--accent-rose)', fontWeight: 600 }}>
+                                {promoForm.badge || '-'}
+                              </span>
+                            </td>
+                            <td style={styles.td}>
+                              <strong style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                                {promoForm.title || '-'}
+                              </strong>
+                            </td>
+                            <td style={styles.td}>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                {promoForm.subtitle || '-'}
+                              </span>
+                            </td>
+                            <td style={styles.td}>
+                              {promoForm.linkUrl ? (
+                                <a href={promoForm.linkUrl} target="_blank" rel="noopener noreferrer" style={styles.tableLink}>
+                                  {promoForm.linkUrl}
+                                </a>
+                              ) : (
+                                <span>-</span>
+                              )}
+                            </td>
+                            <td style={{ ...styles.td, textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const el = document.getElementById('promo-form-card');
+                                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                style={styles.iconEditBtnNews}
+                                title="설정 수정하기"
+                              >
+                                <Pen size={13} />
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* 2. COMPACT FORM + LIVE PREVIEW GRID */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', alignItems: 'start' }}>
+                      {/* Left: Compact Form */}
+                      <div id="promo-form-card" className="glass-panel" style={{ padding: '20px', borderRadius: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            ⚙️ 팝업 상세 설정 편집
+                          </h4>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>* 표시 항목 필수</span>
+                        </div>
+
+                        <form onSubmit={handleSavePromoPopup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={styles.formGroup}>
+                              <label style={{ ...styles.label, fontSize: '0.78rem' }}>상단 뱃지 텍스트</label>
+                              <input
+                                type="text"
+                                value={promoForm.badge || ''}
+                                onChange={(e) => setPromoForm(prev => ({ ...prev, badge: e.target.value }))}
+                                placeholder="예: ✨ 무료 공개 서비스"
+                                className="input-field"
+                                style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                              />
+                            </div>
+
+                            <div style={styles.formGroup}>
+                              <label style={{ ...styles.label, fontSize: '0.78rem' }}>팝업 제목 <span style={{ color: 'var(--accent-rose)' }}>*</span></label>
+                              <input
+                                type="text"
+                                value={promoForm.title || ''}
+                                onChange={(e) => setPromoForm(prev => ({ ...prev, title: e.target.value }))}
+                                placeholder="예: ⚡ 카드뉴스 자동화 도구"
+                                required
+                                className="input-field"
+                                style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                              />
+                            </div>
                           </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={styles.formGroup}>
+                              <label style={{ ...styles.label, fontSize: '0.78rem' }}>소제목 / 한줄 요약</label>
+                              <input
+                                type="text"
+                                value={promoForm.subtitle || ''}
+                                onChange={(e) => setPromoForm(prev => ({ ...prev, subtitle: e.target.value }))}
+                                placeholder="예: 5분 만에 인스타 카드뉴스 제작"
+                                className="input-field"
+                                style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                              />
+                            </div>
+
+                            <div style={styles.formGroup}>
+                              <label style={{ ...styles.label, fontSize: '0.78rem' }}>이미지 URL</label>
+                              <input
+                                type="text"
+                                value={promoForm.imageUrl || ''}
+                                onChange={(e) => setPromoForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                                placeholder="/images/timebox-promo.jpg"
+                                className="input-field"
+                                style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={styles.formGroup}>
+                            <label style={{ ...styles.label, fontSize: '0.78rem' }}>상세 설명글</label>
+                            <textarea
+                              value={promoForm.description || ''}
+                              onChange={(e) => setPromoForm(prev => ({ ...prev, description: e.target.value }))}
+                              placeholder="팝업 내부에 노출될 핵심 설명 텍스트를 입력하세요."
+                              rows={3}
+                              className="input-field"
+                              style={{ resize: 'vertical', fontSize: '0.82rem', padding: '8px 12px' }}
+                            />
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={styles.formGroup}>
+                              <label style={{ ...styles.label, fontSize: '0.78rem' }}>버튼 텍스트</label>
+                              <input
+                                type="text"
+                                value={promoForm.buttonText || ''}
+                                onChange={(e) => setPromoForm(prev => ({ ...prev, buttonText: e.target.value }))}
+                                placeholder="예: 무료로 시작하기"
+                                className="input-field"
+                                style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                              />
+                            </div>
+
+                            <div style={styles.formGroup}>
+                              <label style={{ ...styles.label, fontSize: '0.78rem' }}>클릭 시 이동 URL</label>
+                              <input
+                                type="text"
+                                value={promoForm.linkUrl || ''}
+                                onChange={(e) => setPromoForm(prev => ({ ...prev, linkUrl: e.target.value }))}
+                                placeholder="https://my-timebox-planner.vercel.app"
+                                className="input-field"
+                                style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                            <button
+                              type="submit"
+                              disabled={promoSaving}
+                              style={{
+                                backgroundColor: 'var(--accent-indigo)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '10px 20px',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              {promoSaving ? '저장 중...' : '✨ 메인 팝업 설정 저장'}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+
+                      {/* Right: Live Preview Mini Card */}
+                      <div className="glass-panel" style={{ padding: '18px', borderRadius: '14px', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-purple)' }}>
+                            👁️ 실시간 팝업 미니 미리보기
+                          </span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            backgroundColor: promoForm.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                            color: promoForm.is_active ? '#10b981' : '#ef4444',
+                            fontWeight: 700
+                          }}>
+                            {promoForm.is_active ? '실제 노출 중' : '숨김 상태'}
+                          </span>
+                        </div>
+
+                        <div style={{
+                          backgroundColor: '#0a0915',
+                          borderRadius: '12px',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          padding: '16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '10px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+                        }}>
+                          {promoForm.badge && (
+                            <span style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 800,
+                              color: 'var(--accent-rose)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em'
+                            }}>
+                              {promoForm.badge}
+                            </span>
+                          )}
+                          
+                          <h5 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#fff', lineHeight: 1.3, margin: 0 }}>
+                            {promoForm.title || '팝업 제목 예시'}
+                          </h5>
+
+                          {promoForm.subtitle && (
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
+                              {promoForm.subtitle}
+                            </p>
+                          )}
+
+                          {promoForm.imageUrl && (
+                            <div style={{ height: '110px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#000', margin: '4px 0' }}>
+                              <img
+                                src={promoForm.imageUrl}
+                                alt="Preview"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            </div>
+                          )}
+
+                          {promoForm.description && (
+                            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, margin: 0, whiteSpace: 'pre-line' }}>
+                              {promoForm.description}
+                            </p>
+                          )}
+
                           <button
                             type="button"
-                            onClick={() => setPromoForm(prev => ({ ...prev, is_active: !prev.is_active }))}
                             style={{
-                              padding: '8px 20px',
-                              borderRadius: '30px',
+                              marginTop: '6px',
+                              width: '100%',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
                               border: 'none',
+                              backgroundColor: 'var(--accent-indigo)',
+                              color: '#fff',
                               fontWeight: 700,
-                              fontSize: '0.9rem',
-                              cursor: 'pointer',
-                              backgroundColor: promoForm.is_active ? 'var(--accent-indigo)' : 'rgba(255,255,255,0.1)',
-                              color: promoForm.is_active ? '#fff' : 'var(--text-muted)',
-                              transition: 'all 0.2s ease'
+                              fontSize: '0.78rem',
+                              cursor: 'pointer'
                             }}
                           >
-                            {promoForm.is_active ? '● ON (노출 중)' : '○ OFF (숨김)'}
+                            {promoForm.buttonText || '확인하기'}
                           </button>
                         </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                          <div style={styles.formGroup}>
-                            <label style={styles.label}>상단 뱃지 텍스트</label>
-                            <input
-                              type="text"
-                              value={promoForm.badge || ''}
-                              onChange={(e) => setPromoForm(prev => ({ ...prev, badge: e.target.value }))}
-                              placeholder="예: ✨ 무료 공개 서비스"
-                              className="input-field"
-                            />
-                          </div>
-
-                          <div style={styles.formGroup}>
-                            <label style={styles.label}>팝업 제목</label>
-                            <input
-                              type="text"
-                              value={promoForm.title || ''}
-                              onChange={(e) => setPromoForm(prev => ({ ...prev, title: e.target.value }))}
-                              placeholder="예: ⚡ 카드뉴스 자동화 도구 출시"
-                              required
-                              className="input-field"
-                            />
-                          </div>
-                        </div>
-
-                        <div style={styles.formGroup}>
-                          <label style={styles.label}>소제목 / 한줄 요약</label>
-                          <input
-                            type="text"
-                            value={promoForm.subtitle || ''}
-                            onChange={(e) => setPromoForm(prev => ({ ...prev, subtitle: e.target.value }))}
-                            placeholder="예: 5분 만에 인스타 카드뉴스 완벽 제작"
-                            className="input-field"
-                          />
-                        </div>
-
-                        <div style={styles.formGroup}>
-                          <label style={styles.label}>이미지 URL</label>
-                          <input
-                            type="text"
-                            value={promoForm.imageUrl || ''}
-                            onChange={(e) => setPromoForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                            placeholder="예: /images/timebox-promo.jpg 또는 https://images.unsplash.com/..."
-                            className="input-field"
-                          />
-                        </div>
-
-                        <div style={styles.formGroup}>
-                          <label style={styles.label}>상세 설명글 (줄바꿈 가능)</label>
-                          <textarea
-                            value={promoForm.description || ''}
-                            onChange={(e) => setPromoForm(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="팝업 내부에 노출될 핵심 설명 텍스트를 기입하세요."
-                            rows={4}
-                            className="input-field"
-                            style={{ resize: 'vertical' }}
-                          />
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                          <div style={styles.formGroup}>
-                            <label style={styles.label}>버튼 텍스트</label>
-                            <input
-                              type="text"
-                              value={promoForm.buttonText || ''}
-                              onChange={(e) => setPromoForm(prev => ({ ...prev, buttonText: e.target.value }))}
-                              placeholder="예: 카드뉴스 만들러 가기"
-                              className="input-field"
-                            />
-                          </div>
-
-                          <div style={styles.formGroup}>
-                            <label style={styles.label}>클릭 시 이동 URL (링크)</label>
-                            <input
-                              type="text"
-                              value={promoForm.linkUrl || ''}
-                              onChange={(e) => setPromoForm(prev => ({ ...prev, linkUrl: e.target.value }))}
-                              placeholder="예: /cardnews 또는 https://..."
-                              className="input-field"
-                            />
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                          <button
-                            type="submit"
-                            disabled={promoSaving}
-                            style={{ ...styles.exportBtn, backgroundColor: 'var(--accent-indigo)', padding: '12px 28px', fontSize: '0.95rem' }}
-                          >
-                            {promoSaving ? '저장 중...' : '✨ 메인 팝업 설정 저장하기'}
-                          </button>
-                        </div>
-                      </form>
+                      </div>
                     </div>
                   </div>
                 )}
