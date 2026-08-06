@@ -206,39 +206,10 @@ export default function Admin() {
   };
 
   const loadDashboardData = async (forceRefresh = false) => {
-    // If cache/draft exists and forceRefresh is false, avoid overwriting user edits
-    if (typeof window !== 'undefined' && !forceRefresh) {
-      const isLoadedBefore = sessionStorage.getItem('admin_dashboard_loaded') === 'true';
+    // Always restore tab if present
+    if (typeof window !== 'undefined') {
       const savedTab = sessionStorage.getItem('admin_current_tab');
-      const savedDraftJson = sessionStorage.getItem('admin_promo_form_draft');
-      const savedEditingId = sessionStorage.getItem('admin_editing_promo_id');
-
       if (savedTab) setCurrentTab(savedTab);
-
-      if (isLoadedBefore && savedDraftJson) {
-        try {
-          const draftForm = JSON.parse(savedDraftJson);
-          setPromoForm(draftForm);
-          if (savedEditingId) setEditingPromoId(savedEditingId);
-          
-          const savedListJson = sessionStorage.getItem('admin_promo_list_cache');
-          if (savedListJson) setPromoList(JSON.parse(savedListJson));
-          
-          const savedPortfolioJson = sessionStorage.getItem('admin_portfolio_cache');
-          if (savedPortfolioJson) setPortfolioItems(JSON.parse(savedPortfolioJson));
-
-          const savedNewsJson = sessionStorage.getItem('admin_news_cache');
-          if (savedNewsJson) setNewsItems(JSON.parse(savedNewsJson));
-
-          const savedResourcesJson = sessionStorage.getItem('admin_resources_cache');
-          if (savedResourcesJson) setResources(JSON.parse(savedResourcesJson));
-
-          setLoading(false);
-          return;
-        } catch (e) {
-          console.warn('Failed to parse draft cache, fetching fresh data:', e);
-        }
-      }
     }
 
     setLoading(true);
@@ -319,9 +290,6 @@ export default function Admin() {
 
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('admin_dashboard_loaded', 'true');
-        if (pRes.data) sessionStorage.setItem('admin_portfolio_cache', JSON.stringify(pRes.data.map(mapPortfolioItem)));
-        if (nRes.data) sessionStorage.setItem('admin_news_cache', JSON.stringify(nRes.data.map(mapNewsItem)));
-        if (rRes.data) sessionStorage.setItem('admin_resources_cache', JSON.stringify(rRes.data));
       }
     } catch (e) {
       console.error('Failed to load admin dashboard data:', e);
