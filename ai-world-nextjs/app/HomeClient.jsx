@@ -344,14 +344,18 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
       try {
         const { data } = await db.getPromoPopup();
         if (data) {
-          setPromoConfig(data);
-          const hidePopupDate = localStorage.getItem('hideTimeBoxPromo');
-          const todayStr = new Date().toLocaleDateString('sv-SE');
-          if (data.is_active !== false && hidePopupDate !== todayStr) {
-            const timer = setTimeout(() => {
-              setShowPromoPopup(true);
-            }, 1000);
-            return () => clearTimeout(timer);
+          const list = Array.isArray(data) ? data : [data];
+          const activePromo = list.find(x => x && x.is_active !== false);
+          if (activePromo) {
+            setPromoConfig(activePromo);
+            const hidePopupDate = localStorage.getItem('hideTimeBoxPromo');
+            const todayStr = new Date().toLocaleDateString('sv-SE');
+            if (hidePopupDate !== todayStr) {
+              const timer = setTimeout(() => {
+                setShowPromoPopup(true);
+              }, 1000);
+              return () => clearTimeout(timer);
+            }
           }
         }
       } catch (e) {
