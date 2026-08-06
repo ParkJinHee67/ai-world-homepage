@@ -448,11 +448,14 @@ export default function AINewsClient({ initialNews, highlightId }) {
                   {/* Thumbnail Image */}
                   <div style={styles.cardImageContainer}>
                     <img
-                      src={item.imageUrl || 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop'}
+                      src={item.imageUrl || '/images/default-news-thumb.webp'}
                       alt={translateDb(item.title, 'title')}
                       loading="lazy"
                       onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop';
+                        if (!e.target.dataset.fallback) {
+                          e.target.dataset.fallback = 'true';
+                          e.target.src = '/images/default-news-thumb.webp';
+                        }
                       }}
                       style={styles.cardImage}
                     />

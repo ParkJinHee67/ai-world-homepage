@@ -86,7 +86,7 @@ const defaultAINews = [
 상세 분석 리포트 및 실제 개발 벤치마크는 다음 링크들을 참고하세요.
 - [OpenAI 신규 아키텍처 공식 웹사이트](https://openai.com)
 - [HuggingFace 벤치마크 데이터셋](https://huggingface.co)`,
-    imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop',
+    imageUrl: '/images/default-news-thumb.webp',
     sourceUrl: 'https://openai.com/blog',
     created_at: '2026-06-22'
   },
@@ -107,7 +107,7 @@ const defaultAINews = [
 
 - [Google AI Studio 바로가기](https://ai.google.dev)
 - [Project Astra API 상세 도큐멘테이션](https://ai.google.dev/docs)`,
-    imageUrl: 'https://images.unsplash.com/photo-1589254065878-42c9da997008?q=80&w=600&auto=format&fit=crop',
+    imageUrl: '/images/default-news-thumb.webp',
     sourceUrl: 'https://ai.google.dev',
     created_at: '2026-06-21'
   }

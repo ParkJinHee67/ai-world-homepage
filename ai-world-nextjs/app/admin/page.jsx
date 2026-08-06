@@ -1183,8 +1183,14 @@ def register_ai_news(title, summary_points, article_url):
                               <td style={styles.td}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <img
-                                    src={item.imageUrl || 'https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop'}
+                                    src={item.imageUrl || '/images/default-news-thumb.webp'}
                                     alt={item.title}
+                                    onError={(e) => {
+                                      if (!e.target.dataset.fallback) {
+                                        e.target.dataset.fallback = 'true';
+                                        e.target.src = '/images/default-news-thumb.webp';
+                                      }
+                                    }}
                                     style={styles.tableThumbnail}
                                   />
                                   <span style={{ fontWeight: 600 }}>{item.title}</span>
