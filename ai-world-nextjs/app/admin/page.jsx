@@ -230,6 +230,9 @@ export default function Admin() {
           const savedNewsJson = sessionStorage.getItem('admin_news_cache');
           if (savedNewsJson) setNewsItems(JSON.parse(savedNewsJson));
 
+          const savedResourcesJson = sessionStorage.getItem('admin_resources_cache');
+          if (savedResourcesJson) setResources(JSON.parse(savedResourcesJson));
+
           setLoading(false);
           return;
         } catch (e) {
@@ -318,6 +321,7 @@ export default function Admin() {
         sessionStorage.setItem('admin_dashboard_loaded', 'true');
         if (pRes.data) sessionStorage.setItem('admin_portfolio_cache', JSON.stringify(pRes.data.map(mapPortfolioItem)));
         if (nRes.data) sessionStorage.setItem('admin_news_cache', JSON.stringify(nRes.data.map(mapNewsItem)));
+        if (rRes.data) sessionStorage.setItem('admin_resources_cache', JSON.stringify(rRes.data));
       }
     } catch (e) {
       console.error('Failed to load admin dashboard data:', e);
