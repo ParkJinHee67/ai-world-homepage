@@ -268,6 +268,8 @@ export default function Admin() {
       }
       if (rRes.data) setResources(rRes.data);
 
+      handleLoadAds();
+
       const promoRes = await db.getPromoPopup();
       if (promoRes.data) {
         const list = Array.isArray(promoRes.data) ? promoRes.data : [promoRes.data];
@@ -793,10 +795,6 @@ export default function Admin() {
   };
 
   const handleLoadAds = async () => {
-    if (!adminPublishKey) {
-      alert('보안 비밀번호를 입력해 주세요.');
-      return;
-    }
     setAdFormLoading(true);
     try {
       const { data, error } = await db.getAdSlotsAdmin(adminPublishKey);
@@ -822,10 +820,6 @@ export default function Admin() {
   };
 
   const handleSaveAd = async (position) => {
-    if (!adminPublishKey) {
-      alert('보안 비밀번호를 입력해 주세요.');
-      return;
-    }
     const adData = adFormList.find(ad => ad.position === position);
     if (!adData) return;
 
@@ -1745,37 +1739,24 @@ def register_ai_news(title, summary_points, article_url):
                 {/* Tab 6: Ad Slots Management Panel */}
                 {currentTab === 'ads' && (
                   <div style={styles.leadsContainer} className="glass-panel">
-                    <div style={styles.leadsHeader}>
-                      <h2 style={styles.leadsTitle}>📢 광고 슬롯 관리 (1~4번)</h2>
-                    </div>
-                    <p style={styles.leadsSubtitle}>
-                      카드뉴스 랜딩 페이지 하단의 광고 영역을 실시간으로 관리하는 공간입니다.
-                    </p>
-
-                    {/* 보안 비밀번호 확인 패널 */}
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: '240px' }}>
-                        <label style={{ ...styles.label, marginBottom: '6px', display: 'block' }}>보안 비밀번호 확인</label>
-                        <input 
-                          type="password"
-                          value={adminPublishKey}
-                          onChange={(e) => setAdminPublishKey(e.target.value)}
-                          placeholder="보안 인증을 위한 발행 비밀번호를 입력하세요."
-                          className="input-field"
-                          style={{ margin: 0, width: '100%', boxSizing: 'border-box' }}
-                        />
+                    <div style={{ ...styles.leadsHeader, justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h2 style={styles.leadsTitle}>📢 광고 슬롯 관리 (1~4번)</h2>
+                        <p style={styles.leadsSubtitle}>
+                          카드뉴스 랜딩 페이지 하단의 광고 영역을 실시간으로 관리하는 공간입니다.
+                        </p>
                       </div>
                       <button 
+                        type="button"
                         onClick={handleLoadAds} 
-                        style={{ ...styles.exportBtn, height: '42px', marginTop: '22px' }}
+                        style={{ ...styles.exportBtn, backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.1)' }}
                         disabled={adFormLoading}
                       >
-                        {adFormLoading ? '불러오는 중...' : '🔑 인증 및 데이터 불러오기'}
+                        {adFormLoading ? '동기화 중...' : '🔄 광고 슬롯 동기화'}
                       </button>
                     </div>
 
-                    {adFormList.length > 0 ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', marginTop: '16px' }}>
                         {adFormList.map((ad) => (
                           <div key={ad.position} style={{ padding: '20px', backgroundColor: '#0e0c15', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>
@@ -1908,11 +1889,6 @@ def register_ai_news(title, summary_points, article_url):
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <div style={{ padding: '40px', textAlign: 'center', color: '#6b7684', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '8px' }}>
-                        🔒 보안 비밀번호를 입력하고 [인증 및 데이터 불러오기]를 실행해 주세요.
-                      </div>
-                    )}
                   </div>
                 )}
 
