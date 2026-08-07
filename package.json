@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cd ai-world-nextjs && npm run dev",
-    "build": "cd ai-world-nextjs && npm install && npx next build",
+    "build": "cd ai-world-nextjs && npx next build",
     "start": "cd ai-world-nextjs && npm run start"
   },
   "dependencies": {

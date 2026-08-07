@@ -1,0 +1,17 @@
+{
+  "worktree": {
+    "setup": [
+      "npm ci",
+      "copy \"%PASEO_SOURCE_CHECKOUT_PATH%\\.env\" .env"
+    ]
+  },
+  "scripts": {
+    "dev": {
+      "type": "service",
+      "command": "npm run dev -- --port %PASEO_PORT%",
+      "port": 3000
+    },
+    "build": { "command": "npm run build" },
+    "lint": { "command": "npm run lint" }
+  }
+}
