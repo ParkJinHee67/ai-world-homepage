@@ -9,8 +9,19 @@ export const metadata = {
   description: "AI 기술을 활용하여 제작한 혁신적인 어플리케이션과 기술적 인사이트를 만나보세요.",
   icons: {
     icon: "/favicon.svg",
-  }
+    apple: "/icons/icon-192x192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black",
+    title: "AI월드",
+  },
 };
+
+export const viewport = {
+  themeColor: "#030207",
+};
+
 
 export default function RootLayout({ children }) {
   const jsonLd = {
