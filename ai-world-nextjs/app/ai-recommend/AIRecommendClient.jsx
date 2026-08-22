@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, mapPortfolioItem } from '../supabaseClient';
 import PortfolioCard from '../../components/PortfolioCard';
-import { Video } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 const ApertureCanvas = () => {
@@ -328,11 +328,11 @@ export default function AIRecommendClient({ initialItems, highlightId }) {
         <div className="recommend-header-flex" style={styles.headerFlexContainer}>
           <div style={styles.headerInner}>
             <div style={styles.iconContainer}>
-              <Video size={24} color="var(--accent-emerald)" />
+              <Package size={24} color="var(--accent-emerald)" />
             </div>
-            <h1 className="recommend-title" style={styles.title}>{t('video.title', '영상제작 포트폴리오')}</h1>
+            <h1 className="recommend-title" style={styles.title}>{t('video.title', '상품 포트폴리오')}</h1>
             <p className="recommend-subtitle" style={styles.subtitle}>
-              {t('video.subtitle', '유튜브 롱폼/쇼츠, 인트로, 브랜드 홍보 영상 등 AI 자동화 편집 기술이 가미된 풍부한 비디오 제작 포트폴리오입니다.')}
+              {t('video.subtitle', '실무와 비즈니스 현장에 즉시 도입할 수 있는 완성형 AI 상품 및 프로그램 포트폴리오입니다.')}
             </p>
           </div>
           <div className="recommend-header-img-container" style={styles.headerImageContainer}>

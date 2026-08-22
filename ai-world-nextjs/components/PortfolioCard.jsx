@@ -20,8 +20,17 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
     e.stopPropagation();
 
     // Determine link path depending on category
-    const path = item.category === 'AI Recommend' ? '/ai-recommend' : (item.category === 'Insight' ? '/insights' : (item.category === 'App' ? '/homepage' : '/'));
-    const shareUrl = `${window.location.origin}${path}?id=${item.id}`;
+    const getSharePath = () => {
+      switch (item.category) {
+        case 'AI Recommend': return '/ai-recommend';
+        case 'FreeTool': return '/free-tools';
+        case 'Content': return '/content';
+        case 'Insight': return '/insights';
+        case 'App': return '/homepage';
+        default: return '/';
+      }
+    };
+    const shareUrl = `${window.location.origin}${getSharePath()}?id=${item.id}`;
 
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
@@ -42,19 +51,34 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
   // Determine category badge colors
   const getCatClass = () => {
     switch (item.category) {
+      case 'AI Recommend': return 'cat-recommend';
+      case 'FreeTool': return 'cat-freetool';
+      case 'Content': return 'cat-content';
       case 'App': return 'cat-app';
       case 'Insight': return 'cat-insight';
-      case 'AI Recommend': return 'cat-recommend';
       default: return '';
     }
   };
 
   const getBadgeClass = () => {
     switch (item.category) {
+      case 'AI Recommend': return 'recommend';
+      case 'FreeTool': return 'freetool';
+      case 'Content': return 'content';
       case 'App': return 'app';
       case 'Insight': return 'insight';
-      case 'AI Recommend': return 'recommend';
       default: return '';
+    }
+  };
+
+  const getCategoryLabel = () => {
+    switch (item.category) {
+      case 'AI Recommend': return t('cat.recommend', '상품');
+      case 'FreeTool': return t('cat.freetool', '무료도구');
+      case 'Content': return t('cat.content', '콘텐츠사이트');
+      case 'App': return t('cat.app', '외주프로젝트');
+      case 'Insight': return t('cat.insight', '인사이트');
+      default: return item.category || '';
     }
   };
 
@@ -77,7 +101,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
           <div style={styles.imageOverlay} />
           <div style={styles.badgeContainer}>
             <span className={`badge ${getBadgeClass()}`}>
-              {item.category === 'App' ? t('cat.app', '홈페이지') : (item.category === 'Insight' ? t('cat.insight', '인사이트') : t('cat.recommend', '영상제작'))}
+              {getCategoryLabel()}
             </span>
           </div>
         </div>

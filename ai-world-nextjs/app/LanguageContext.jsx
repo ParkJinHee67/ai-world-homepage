@@ -9,10 +9,12 @@ const translations = {
     // Navbar
     'nav.home': '홈',
     'nav.news': 'AI 뉴스',
-    'nav.video': '영상제작',
+    'nav.video': '상품',
+    'nav.freetool': '무료도구',
+    'nav.content': '콘텐츠사이트',
     'nav.cardnews': '카드뉴스자동화',
     'nav.download': '주인공 이미지',
-    'nav.homepage': '홈페이지',
+    'nav.homepage': '외주프로젝트',
     'nav.insights': '인사이트',
     'nav.admin': '관리자',
     'brand.title': '톱니바꿈',
@@ -37,8 +39,10 @@ const translations = {
     
     // Category tabs
     'cat.all': '전체',
-    'cat.recommend': '추천도구',
-    'cat.app': '앱',
+    'cat.recommend': '상품',
+    'cat.freetool': '무료도구',
+    'cat.content': '콘텐츠사이트',
+    'cat.app': '외주프로젝트',
     'cat.insight': '인사이트',
 
     // CardNews Banner & Section
@@ -117,10 +121,20 @@ const translations = {
     'news.prev': '이전',
     'news.next': '다음',
 
-    // Video
-    'video.title': '영상제작 포트폴리오',
-    'video.subtitle': '유튜브 롱폼/쇼츠, 인트로, 브랜드 홍보 영상 등 AI 자동화 편집 기술이 가미된 풍부한 비디오 제작 포트폴리오입니다.',
-    'video.no_portfolio': '등록된 영상제작 포트폴리오가 없습니다.',
+    // Video (Product)
+    'video.title': '상품 포트폴리오',
+    'video.subtitle': '실무와 비즈니스 현장에 즉시 도입할 수 있는 완성형 AI 상품 및 프로그램 포트폴리오입니다.',
+    'video.no_portfolio': '등록된 상품 포트폴리오가 없습니다.',
+
+    // Free Tools
+    'freetool.title': '무료 AI 도구',
+    'freetool.subtitle': '누구나 제약 없이 자유롭게 활용할 수 있는 웹 기반 AI 무료 실용 도구 모음입니다.',
+    'freetool.no_portfolio': '등록된 무료 도구가 없습니다.',
+
+    // Content Sites
+    'content.title': '콘텐츠 사이트',
+    'content.subtitle': 'AI 기술과 정보가 집약된 미디어, 포털 및 지식 콘텐츠 서비스입니다.',
+    'content.no_portfolio': '등록된 콘텐츠 사이트가 없습니다.',
 
     // Image Download
     'download.loading': '이미지 불러오는 중...',
@@ -151,10 +165,10 @@ const translations = {
     'download.go_main': '메인 화면으로 가기',
     'download.file_size': '파일 크기: ',
 
-    // Websites
-    'websites.title': '제작 홈페이지',
-    'websites.subtitle': '반응형 모던 인터페이스 디자인, Supabase 백엔드 데이터 연동, 그리고 편리한 관리 기능이 통합된 차별화된 홈페이지 제작 사례입니다.',
-    'websites.no_portfolio': '등록된 홈페이지 포트폴리오가 없습니다.',
+    // Websites (Outsourcing Projects)
+    'websites.title': '외주 프로젝트',
+    'websites.subtitle': '맞춤형 AI 솔루션 연동 및 고성능 백엔드 기반으로 구축된 클라이언트 외주 제작 프로젝트입니다.',
+    'websites.no_portfolio': '등록된 외주 프로젝트가 없습니다.',
 
     // Insights
     'insights.title': '기술 인사이트',
@@ -218,10 +232,12 @@ const translations = {
     // Navbar
     'nav.home': 'Home',
     'nav.news': 'AI News',
-    'nav.video': 'AI Videos',
+    'nav.video': 'Products',
+    'nav.freetool': 'Free Tools',
+    'nav.content': 'Content Sites',
     'nav.cardnews': 'Card News Auto',
     'nav.download': 'Character Img',
-    'nav.homepage': 'Websites',
+    'nav.homepage': 'Outsourcing',
     'nav.insights': 'Insights',
     'nav.admin': 'Admin',
     'brand.title': 'GearsShift',
@@ -246,8 +262,10 @@ const translations = {
 
     // Category tabs
     'cat.all': 'All',
-    'cat.recommend': 'AI Recommend',
-    'cat.app': 'App',
+    'cat.recommend': 'Products',
+    'cat.freetool': 'Free Tools',
+    'cat.content': 'Content Sites',
+    'cat.app': 'Outsourcing',
     'cat.insight': 'Insight',
 
     // CardNews Banner & Section
@@ -311,10 +329,20 @@ const translations = {
     'news.prev': 'Prev',
     'news.next': 'Next',
 
-    // Video
-    'video.title': 'Video Production Portfolio',
-    'video.subtitle': 'Rich video portfolio including YouTube long-form/shorts, intros, and brand promotions, enhanced with AI automated editing technologies.',
-    'video.no_portfolio': 'No video production portfolio found.',
+    // Video (Product)
+    'video.title': 'Product Portfolio',
+    'video.subtitle': 'Turnkey AI product and software portfolio ready for immediate deployment in practical business environments.',
+    'video.no_portfolio': 'No product portfolio found.',
+
+    // Free Tools
+    'freetool.title': 'Free AI Tools',
+    'freetool.subtitle': 'A collection of practical web-based AI tools freely accessible to everyone without limitations.',
+    'freetool.no_portfolio': 'No free tools found.',
+
+    // Content Sites
+    'content.title': 'Content Sites',
+    'content.subtitle': 'Media, portal, and knowledge content services built with integrated AI technologies.',
+    'content.no_portfolio': 'No content sites found.',
 
     // Image Download
     'download.loading': 'Loading images...',
@@ -345,10 +373,10 @@ const translations = {
     'download.go_main': 'Go to Main Screen',
     'download.file_size': 'File Size: ',
 
-    // Websites
-    'websites.title': 'Websites Portfolio',
-    'websites.subtitle': 'Showcasing our outstanding website templates built with responsive designs, Supabase backend databases, and robust admin panels.',
-    'websites.no_portfolio': 'No website portfolio found.',
+    // Websites (Outsourcing Projects)
+    'websites.title': 'Outsourcing Projects',
+    'websites.subtitle': 'Custom client development projects integrated with tailored AI solutions and high-performance backends.',
+    'websites.no_portfolio': 'No outsourcing projects found.',
 
     // Insights
     'insights.title': 'Tech Insights',

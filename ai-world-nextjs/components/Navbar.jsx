@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Terminal, Newspaper, Video, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download, FileText } from 'lucide-react';
+import { Terminal, Newspaper, Package, Wrench, Globe, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download } from 'lucide-react';
 import { useLanguage } from '../app/LanguageContext';
 
 export default function Navbar() {
@@ -17,10 +17,11 @@ export default function Navbar() {
   const navItems = [
     { path: '/', label: t('nav.home', '홈'), icon: Terminal },
     { path: '/ai-news', label: t('nav.news', 'AI 뉴스'), icon: Newspaper },
-    { path: '/ai-recommend', label: t('nav.video', '영상제작'), icon: Video },
-    { path: '/cardnews', label: t('nav.cardnews', '카드뉴스자동화'), icon: FileText },
+    { path: '/ai-recommend', label: t('nav.video', '상품'), icon: Package },
+    { path: '/free-tools', label: t('nav.freetool', '무료도구'), icon: Wrench },
+    { path: '/content', label: t('nav.content', '콘텐츠사이트'), icon: Globe },
+    { path: '/homepage', label: t('nav.homepage', '외주프로젝트'), icon: Layout },
     { path: '/download', label: t('nav.download', '주인공 이미지'), icon: Download },
-    { path: '/homepage', label: t('nav.homepage', '홈페이지'), icon: Layout },
     { path: '/insights', label: t('nav.insights', '인사이트'), icon: Lightbulb },
     { path: '/admin', label: t('nav.admin', '관리자'), icon: ShieldAlert },
   ];

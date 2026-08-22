@@ -1198,18 +1198,31 @@ def register_ai_news(title, summary_points, article_url):
                 {currentTab === 'portfolio' && (
                   <div>
                     <div style={styles.subHeader}>
-                        {['All', 'AI Recommend', 'App', 'Insight'].map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => setPortfolioFilter(cat)}
-                            style={{
-                              ...styles.filterBtn,
-                              ...(portfolioFilter === cat ? styles.filterBtnActive : {})
-                            }}
-                          >
-                            {cat === 'All' ? '전체보기' : (cat === 'AI Recommend' ? '영상제작' : (cat === 'App' ? '홈페이지' : '인사이트'))}
-                          </button>
-                        ))}
+                        {['All', 'AI Recommend', 'FreeTool', 'Content', 'App', 'Insight'].map((cat) => {
+                          const getCatName = (c) => {
+                            switch (c) {
+                              case 'All': return '전체보기';
+                              case 'AI Recommend': return '상품';
+                              case 'FreeTool': return '무료도구';
+                              case 'Content': return '콘텐츠사이트';
+                              case 'App': return '외주프로젝트';
+                              case 'Insight': return '인사이트';
+                              default: return c;
+                            }
+                          };
+                          return (
+                            <button
+                              key={cat}
+                              onClick={() => setPortfolioFilter(cat)}
+                              style={{
+                                ...styles.filterBtn,
+                                ...(portfolioFilter === cat ? styles.filterBtnActive : {})
+                              }}
+                            >
+                              {getCatName(cat)}
+                            </button>
+                          );
+                        })}
 
                       {portfolioFilter === 'All' ? (
                         <span style={styles.infoSpan}>
@@ -1269,8 +1282,8 @@ def register_ai_news(title, summary_points, article_url):
                                 </div>
                               </td>
                               <td style={styles.td}>
-                                <span className={`badge ${item.category === 'App' ? 'app' : (item.category === 'Insight' ? 'insight' : 'recommend')}`}>
-                                  {item.category === 'App' ? '홈페이지' : (item.category === 'Insight' ? '인사이트' : '영상제작')}
+                                <span className={`badge ${item.category === 'App' ? 'app' : (item.category === 'Insight' ? 'insight' : (item.category === 'FreeTool' ? 'freetool' : (item.category === 'Content' ? 'content' : 'recommend')))}`}>
+                                  {item.category === 'App' ? '외주프로젝트' : (item.category === 'Insight' ? '인사이트' : (item.category === 'FreeTool' ? '무료도구' : (item.category === 'Content' ? '콘텐츠사이트' : '상품')))}
                                 </span>
                               </td>
                               <td style={styles.td}>{formatKSTDate(item.createdAt)}</td>
@@ -2306,8 +2319,10 @@ def register_ai_news(title, summary_points, article_url):
                       style={styles.selectInput}
                       className="input-field"
                     >
-                      <option value="AI Recommend">영상제작 (유튜브/쇼츠/홍보영상)</option>
-                      <option value="App">홈페이지 (웹 어플리케이션/사이트)</option>
+                      <option value="AI Recommend">상품 (완성형 솔루션/프로그램)</option>
+                      <option value="FreeTool">무료도구 (AI 무료 실용 도구)</option>
+                      <option value="Content">콘텐츠사이트 (미디어/포털/정보)</option>
+                      <option value="App">외주프로젝트 (클라이언트 구축 사례)</option>
                       <option value="Insight">인사이트 (보고서/분석자료)</option>
                     </select>
                   </div>

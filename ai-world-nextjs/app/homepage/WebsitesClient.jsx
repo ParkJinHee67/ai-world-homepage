@@ -289,9 +289,9 @@ export default function WebsitesClient({ initialItems, highlightId }) {
             <div style={styles.iconContainer}>
               <Layout size={24} color="var(--accent-indigo)" />
             </div>
-            <h1 className="websites-title" style={styles.title}>{t('websites.title', '제작 홈페이지')}</h1>
+            <h1 className="websites-title" style={styles.title}>{t('websites.title', '외주 프로젝트')}</h1>
             <p className="websites-subtitle" style={styles.subtitle}>
-              {t('websites.subtitle', '반응형 모던 인터페이스 디자인, Supabase 백엔드 데이터 연동, 그리고 편리한 관리 기능이 통합된 차별화된 홈페이지 제작 사례입니다.')}
+              {t('websites.subtitle', '맞춤형 AI 솔루션 연동 및 고성능 백엔드 기반으로 구축된 클라이언트 외주 제작 프로젝트입니다.')}
             </p>
           </div>
           <div className="websites-header-img-container" style={styles.headerImageContainer}>

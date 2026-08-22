@@ -3,12 +3,12 @@ import AIRecommendClient from './AIRecommendClient';
 import { db, mapPortfolioItem } from '../supabaseClient';
 
 export const metadata = {
-  title: '영상제작 포트폴리오 - 톱니바꿈 AI월드',
-  description: 'AI 자동화 편집 기술이 가미된 다양한 롱폼/쇼츠 및 비디오 가이드 제작 포트폴리오입니다.',
+  title: '상품 포트폴리오 - 톱니바꿈 AI월드',
+  description: '실무와 비즈니스 현장에 즉시 도입할 수 있는 완성형 AI 상품 및 프로그램 포트폴리오입니다.',
   openGraph: {
     type: 'website',
-    title: '영상제작 포트폴리오 - 톱니바꿈 AI월드',
-    description: 'AI 자동화 편집 기술이 가미된 다양한 롱폼/쇼츠 및 비디오 가이드 제작 포트폴리오입니다.',
+    title: '상품 포트폴리오 - 톱니바꿈 AI월드',
+    description: '실무와 비즈니스 현장에 즉시 도입할 수 있는 완성형 AI 상품 및 프로그램 포트폴리오입니다.',
     images: [
       {
         url: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=600&auto=format&fit=crop',
@@ -17,8 +17,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '영상제작 포트폴리오 - 톱니바꿈 AI월드',
-    description: 'AI 자동화 편집 기술이 가미된 다양한 롱폼/쇼츠 및 비디오 가이드 제작 포트폴리오입니다.',
+    title: '상품 포트폴리오 - 톱니바꿈 AI월드',
+    description: '실무와 비즈니스 현장에 즉시 도입할 수 있는 완성형 AI 상품 및 프로그램 포트폴리오입니다.',
     images: ['https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=600&auto=format&fit=crop'],
   }
 };

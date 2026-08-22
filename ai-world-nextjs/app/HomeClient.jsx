@@ -612,18 +612,31 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
             </a>
 
             <div style={styles.filterBtns}>
-              {['All', 'AI Recommend', 'App', 'Insight'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  style={{
-                    ...styles.filterBtn,
-                    ...(filter === cat ? styles.filterBtnActive : {})
-                  }}
-                >
-                  {cat === 'All' ? t('cat.all', '전체') : (cat === 'AI Recommend' ? t('cat.recommend', '영상제작') : (cat === 'App' ? t('cat.app', '홈페이지') : t('cat.insight', '인사이트')))}
-                </button>
-              ))}
+              {['All', 'AI Recommend', 'FreeTool', 'Content', 'App', 'Insight'].map((cat) => {
+                const getTabLabel = (c) => {
+                  switch (c) {
+                    case 'All': return t('cat.all', '전체');
+                    case 'AI Recommend': return t('cat.recommend', '상품');
+                    case 'FreeTool': return t('cat.freetool', '무료도구');
+                    case 'Content': return t('cat.content', '콘텐츠사이트');
+                    case 'App': return t('cat.app', '외주프로젝트');
+                    case 'Insight': return t('cat.insight', '인사이트');
+                    default: return c;
+                  }
+                };
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setFilter(cat)}
+                    style={{
+                      ...styles.filterBtn,
+                      ...(filter === cat ? styles.filterBtnActive : {})
+                    }}
+                  >
+                    {getTabLabel(cat)}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
