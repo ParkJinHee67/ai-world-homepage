@@ -275,20 +275,33 @@ export const db = {
       app_url: item.appUrl,
       notion_url: item.notionUrl,
       youtube_url: item.youtubeUrl,
+      purchase_url: item.purchaseUrl || null,
       category: item.category
     };
     if (item.sort_order !== undefined) dbItem.sort_order = item.sort_order;
 
+    const clarifyPurchaseUrlColumnError = (error) => {
+      if (!error) return error;
+      const msg = String(error.message || error.details || error.hint || error || '');
+      if (/purchase_url/i.test(msg) && /(column|schema|does not exist|unknown|could not find)/i.test(msg)) {
+        return {
+          ...error,
+          message: 'DB에 purchase_url 컬럼이 없습니다. Supabase SQL Editor에서 sql/add_portfolio_purchase_url.sql 을 한 번 실행한 뒤 다시 저장해주세요.'
+        };
+      }
+      return error;
+    };
+
     if (item.id) {
       const { data, error } = await supabase.from('portfolio_items').update(dbItem).eq('id', item.id).select();
-      return { data, error };
+      return { data, error: clarifyPurchaseUrlColumnError(error) };
     } else {
       // Get max sort_order
       const { data: currentItems } = await supabase.from('portfolio_items').select('sort_order');
       const maxSortOrder = currentItems ? Math.max(...currentItems.map(x => x.sort_order || 0), -1) : -1;
       dbItem.sort_order = maxSortOrder + 1;
       const { data, error } = await supabase.from('portfolio_items').insert([dbItem]).select();
-      return { data, error };
+      return { data, error: clarifyPurchaseUrlColumnError(error) };
     }
   },
 
@@ -394,6 +407,7 @@ export const db = {
             appUrl: item.appUrl || item.app_url,
             notionUrl: item.notionUrl || item.notion_url,
             youtubeUrl: item.youtubeUrl || item.youtube_url,
+            purchaseUrl: item.purchaseUrl || item.purchase_url || '',
             category: item.category
           };
           
@@ -969,6 +983,7 @@ export const mapPortfolioItem = (dbItem) => ({
   appUrl: dbItem.app_url || dbItem.appUrl,
   notionUrl: dbItem.notion_url || dbItem.notionUrl,
   youtubeUrl: dbItem.youtube_url || dbItem.youtubeUrl,
+  purchaseUrl: dbItem.purchase_url || dbItem.purchaseUrl || '',
   category: dbItem.category,
   sortOrder: dbItem.sort_order ?? dbItem.sortOrder,
   createdAt: dbItem.created_at || dbItem.createdAt

@@ -174,7 +174,19 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
               </button>
             )}
 
-            {purchaseGuide && (
+            {item.purchaseUrl ? (
+              <a
+                href={item.purchaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="action-btn purchase-btn"
+                style={styles.actionBtnPurchase}
+                title={t('card.purchase_tooltip', '구매 방법 안내')}
+              >
+                <ShoppingBag size={13} />
+                <span>{t('card.purchase', '구매방법')}</span>
+              </a>
+            ) : purchaseGuide ? (
               <button
                 type="button"
                 onClick={handlePurchaseClick}
@@ -185,7 +197,7 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 <ShoppingBag size={13} />
                 <span>{t('card.purchase', '구매방법')}</span>
               </button>
-            )}
+            ) : null}
 
             <button 
               onClick={handleShare} 

@@ -85,7 +85,7 @@ export default function Admin() {
   
   // Forms state
   const [portfolioForm, setPortfolioForm] = useState({
-    title: '', description: '', category: 'App', appUrl: '', notionUrl: '', youtubeUrl: '', imageUrl: ''
+    title: '', description: '', category: 'App', appUrl: '', notionUrl: '', youtubeUrl: '', purchaseUrl: '', imageUrl: ''
   });
   const [newsForm, setNewsForm] = useState({
     title: '', description: '', content: '', sourceUrl: '', imageUrl: ''
@@ -758,13 +758,14 @@ export default function Admin() {
         appUrl: item.appUrl || '',
         notionUrl: item.notionUrl || '',
         youtubeUrl: item.youtubeUrl || '',
+        purchaseUrl: item.purchaseUrl || '',
         imageUrl: item.imageUrl || ''
       });
       setUrlStatus(!!item.appUrl);
     } else {
       setEditingPortfolioItem(null);
       setPortfolioForm({
-        title: '', description: '', category: 'App', appUrl: '', notionUrl: '', youtubeUrl: '', imageUrl: ''
+        title: '', description: '', category: 'App', appUrl: '', notionUrl: '', youtubeUrl: '', purchaseUrl: '', imageUrl: ''
       });
       setUrlStatus(false);
     }
@@ -1460,7 +1461,7 @@ def register_ai_news(title, summary_points, article_url):
                       <p style={styles.manualText}>
                         - <strong>등록/수정</strong>: 제목, 설명, 카테고리(영상제작, 홈페이지, 인사이트)를 등록합니다.<br />
                         - <strong>실시간 화면 캡처</strong>: 프로젝트 URL 입력 후 '실시간 웹 보기' 버튼을 클릭하면 해당 웹페이지를 임베디드 창으로 직접 확인하고 <strong>'현재 화면 실시간 캡처 및 등록'</strong> 버튼을 눌러 대표 썸네일로 즉시 자동 캡처할 수 있습니다.<br />
-                        - <strong>Manual 및 Video 링크</strong>: Notion 설명서 주소 및 유튜브 영상 링크(여러 개인 경우 쉼표로 구분)를 연동하면 포털 카드에 매뉴얼 및 비디오 재생 버튼이 자동으로 활성화됩니다.<br />
+                        - <strong>Manual · Video · 구매방법 링크</strong>: Notion 설명서 주소, 유튜브 영상 링크(여러 개인 경우 쉼표로 구분), 구매방법 링크를 연동하면 포털 카드에 Manual · 소개영상 · 구매방법 버튼이 자동으로 활성화됩니다. 구매방법 링크는 Google Docs·판매 페이지 등 외부 URL이며 새 탭으로 열립니다.<br />
                         - <strong>드래그 앤 드롭 정렬 (DND)</strong>: 포트폴리오 필터를 <strong>'전체보기(All)'</strong> 상태로 변경한 후, 리스트 왼쪽의 손잡이 아이콘(<GripVertical size={14} style={{ display: 'inline', margin: '0 2px' }} />)을 잡고 원하는 위치로 드래그하면 순서가 실시간 저장되어 메인 화면에 반영됩니다.
                       </p>
                     </div>
@@ -2427,6 +2428,17 @@ def register_ai_news(title, summary_points, article_url):
                         value={portfolioForm.youtubeUrl} 
                         onChange={(e) => setPortfolioForm(prev => ({ ...prev, youtubeUrl: e.target.value }))} 
                         placeholder="https://youtube.com/watch?..."
+                        style={{ padding: '8px 12px', fontSize: '0.8rem' }}
+                        className="input-field"
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ ...styles.label, fontSize: '0.75rem' }}>구매방법 링크</label>
+                      <input 
+                        type="url" 
+                        value={portfolioForm.purchaseUrl} 
+                        onChange={(e) => setPortfolioForm(prev => ({ ...prev, purchaseUrl: e.target.value }))} 
+                        placeholder="https://docs.google.com/... 또는 판매 페이지 URL"
                         style={{ padding: '8px 12px', fontSize: '0.8rem' }}
                         className="input-field"
                       />
