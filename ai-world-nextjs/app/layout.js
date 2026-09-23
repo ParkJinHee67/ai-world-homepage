@@ -6,7 +6,7 @@ import { LanguageProvider } from "./LanguageContext";
 export const metadata = {
   metadataBase: new URL("https://ai.jinheestate.blog"),
   title: "톱니바꿈 AI월드",
-  description: "AI 기술을 활용하여 제작한 혁신적인 어플리케이션과 기술적 인사이트를 만나보세요.",
+  description: "쓰는 AI, 파는 AI. 실무 AI 도구·자동화·외주 솔루션을 한곳에서.",
   icons: {
     icon: "/favicon.svg",
     apple: "/icons/icon-192x192.png",
@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
     "@type": "WebSite",
     "name": "톱니바꿈 AI월드",
     "url": "https://ai.jinheestate.blog/",
-    "description": "AI 기술을 활용하여 제작한 혁신적인 어플리케이션과 가치 있는 기술적 인사이트를 만나보세요.",
+    "description": "쓰는 AI, 파는 AI. 실무 AI 도구·자동화·외주 솔루션을 한곳에서.",
     "publisher": {
       "@type": "Organization",
       "name": "톱니바꿈 AI월드",

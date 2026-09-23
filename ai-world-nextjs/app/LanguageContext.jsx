@@ -11,20 +11,22 @@ const translations = {
     'nav.news': 'AI 뉴스',
     'nav.video': '상품',
     'nav.freetool': '무료도구',
-    'nav.content': '콘텐츠사이트',
+    'nav.content': '콘텐츠',
     'nav.cardnews': '카드뉴스자동화',
     'nav.download': '주인공 이미지',
-    'nav.homepage': '외주프로젝트',
+    'nav.homepage': '외주',
     'nav.insights': '인사이트',
     'nav.admin': '관리자',
+    'nav.media': '미디어',
     'brand.title': '톱니바꿈',
     'brand.subtitle': 'AI월드',
 
     // Hero
     'hero.badge': 'PORTFOLIO & INSIGHTS',
+    'hero.tagline': '쓰는 AI, 파는 AI',
     'hero.title_pre': '톱니바꿈',
     'hero.title_post': 'AI월드',
-    'hero.desc': '실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여 업무의 한계를 넓혀보세요.',
+    'hero.desc': '쓰는 AI, 파는 AI. 실무에서 검증된 AI 자동화·어플리케이션·외주 솔루션으로 업무의 한계를 넓혀보세요.',
     'hero.stat.today': '오늘 방문자',
     'hero.stat.total': '누적 방문자',
     'hero.stat.downloads': '주인공 이미지 다운로드',
@@ -41,8 +43,8 @@ const translations = {
     'cat.all': '전체',
     'cat.recommend': '상품',
     'cat.freetool': '무료도구',
-    'cat.content': '콘텐츠사이트',
-    'cat.app': '외주프로젝트',
+    'cat.content': '콘텐츠',
+    'cat.app': '외주',
     'cat.insight': '인사이트',
 
     // CardNews Banner & Section
@@ -218,9 +220,10 @@ const translations = {
 
     // Footer
     'footer.copyright': '© {year} 톱니바꿈 AI월드. All rights reserved.',
-    'footer.desc': 'AI 기술을 활용한 혁신적인 어플리케이션과 트렌드 분석 리포트를 제공합니다.',
+    'footer.desc': '쓰는 AI, 파는 AI — 실무 AI 도구·자동화·외주를 한곳에서.',
     'footer.link.about': '소개',
     'footer.link.privacy': '개인정보처리방침',
+    'footer.link.media': '미디어',
     'footer.inquiry': '프로그램 및 비즈니스 문의',
 
     // Privacy Page
@@ -240,14 +243,16 @@ const translations = {
     'nav.homepage': 'Outsourcing',
     'nav.insights': 'Insights',
     'nav.admin': 'Admin',
+    'nav.media': 'Media',
     'brand.title': 'GearsShift',
     'brand.subtitle': 'AI World',
 
     // Hero
     'hero.badge': 'PORTFOLIO & INSIGHTS',
+    'hero.tagline': 'AI you use, AI you sell',
     'hero.title_pre': 'GearsShift ',
     'hero.title_post': 'AI World',
-    'hero.desc': 'Expand the limits of your work by leveraging field-proven AI automation solutions, cutting-edge AI applications, and valuable insights.',
+    'hero.desc': 'AI you use, AI you sell. Expand your work with proven automation, apps, and outsourcing.',
     'hero.stat.today': 'Today\'s Visitors',
     'hero.stat.total': 'Total Visitors',
     'hero.stat.downloads': 'Character Image Downloads',
@@ -426,9 +431,10 @@ const translations = {
 
     // Footer
     'footer.copyright': '© {year} GearsShift AI World. All rights reserved.',
-    'footer.desc': 'Providing innovative applications and trend analysis reports leveraging AI technology.',
+    'footer.desc': 'AI you use, AI you sell — tools, automation, and outsourcing in one place.',
     'footer.link.about': 'About',
     'footer.link.privacy': 'Privacy Policy',
+    'footer.link.media': 'Media',
     'footer.inquiry': 'Business & Program Inquiries',
 
     // Privacy Page

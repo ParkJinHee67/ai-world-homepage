@@ -519,6 +519,8 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
   // Filter items (shows all categories on Home page)
   const displayItems = useMemo(() => {
     if (filter === 'All') return items;
+    // 「외주」탭: App + Content 함께 표시
+    if (filter === 'App') return items.filter(item => item.category === 'App' || item.category === 'Content');
     return items.filter(item => item.category === filter);
   }, [filter, items]);
 
@@ -537,8 +539,11 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
             <h1 className="hero-title" style={styles.heroTitle}>
               {t('hero.title_pre', '톱니바꿈')}<span style={styles.heroGradient}>{t('hero.title_post', 'AI월드')}</span>
             </h1>
+            <p style={{ margin: '8px 0 0', fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent-indigo)', letterSpacing: '-0.02em' }}>
+              {t('hero.tagline', '쓰는 AI, 파는 AI')}
+            </p>
             <p className="hero-desc" style={styles.heroDesc}>
-              {t('hero.desc', '실무에서 검증된 AI 자동화 솔루션과 최첨단 AI 어플리케이션 및 인사이트를 활용하여 업무의 한계를 넓혀보세요.')}
+              {t('hero.desc', '쓰는 AI, 파는 AI. 실무에서 검증된 AI 자동화·어플리케이션·외주 솔루션으로 업무의 한계를 넓혀보세요.')}
             </p>
 
             {/* Real-time Stats Widget */}
@@ -612,14 +617,13 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
             </a>
 
             <div style={styles.filterBtns}>
-              {['All', 'AI Recommend', 'FreeTool', 'Content', 'App', 'Insight'].map((cat) => {
+              {['All', 'AI Recommend', 'FreeTool', 'App', 'Insight'].map((cat) => {
                 const getTabLabel = (c) => {
                   switch (c) {
                     case 'All': return t('cat.all', '전체');
                     case 'AI Recommend': return t('cat.recommend', '상품');
                     case 'FreeTool': return t('cat.freetool', '무료도구');
-                    case 'Content': return t('cat.content', '콘텐츠사이트');
-                    case 'App': return t('cat.app', '외주프로젝트');
+                    case 'App': return t('cat.app', '외주');
                     case 'Insight': return t('cat.insight', '인사이트');
                     default: return c;
                   }

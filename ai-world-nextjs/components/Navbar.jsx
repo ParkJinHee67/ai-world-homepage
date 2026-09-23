@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Terminal, Newspaper, Package, Wrench, Globe, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download } from 'lucide-react';
+import { Terminal, Newspaper, Package, Wrench, Globe, Layout, Lightbulb, ShieldAlert, Menu, X, Cog, Download, BookOpen } from 'lucide-react';
 import { useLanguage } from '../app/LanguageContext';
 
 export default function Navbar() {
@@ -53,6 +53,17 @@ export default function Navbar() {
             );
           })}
           
+          <a
+            href="https://jinheestate.blog/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-link"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <BookOpen size={16} />
+            {t('nav.media', '미디어')}
+          </a>
+
           {/* Language Toggle Button */}
           <button onClick={toggleLanguage} style={styles.langToggleBtn} className="lang-toggle-btn">
             {language === 'ko' ? 'EN' : 'KO'}
@@ -85,6 +96,18 @@ export default function Navbar() {
             );
           })}
           
+          <a
+            href="https://jinheestate.blog/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setIsOpen(false)}
+            className="nav-link"
+            style={styles.mobileNavLink}
+          >
+            <BookOpen size={18} />
+            {t('nav.media', '미디어')}
+          </a>
+
           {/* Mobile Language Toggle */}
           <button 
             onClick={() => { toggleLanguage(); setIsOpen(false); }} 

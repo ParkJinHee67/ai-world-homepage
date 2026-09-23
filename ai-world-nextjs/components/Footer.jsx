@@ -24,6 +24,10 @@ export default function Footer() {
             <Link href="/privacy" style={styles.footerLink}>
               {t('footer.link.privacy', '개인정보처리방침')}
             </Link>
+            <span style={styles.separator}>|</span>
+            <a href="https://jinheestate.blog/" target="_blank" rel="noopener noreferrer" style={styles.footerLink}>
+              {t('footer.link.media', '미디어')}
+            </a>
           </div>
         </div>
 
