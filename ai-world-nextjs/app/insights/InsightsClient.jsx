@@ -4,6 +4,7 @@ import { db, mapPortfolioItem } from '../supabaseClient';
 import PortfolioCard from '../../components/PortfolioCard';
 import { Lightbulb } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
+import { mergeMediaInsights, MEDIA_HUB_IT_AI_URL } from '../../config/mediaInsights';
 
 const NeuralCanvas = () => {
   const canvasRef = useRef(null);
@@ -265,7 +266,7 @@ const NeuralCanvas = () => {
 
 export default function InsightsClient({ initialItems, highlightId }) {
   const { t } = useLanguage();
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState(() => mergeMediaInsights(initialItems || []));
   const [loading, setLoading] = useState(false);
   const [highlightCardId, setHighlightCardId] = useState(null);
 
@@ -278,7 +279,7 @@ export default function InsightsClient({ initialItems, highlightId }) {
         if (data) {
           const mapped = data.map(mapPortfolioItem);
           const filtered = mapped.filter(x => x.category === 'Insight');
-          setItems(filtered);
+          setItems(mergeMediaInsights(filtered));
         }
       } catch (e) {
         console.error('Failed to load insights:', e);
@@ -327,6 +328,25 @@ export default function InsightsClient({ initialItems, highlightId }) {
             <p className="insights-subtitle" style={styles.subtitle}>
               {t('insights.subtitle', '프롬프트 엔지니어링 템플릿, 비즈니스 자동화 워크플로우 설계서, AI 개발 지침 가이드 등 가치 있는 지식형 인사이트 자산군입니다.')}
             </p>
+            <a
+              href={MEDIA_HUB_IT_AI_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                marginTop: 18,
+                padding: '10px 16px',
+                borderRadius: 999,
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '1px solid rgba(245, 158, 11, 0.35)',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              {t('insights.media_cta', '미디어에서 더 읽기')} →
+            </a>
           </div>
           <div className="insights-header-img-container" style={styles.headerImageContainer}>
             <NeuralCanvas />

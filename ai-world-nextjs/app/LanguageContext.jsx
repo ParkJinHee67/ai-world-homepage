@@ -174,8 +174,11 @@ const translations = {
 
     // Insights
     'insights.title': '기술 인사이트',
-    'insights.subtitle': '프롬프트 엔지니어링 템플릿, 비즈니스 자동화 워크플로우 설계서, AI 개발 지침 가이드 등 가치 있는 지식형 인사이트 자산군입니다.',
+    'insights.subtitle': '미디어 허브의 IT/AI 글과 기술 인사이트 자산을 모았습니다. 카드의 「읽기」는 jinheestate.blog 글로 바로 연결됩니다.',
     'insights.no_portfolio': '등록된 인사이트 포트폴리오가 없습니다.',
+    'insights.media_cta': '미디어에서 더 읽기',
+    'card.read_media': '읽기',
+    'card.read_media_tooltip': '미디어 글 읽기',
 
     // CardNews Gallery
     'gallery.back': '소개 페이지로 돌아가기',
@@ -385,8 +388,11 @@ const translations = {
 
     // Insights
     'insights.title': 'Tech Insights',
-    'insights.subtitle': 'Valuable knowledge assets including prompt engineering templates, business automation workflows, and AI development guidebooks.',
+    'insights.subtitle': 'IT/AI articles from the media hub plus tech insight assets. 「Read」 opens the matching jinheestate.blog post.',
     'insights.no_portfolio': 'No tech insights found.',
+    'insights.media_cta': 'Read more on Media',
+    'card.read_media': 'Read',
+    'card.read_media_tooltip': 'Read on the media hub',
 
     // CardNews Gallery
     'gallery.back': 'Back to About Page',

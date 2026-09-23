@@ -120,10 +120,18 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 rel="noopener noreferrer" 
                 className="action-btn primary"
                 style={styles.actionBtnPrimary}
-                title={t('card.launch_tooltip', '앱 실행하기')}
+                title={
+                  String(item.appUrl).includes('jinheestate.blog')
+                    ? t('card.read_media_tooltip', '미디어 글 읽기')
+                    : t('card.launch_tooltip', '앱 실행하기')
+                }
               >
                 <ExternalLink size={13} />
-                <span>Launch</span>
+                <span>
+                  {String(item.appUrl).includes('jinheestate.blog')
+                    ? t('card.read_media', '읽기')
+                    : 'Launch'}
+                </span>
               </a>
             )}
 

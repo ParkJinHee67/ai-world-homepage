@@ -1,6 +1,7 @@
 import React from 'react';
 import InsightsClient from './InsightsClient';
 import { db, mapPortfolioItem } from '../supabaseClient';
+import { mergeMediaInsights } from '../../config/mediaInsights';
 
 export const metadata = {
   title: '기술 인사이트 - 톱니바꿈 AI월드',
@@ -29,7 +30,7 @@ export default async function Page() {
     const { data, error } = await db.getPortfolio();
     if (data) {
       const mapped = data.map(mapPortfolioItem);
-      filteredItems = mapped.filter(x => x.category === 'Insight');
+      filteredItems = mergeMediaInsights(mapped.filter(x => x.category === 'Insight'));
     }
   } catch (e) {
     console.error('Failed to pre-fetch insights:', e);

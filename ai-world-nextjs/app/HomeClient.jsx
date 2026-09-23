@@ -5,6 +5,7 @@ import { db, mapPortfolioItem, supabase } from './supabaseClient';
 import PortfolioCard from '../components/PortfolioCard';
 import { MessageSquare, Star, Sparkles } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
+import { mergeMediaInsights, MEDIA_HUB_IT_AI_URL } from '../config/mediaInsights';
 
 function CloudWordCanvas() {
   const canvasRef = useRef(null);
@@ -521,6 +522,9 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
     if (filter === 'All') return items;
     // 「외주」탭: App + Content 함께 표시
     if (filter === 'App') return items.filter(item => item.category === 'App' || item.category === 'Content');
+    if (filter === 'Insight') {
+      return mergeMediaInsights(items.filter(item => item.category === 'Insight'));
+    }
     return items.filter(item => item.category === filter);
   }, [filter, items]);
 
@@ -671,6 +675,30 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
           </div>
         ) : (
           <div className="grid-container">
+            {filter === 'Insight' && (
+              <div style={{ width: '100%', marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+                <a
+                  href={MEDIA_HUB_IT_AI_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 16px',
+                    borderRadius: 999,
+                    background: 'rgba(99, 102, 241, 0.12)',
+                    border: '1px solid rgba(99, 102, 241, 0.35)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  {t('insights.media_cta', '미디어에서 더 읽기')} →
+                </a>
+              </div>
+            )}
             {displayItems.map((item, idx) => (
               <PortfolioCard 
                 key={item.id} 
