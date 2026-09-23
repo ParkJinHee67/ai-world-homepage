@@ -1,14 +1,18 @@
 "use client";
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { ExternalLink, BookOpen, Video, Share2, Check } from 'lucide-react';
+import { ExternalLink, BookOpen, Video, Share2, Check, ShoppingBag } from 'lucide-react';
 import VideoModal from './VideoModal';
+import PurchaseGuideModal from './PurchaseGuideModal';
+import { findPurchaseGuide } from '../config/productPurchaseGuides';
 import { useLanguage } from '../app/LanguageContext';
 
 export default function PortfolioCard({ item, index, isHighlighted = false }) {
   const [copied, setCopied] = useState(false);
   const [showVideos, setShowVideos] = useState(false);
+  const [showPurchaseGuide, setShowPurchaseGuide] = useState(false);
   const { t, translateDb } = useLanguage();
+  const purchaseGuide = findPurchaseGuide(item.title);
 
   // Parse youtube links
   const youtubeUrls = item.youtubeUrl 
@@ -46,6 +50,12 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
     } else if (youtubeUrls.length === 1) {
       window.open(youtubeUrls[0], '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handlePurchaseClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (purchaseGuide) setShowPurchaseGuide(true);
   };
 
   // Determine category badge colors
@@ -154,12 +164,26 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
                 onClick={handleVideoClick} 
                 className="action-btn video-btn"
                 style={styles.actionBtnVideo}
-                title={t('card.video_tooltip', '유튜브 영상 가이드 보기')}
+                title={t('card.intro_video_tooltip', '소개 영상 보기')}
               >
                 <Video size={13} />
                 <span>
-                  Video {youtubeUrls.length > 1 ? `(${youtubeUrls.length})` : ''}
+                  {t('card.intro_video', '소개영상')}
+                  {youtubeUrls.length > 1 ? ` (${youtubeUrls.length})` : ''}
                 </span>
+              </button>
+            )}
+
+            {purchaseGuide && (
+              <button
+                type="button"
+                onClick={handlePurchaseClick}
+                className="action-btn purchase-btn"
+                style={styles.actionBtnPurchase}
+                title={t('card.purchase_tooltip', '구매 방법 안내')}
+              >
+                <ShoppingBag size={13} />
+                <span>{t('card.purchase', '구매방법')}</span>
               </button>
             )}
 
@@ -180,6 +204,17 @@ export default function PortfolioCard({ item, index, isHighlighted = false }) {
 
       {showVideos && (
         <VideoModal urls={youtubeUrls} onClose={() => setShowVideos(false)} />
+      )}
+
+      {showPurchaseGuide && purchaseGuide && (
+        <PurchaseGuideModal
+          guide={{
+            ...purchaseGuide,
+            siteUrl: purchaseGuide.siteUrl || item.appUrl || purchaseGuide.detailUrl,
+            detailUrl: purchaseGuide.detailUrl || item.appUrl || null,
+          }}
+          onClose={() => setShowPurchaseGuide(false)}
+        />
       )}
     </>
   );
@@ -282,6 +317,20 @@ const styles = {
     backgroundColor: 'rgba(244, 63, 94, 0.08)',
     color: '#fda4af',
     border: '1px solid rgba(244, 63, 94, 0.15)',
+    padding: '7px 11px',
+    borderRadius: '8px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  },
+  actionBtnPurchase: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    backgroundColor: 'rgba(124, 58, 237, 0.08)',
+    color: '#c4b5fd',
+    border: '1px solid rgba(167, 139, 250, 0.35)',
     padding: '7px 11px',
     borderRadius: '8px',
     fontSize: '0.75rem',
