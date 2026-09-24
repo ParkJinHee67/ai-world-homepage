@@ -8,7 +8,7 @@ export const PRODUCT_PURCHASE_GUIDES = [
     match: [/vrewmatcher/i, /vrew\s*matcher/i],
     title: 'VrewMatcher Pro',
     tagline: 'Vrew 편집 6시간을 10분으로 — AI 씬·이미지·BGM 자동 매칭',
-    priceLabel: '₩30,000',
+    priceLabel: '₩39,000',
     priceNote: '부가세 포함 · 한 번 구매로 평생 사용',
     includes: [
       'VrewMatcher Pro exe (Windows 10/11 64bit)',
@@ -16,11 +16,12 @@ export const PRODUCT_PURCHASE_GUIDES = [
       'Gemini Gems 프롬프트 6종',
       '마이너 업데이트 무료',
       '이메일 기술 지원',
+      'Nano Banana 프롬프트 생성기 (세트 포함)',
     ],
     steps: [
       {
         title: '계좌 입금',
-        body: '신한은행 247-02-197411 (예금주: 박진희)으로 30,000원을 입금해 주세요. 입금자명은 반드시 본인 이메일 주소로 적어 주세요.',
+        body: '신한은행 247-02-197411 (예금주: 박진희)으로 39,000원을 입금해 주세요. 입금자명은 반드시 본인 이메일 주소로 적어 주세요.',
       },
       {
         title: '입금 알림 메일',
@@ -42,8 +43,8 @@ export const PRODUCT_PURCHASE_GUIDES = [
     match: [/nano\s*banana/i, /나노\s*바나나/, /나노바나나/],
     title: 'Nano Banana 프롬프트 생성기',
     tagline: 'VrewMatcher CSV + 대본 → Nano Banana(Google Flow)용 씬별 영문 프롬프트 자동 생성',
-    priceLabel: '₩20,000',
-    priceNote: '부가세 포함 · 한 번 구매로 평생 사용 (v3.1)',
+    priceLabel: '₩39,000',
+    priceNote: '부가세 포함 · VrewMatcher Pro와 세트 · 한 번 구매로 평생 사용',
     includes: [
       'Nano Banana 프롬프트 생성기 v3.1 EXE',
       '사용자 매뉴얼 PDF',
@@ -54,7 +55,7 @@ export const PRODUCT_PURCHASE_GUIDES = [
     steps: [
       {
         title: '계좌 입금',
-        body: '신한은행 247-02-197411 (예금주: 박진희)으로 20,000원을 입금해 주세요. 입금자명은 반드시 본인 이메일 주소로 적어 주세요.',
+        body: '신한은행 247-02-197411 (예금주: 박진희)으로 39,000원을 입금해 주세요. (VrewMatcher Pro + Nano Banana 프롬프트 생성기 세트) 입금자명은 반드시 본인 이메일 주소로 적어 주세요.',
       },
       {
         title: '입금 알림 메일',
@@ -66,6 +67,7 @@ export const PRODUCT_PURCHASE_GUIDES = [
       },
     ],
     notes: [
+      '단독 카드로 보이더라도 가격·입금 안내는 VrewMatcher Pro와의 세트 기준과 동일합니다.',
       '프롬프트·스타일·캐릭터 분석에 Claude API 키가 필요합니다.',
       '디지털 콘텐츠 특성상 다운로드 후에는 환불이 어렵습니다.',
     ],
@@ -76,8 +78,8 @@ export const PRODUCT_PURCHASE_GUIDES = [
     match: [/판매용전자책/, /\(판매용/],
     title: '판매용 전자책',
     tagline: '미리보기로 내용을 확인한 뒤, 이메일로 구매를 요청해 주세요.',
-    priceLabel: '문의',
-    priceNote: '작품별로 가격이 다를 수 있습니다. 메일로 문의해 주세요.',
+    priceLabel: '₩19,000',
+    priceNote: '부가세 포함 · 작품별 상이할 수 있음 · 기본 안내가',
     includes: [
       '전자책 본문(미리보기 링크에서 일부 확인 가능)',
       '구매 확인 후 열람·파일 안내',
@@ -88,12 +90,16 @@ export const PRODUCT_PURCHASE_GUIDES = [
         body: '카드의 Launch(또는 미리보기)로 내용을 먼저 확인해 주세요.',
       },
       {
-        title: '구매 문의',
-        body: 'jhpa670211@gmail.com 으로 원하시는 전자책 제목과 성함을 적어 보내 주세요. 제목 예: [전자책 구매] 30년 차 IT PM',
+        title: '계좌 입금',
+        body: '신한은행 247-02-197411 (예금주: 박진희)으로 19,000원을 입금해 주세요. 입금자명은 반드시 본인 이메일 주소로 적어 주세요.',
       },
       {
-        title: '입금·발송 안내',
-        body: '회신으로 가격·입금 계좌(신한은행 247-02-197411, 예금주 박진희)와 발송 방법을 안내해 드립니다.',
+        title: '구매 알림 메일',
+        body: 'jhpa670211@gmail.com 으로 원하시는 전자책 제목과 입금 사실을 적어 메일을 보내 주세요. 예) 제목: [전자책 구매] AI 바이브코딩으로 만든 1인 SaaS 개발기',
+      },
+      {
+        title: '발송 안내',
+        body: '확인 후 열람·파일 안내를 이메일로 보내 드립니다. (작품별로 가격이 다를 수 있으면 회신으로 안내합니다.)',
       },
     ],
     notes: [
