@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ai.jinheestate.blog Hero Video Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #030408;
+            font-family: 'Noto Sans KR', sans-serif;
+            color: #f1f5f9;
+        }
+        .player-root {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 50%, rgba(14, 21, 45, 0.45) 0%, rgba(3, 4, 8, 0.95) 100%);
+            overflow: hidden;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Top control bar */
+        .top-bar {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .interactive {
+            pointer-events: auto;
+        }
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: #38bdf8;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8;
+            animation: pulse-dot 1.4s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .ratio-switch {
+            display: inline-flex;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 3px;
+            gap: 3px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+        }
+        .ratio-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ratio-btn.active {
+            background: #38bdf8;
+            color: #030712;
+            box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+        }
+        .ratio-btn:hover:not(.active) {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Bottom Floating Audio & Transport Bar */
+        .bottom-bar {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .sound-trigger-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 15px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #38bdf8;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+        .sound-trigger-pill:hover {
+            background: #38bdf8;
+            color: #030712;
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);
+        }
+        .sound-trigger-pill.unmuted {
+            border-color: rgba(168, 85, 247, 0.5);
+            color: #c084fc;
+        }
+        .sound-trigger-pill.unmuted:hover {
+            background: #a855f7;
+            color: #ffffff;
+            border-color: #a855f7;
+        }
+        .eq-bars {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+        }
+        .eq-bar {
+            width: 2.5px;
+            height: 3px;
+            background: currentColor;
+            border-radius: 1px;
+            transition: height 0.08s ease;
+        }
+
+        .controls-right {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-icon-pill {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-icon-pill:hover {
+            color: #38bdf8;
+            border-color: #38bdf8;
+            transform: scale(1.08);
+        }
+
+        /* Center Big Play Pause Overlay */
+        .center-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(3, 7, 18, 0.5);
+            backdrop-filter: blur(3px);
+            z-index: 15;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+        .center-overlay.hidden {
+            display: none;
+        }
+        .play-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #38bdf8;
+            color: #030712;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 32px rgba(56, 189, 248, 0.5);
+            transition: transform 0.2s ease;
+        }
+        .play-circle:hover {
+            transform: scale(1.12);
+        }
+        @media (max-width: 480px), (max-height: 320px) {
+            .top-bar { top: 8px; left: 8px; right: 8px; }
+            .bottom-bar { bottom: 8px; left: 8px; right: 8px; }
+            .brand-badge { font-size: 9px; padding: 3px 8px; }
+            .ratio-btn { font-size: 10px; padding: 3px 6px; }
+            .sound-trigger-pill { font-size: 10px; padding: 4px 10px; }
+            .btn-icon-pill { width: 26px; height: 26px; font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-root" id="playerRoot">
+        <!-- Canvas Stage -->
+        <div class="canvas-container" id="stageContainer" title="클릭하여 재생/일시정지">
+            <canvas id="motionCanvas" width="1920" height="1080"></canvas>
+        </div>
+
+        <!-- Center Play Overlay when paused -->
+        <div id="centerOverlay" class="center-overlay hidden">
+            <div class="play-circle">
+                <i class="fa-solid fa-play" style="margin-left: 4px;"></i>
+            </div>
+        </div>
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="brand-badge">
+                <span class="badge-dot" id="badgeDot"></span>
+                <span id="sceneBadgeText">AI KINETIC // 15S PROMO</span>
+            </div>
+
+            <div class="ratio-switch interactive">
+                <button id="btnRatio169" class="ratio-btn active" title="16:9 가로형 와이드 비율">
+                    <i class="fa-solid fa-tv"></i> 16:9
+                </button>
+                <button id="btnRatio916" class="ratio-btn" title="9:16 모바일 릴스/쇼츠 비율">
+                    <i class="fa-solid fa-mobile-screen"></i> 9:16
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <div id="soundPill" class="sound-trigger-pill interactive" title="마우스오버 또는 클릭 시 사운드 ON/OFF">
+                <div class="eq-bars">
+                    <span class="eq-bar" id="eq1" style="height: 4px;"></span>
+                    <span class="eq-bar" id="eq2" style="height: 7px;"></span>
+                    <span class="eq-bar" id="eq3" style="height: 5px;"></span>
+                </div>
+                <span id="soundLabel">🔊 사운드 켜기 (Click / Hover)</span>
+            </div>
+
+            <div class="controls-right interactive">
+                <button id="btnRestart" class="btn-icon-pill" title="처음부터 재생 (0초)">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button id="btnPlayPause" class="btn-icon-pill" title="재생 / 일시정지">
+                    <i id="playIcon" class="fa-solid fa-pause"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Configuration & Text State
+            const DURATION = 15.0;
+            const config = {
+                domain: "ai.jinheestate.blog",
+                s1Main: "급변하는 세상",
+                s1Sub: "기준을 바꾸는 힘",
+                s2Main: "AI 데이터 인사이트",
+                s2Sub: "부동산 · 테크 · 미래전략의 결합",
+                s3Words: ["AI 트렌드", "스마트 분석", "미래 가치", "인사이트"],
+                s5Cta: "지금 바로 미래를 만나보세요"
+            };
+
+            // DOM
+            const canvas = document.getElementById('motionCanvas');
+            const ctx = canvas.getContext('2d');
+            const playerRoot = document.getElementById('playerRoot');
+            const stageContainer = document.getElementById('stageContainer');
+            const centerOverlay = document.getElementById('centerOverlay');
+            const btnRatio169 = document.getElementById('btnRatio169');
+            const btnRatio916 = document.getElementById('btnRatio916');
+            const soundPill = document.getElementById('soundPill');
+            const soundLabel = document.getElementById('soundLabel');
+            const eq1 = document.getElementById('eq1');
+            const eq2 = document.getElementById('eq2');
+            const eq3 = document.getElementById('eq3');
+            const btnPlayPause = document.getElementById('btnPlayPause');
+            const playIcon = document.getElementById('playIcon');
+            const btnRestart = document.getElementById('btnRestart');
+            const sceneBadgeText = document.getElementById('sceneBadgeText');
+            const badgeDot = document.getElementById('badgeDot');
+
+            // Playback State
+            let isPlaying = true;
+            let currentTime = 0;
+            let lastFrameTime = performance.now();
+            let aspectMode = '16:9';
+            let isMuted = true;
+            let triggeredCues = new Set();
+            let triggeredBgmSteps = new Set();
+
+            // Web Audio Synth Engine (128 BPM Synth BGM + Cinematic SFX)
+            let audioCtx = null;
+            let masterGain = null;
+            let compressor = null;
+            let delayNode = null;
+            let noiseBuffer = null;
+            const STEP_DUR = 60 / 128 / 4; // 16th note step = 0.1171875s
+
+            function initAudio() {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        audioCtx = new AudioContext();
+
+                        compressor = audioCtx.createDynamicsCompressor();
+                        compressor.threshold.setValueAtTime(-16, audioCtx.currentTime);
+                        compressor.knee.setValueAtTime(18, audioCtx.currentTime);
+                        compressor.ratio.setValueAtTime(4, audioCtx.currentTime);
+                        compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+                        compressor.release.setValueAtTime(0.18, audioCtx.currentTime);
+
+                        masterGain = audioCtx.createGain();
+                        masterGain.gain.setValueAtTime(isMuted ? 0 : 0.85, audioCtx.currentTime);
+
+                        delayNode = audioCtx.createDelay(1.0);
+                        delayNode.delayTime.setValueAtTime(STEP_DUR * 3, audioCtx.currentTime);
+                        const delayFeedback = audioCtx.createGain();
+                        delayFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+                        const delayFilter = audioCtx.createBiquadFilter();
+                        delayFilter.type = 'bandpass';
+                        delayFilter.frequency.setValueAtTime(1600, audioCtx.currentTime);
+                        delayFilter.Q.setValueAtTime(0.8, audioCtx.currentTime);
+
+                        delayNode.connect(delayFilter);
+                        delayFilter.connect(delayFeedback);
+                        delayFeedback.connect(delayNode);
+                        delayFeedback.connect(compressor);
+
+                        compressor.connect(masterGain);
+                        masterGain.connect(audioCtx.destination);
+
+                        const bufSize = audioCtx.sampleRate * 2;
+                        noiseBuffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+                        const output = noiseBuffer.getChannelData(0);
+                        for (let i = 0; i < bufSize; i++) {
+                            output[i] = Math.random() * 2 - 1;
+                        }
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+
+            function setMute(mute) {
+                isMuted = mute;
+                initAudio();
+                if (audioCtx && masterGain) {
+                    const now = audioCtx.currentTime;
+                    masterGain.gain.cancelScheduledValues(now);
+                    masterGain.gain.linearRampToValueAtTime(isMuted ? 0 : 0.85, now + 0.08);
+                }
+                if (isMuted) {
+                    soundPill.classList.remove('unmuted');
+                    soundLabel.textContent = '🔊 사운드 켜기 (Click / Hover)';
+                    eq1.style.height = '3px';
+                    eq2.style.height = '4px';
+                    eq3.style.height = '3px';
+                } else {
+                    soundPill.classList.add('unmuted');
+                    soundLabel.textContent = '🎵 128 BPM 사운드 켜짐';
+                }
+            }
+
+            // Synthesizer Instruments
+            function playKick(energy = 1.0) {
+                if (!audioCtx || isMuted) return;
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(155, now);
+                osc.frequency.exponentialRampToValueAtTime(42, now + 0.08);
+                osc.frequency.exponentialRampToValueAtTime(28, now + 0.28);
+                gain.gain.setValueAtTime(0.65 * energy, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(compressor);
+                osc.start(now);
+                osc.stop(now + 0.32);
+
+                const clickOsc = audioCtx.createOscillator();
+                const clickGain = audioCtx.createGain();
+                clickOsc.type = 'triangle';
+                clickOsc.frequency.setValueAtTime(950, now);
+                clickOsc.frequency.exponentialRampToValueAtTime(120, now + 0.025);
+                clickGain.gain.setValueAtTime(0.25 * energy, now);
+                clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                clickOsc.connect(clickGain);
+                clickGain.connect(compressor);
+                clickOsc.start(now);
+                clickOsc.stop(now + 0.035);
+            }
+
+            function playSnare(intensity = 1.0) {
+                if (!audioCtx || !noiseBuffer || isMuted) return;
+                const now = audioCtx.currentTime;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(650, now);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.32 * intensity, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(compressor);
+                gain.connect(delayNode);
+                noise.start(now);
+                noise.stop(now + 0.2);
+
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(230, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.09);
+                oscGain.gain.setValueAtTime(0.28 * intensity, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                osc.connect(oscGain);
+                oscGain.connect(compressor);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+
+            function playHiHat(isOpen = false) {
+                if (!audioCtx || !noiseBuffer || isMuted) return;
+                const now = audioCtx.currentTime;
+                const dur = isOpen ? 0.16 : 0.045;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(7500, now);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(isOpen ? 0.13 : 0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(compressor);
+                noise.start(now);
+                noise.stop(now + dur + 0.01);
+            }
+
+            function playBassNote(freq, duration = 0.2, cutoff = 750) {
+                if (!audioCtx || isMuted) return;
+                const now = audioCtx.currentTime;
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                osc1.type = 'sawtooth';
+                osc2.type = 'square';
+                osc1.frequency.setValueAtTime(freq, now);
+                osc2.frequency.setValueAtTime(freq * 0.5, now);
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(cutoff * 1.8, now);
+                filter.frequency.exponentialRampToValueAtTime(cutoff * 0.45, now + duration);
+                filter.Q.setValueAtTime(3.5, now);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.24, now + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
+                gain.connect(compressor);
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + duration + 0.02);
+                osc2.stop(now + duration + 0.02);
+            }
+
+            function playArpPluck(freq, brightness = 1.0) {
+                if (!audioCtx || isMuted) return;
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, now);
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(3600 * brightness, now);
+                filter.frequency.exponentialRampToValueAtTime(480, now + 0.14);
+                filter.Q.setValueAtTime(2.5, now);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.11, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(compressor);
+                gain.connect(delayNode);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            }
+
+            function playSuperSawChord(freqs, duration = 0.7, vol = 0.065) {
+                if (!audioCtx || isMuted) return;
+                const now = audioCtx.currentTime;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, now);
+                filter.frequency.exponentialRampToValueAtTime(3400, now + duration * 0.35);
+                filter.frequency.exponentialRampToValueAtTime(1200, now + duration);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(vol, now + 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                filter.connect(gain);
+                gain.connect(compressor);
+                gain.connect(delayNode);
+
+                freqs.forEach(f => {
+                    [-4, 4].forEach(detuneCents => {
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(f, now);
+                        osc.detune.setValueAtTime(detuneCents, now);
+                        osc.connect(filter);
+                        osc.start(now);
+                        osc.stop(now + duration + 0.05);
+                    });
+                });
+            }
+
+            const arpScale = [261.63, 311.13, 392.00, 466.16, 523.25, 622.25, 783.99, 523.25];
+
+            function triggerBgmStep(step) {
+                if (isMuted) return;
+                initAudio();
+                if (!audioCtx || audioCtx.state !== 'running') return;
+
+                const stepInBar = step % 16;
+                const sceneIndex = Math.floor((step * STEP_DUR) / 3.0);
+                const bassRoots = [65.41, 103.83, 87.31, 98.00, 65.41];
+                const rootFreq = bassRoots[clamp(sceneIndex, 0, 4)];
+
+                if (stepInBar % 4 === 0) {
+                    playKick(sceneIndex === 2 || sceneIndex === 4 ? 1.15 : 0.95);
+                } else if (sceneIndex === 2 && stepInBar % 6 === 0) {
+                    playKick(0.85);
+                }
+
+                if (stepInBar === 4 || stepInBar === 12) {
+                    playSnare(sceneIndex >= 1 ? 1.0 : 0.75);
+                }
+
+                if (stepInBar % 4 === 2) {
+                    playHiHat(true);
+                } else if (stepInBar % 2 === 0 || sceneIndex >= 1) {
+                    playHiHat(false);
+                }
+
+                const bassPattern = [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1];
+                if (bassPattern[stepInBar]) {
+                    const octaveMult = (stepInBar === 2 || stepInBar === 6 || stepInBar === 10 || stepInBar === 14) ? 2 : 1;
+                    const cutoff = sceneIndex === 2 ? 1300 : (sceneIndex === 4 ? 1500 : 850);
+                    playBassNote(rootFreq * octaveMult, STEP_DUR * 1.4, cutoff);
+                }
+
+                const arpNote = arpScale[(step + sceneIndex * 2) % arpScale.length];
+                if (sceneIndex === 0 && stepInBar % 2 === 0) {
+                    playArpPluck(arpNote, 0.9);
+                } else if (sceneIndex === 1) {
+                    playArpPluck(arpNote * (stepInBar % 4 === 0 ? 1.5 : 1), 1.2);
+                } else if (sceneIndex === 2 && stepInBar % 2 === 0) {
+                    playArpPluck(arpNote * 1.25, 1.4);
+                } else if (sceneIndex === 3 && stepInBar % 2 === 1) {
+                    playArpPluck(arpNote * 1.5, 1.1);
+                } else if (sceneIndex === 4) {
+                    playArpPluck(arpNote * (stepInBar % 3 === 0 ? 2.0 : 1.0), 1.5);
+                }
+
+                if (stepInBar === 0) {
+                    if (sceneIndex === 0) playSuperSawChord([261.63, 311.13, 392.00, 587.33], 1.2, 0.05);
+                    if (sceneIndex === 1) playSuperSawChord([207.65, 261.63, 311.13, 392.00], 1.2, 0.06);
+                    if (sceneIndex === 2) playSuperSawChord([174.61, 261.63, 311.13, 466.16], 0.9, 0.065);
+                    if (sceneIndex === 3) playSuperSawChord([196.00, 293.66, 349.23, 493.88], 1.2, 0.06);
+                    if (sceneIndex === 4) playSuperSawChord([261.63, 311.13, 392.00, 523.25, 622.25], 2.2, 0.08);
+                }
+            }
+
+            function playSfx(type, pitch = 1) {
+                if (isMuted) return;
+                initAudio();
+                if (!audioCtx || audioCtx.state !== 'running') return;
+                const now = audioCtx.currentTime;
+
+                if (type === 'impact') {
+                    const sub = audioCtx.createOscillator();
+                    const subGain = audioCtx.createGain();
+                    sub.type = 'sine';
+                    sub.frequency.setValueAtTime(160 * pitch, now);
+                    sub.frequency.exponentialRampToValueAtTime(28, now + 0.45);
+                    subGain.gain.setValueAtTime(0.65, now);
+                    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+                    sub.connect(subGain);
+                    subGain.connect(compressor);
+                    sub.start(now);
+                    sub.stop(now + 0.5);
+
+                    const metal = audioCtx.createOscillator();
+                    const metalGain = audioCtx.createGain();
+                    metal.type = 'sawtooth';
+                    metal.frequency.setValueAtTime(420 * pitch, now);
+                    metal.frequency.exponentialRampToValueAtTime(65, now + 0.18);
+                    metalGain.gain.setValueAtTime(0.22, now);
+                    metalGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    metal.connect(metalGain);
+                    metalGain.connect(compressor);
+                    metalGain.connect(delayNode);
+                    metal.start(now);
+                    metal.stop(now + 0.22);
+                } else if (type === 'whoosh') {
+                    if (!noiseBuffer) return;
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = noiseBuffer;
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(220, now);
+                    filter.frequency.exponentialRampToValueAtTime(2600 * pitch, now + 0.16);
+                    filter.frequency.exponentialRampToValueAtTime(380, now + 0.32);
+                    filter.Q.setValueAtTime(3.0, now);
+                    const gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.01, now);
+                    gain.gain.linearRampToValueAtTime(0.35, now + 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(compressor);
+                    gain.connect(delayNode);
+                    noise.start(now);
+                    noise.stop(now + 0.36);
+                } else if (type === 'type') {
+                    const click = audioCtx.createOscillator();
+                    const clickGain = audioCtx.createGain();
+                    click.type = 'square';
+                    click.frequency.setValueAtTime(1800 + Math.random() * 600, now);
+                    clickGain.gain.setValueAtTime(0.11, now);
+                    clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+                    click.connect(clickGain);
+                    clickGain.connect(compressor);
+                    click.start(now);
+                    click.stop(now + 0.02);
+                } else if (type === 'confirm') {
+                    const notes = [523.25, 783.99, 1046.50];
+                    notes.forEach((f, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(f, now + idx * 0.055);
+                        gain.gain.setValueAtTime(0.18, now + idx * 0.055);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(compressor);
+                        gain.connect(delayNode);
+                        osc.start(now + idx * 0.055);
+                        osc.stop(now + idx * 0.055 + 0.38);
+                    });
+                }
+            }
+
+            const sfxSchedule = [
+                { time: 0.05, id: 's1_in', type: 'impact', pitch: 1.0 },
+                { time: 0.86, id: 's1_sub', type: 'whoosh', pitch: 1.15 },
+                { time: 1.85, id: 's1_ai', type: 'impact', pitch: 1.35 },
+                { time: 3.02, id: 's2_in', type: 'whoosh', pitch: 0.95 },
+                { time: 3.48, id: 's2_hit', type: 'impact', pitch: 1.1 },
+                { time: 6.02, id: 's3_w1', type: 'impact', pitch: 0.9 },
+                { time: 6.72, id: 's3_w2', type: 'impact', pitch: 1.08 },
+                { time: 7.42, id: 's3_w3', type: 'impact', pitch: 1.25 },
+                { time: 8.12, id: 's3_w4', type: 'impact', pitch: 1.45 },
+                { time: 9.02, id: 's4_in', type: 'whoosh', pitch: 1.2 },
+                { time: 11.20, id: 's4_enter', type: 'confirm', pitch: 1.0 },
+                { time: 12.12, id: 's5_hit', type: 'impact', pitch: 0.85 },
+                { time: 12.40, id: 's5_cta', type: 'confirm', pitch: 1.2 }
+            ];
+
+            function checkAudioCues(prevTime, newTime) {
+                if (newTime < prevTime) {
+                    triggeredCues.clear();
+                    triggeredBgmSteps.clear();
+                }
+
+                const currentStep = Math.floor(newTime / STEP_DUR);
+                if (!triggeredBgmSteps.has(currentStep) && newTime < DURATION) {
+                    triggeredBgmSteps.add(currentStep);
+                    triggerBgmStep(currentStep);
+
+                    if (!isMuted && audioCtx && audioCtx.state === 'running') {
+                        eq1.style.height = `${3 + Math.floor(Math.random() * 9)}px`;
+                        eq2.style.height = `${4 + Math.floor(Math.random() * 8)}px`;
+                        eq3.style.height = `${3 + Math.floor(Math.random() * 10)}px`;
+                    }
+                }
+
+                sfxSchedule.forEach(cue => {
+                    if (newTime >= cue.time && prevTime < cue.time && !triggeredCues.has(cue.id)) {
+                        triggeredCues.add(cue.id);
+                        playSfx(cue.type, cue.pitch);
+                    }
+                });
+
+                if (newTime >= 9.3 && newTime <= 11.08) {
+                    const charIndex = Math.floor(((newTime - 9.3) / 1.75) * config.domain.length);
+                    const cueKey = 'type_' + charIndex;
+                    if (!triggeredCues.has(cueKey)) {
+                        triggeredCues.add(cueKey);
+                        playSfx('type', 1);
+                    }
+                }
+            }
+
+            // Math & Easing
+            const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+            const easeOutExpo = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+            const easeOutBack = (x) => {
+                const c1 = 1.70158;
+                const c3 = c1 + 1;
+                return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+            };
+
+            const particles = Array.from({ length: 36 }, (_, i) => ({
+                x: Math.random(),
+                y: Math.random(),
+                size: 1.5 + Math.random() * 2.2,
+                speedX: (Math.random() - 0.5) * 0.04,
+                speedY: (Math.random() - 0.5) * 0.04,
+                hue: i % 2 === 0 ? 198 : 265
+            }));
+
+            function drawCyberBackground(W, H, t, accentHue = 198, intensity = 1) {
+                const grad = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.05, W * 0.5, H * 0.5, Math.max(W, H) * 0.75);
+                grad.addColorStop(0, `hsla(${accentHue}, 65%, 12%, 1)`);
+                grad.addColorStop(0.6, '#070a14');
+                grad.addColorStop(1, '#03050a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, W, H);
+
+                ctx.save();
+                ctx.strokeStyle = `hsla(${accentHue}, 85%, 60%, ${0.07 * intensity})`;
+                ctx.lineWidth = 1;
+                const gridSize = Math.min(W, H) * 0.08;
+                const offsetX = (t * 40) % gridSize;
+                const offsetY = (t * 25) % gridSize;
+
+                for (let x = offsetX; x < W; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, H);
+                    ctx.stroke();
+                }
+                for (let y = offsetY; y < H; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(W, y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                ctx.save();
+                particles.forEach((p, idx) => {
+                    const px = ((p.x + p.speedX * t) % 1 + 1) % 1 * W;
+                    const py = ((p.y + p.speedY * t) % 1 + 1) % 1 * H;
+                    ctx.fillStyle = `hsla(${p.hue}, 90%, 65%, ${0.35 * intensity})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    for (let j = idx + 1; j < particles.length; j += 4) {
+                        const p2 = particles[j];
+                        const p2x = ((p2.x + p2.speedX * t) % 1 + 1) % 1 * W;
+                        const p2y = ((p2.y + p2.speedY * t) % 1 + 1) % 1 * H;
+                        const dist = Math.hypot(px - p2x, py - p2y);
+                        if (dist < Math.min(W, H) * 0.16) {
+                            ctx.strokeStyle = `hsla(${accentHue}, 90%, 65%, ${(1 - dist / (Math.min(W, H) * 0.16)) * 0.12 * intensity})`;
+                            ctx.beginPath();
+                            ctx.moveTo(px, py);
+                            ctx.lineTo(p2x, p2y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+                ctx.restore();
+            }
+
+            function roundRect(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, r);
+                ctx.closePath();
+            }
+
+            // Scene 1: 0~3s
+            function renderScene1(W, H, t, isPortrait) {
+                const lt = t;
+                drawCyberBackground(W, H, t, 199, 1.0);
+                const baseScale = isPortrait ? W / 950 : W / 1600;
+
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+
+                let camZoom = 1 + lt * 0.04;
+                if (lt > 1.8) {
+                    camZoom += easeOutExpo(clamp((lt - 1.8) / 0.4, 0, 1)) * 0.12;
+                }
+                ctx.scale(camZoom, camZoom);
+
+                const p1 = easeOutBack(clamp(lt / 0.55, 0, 1));
+                const p2 = easeOutExpo(clamp((lt - 0.85) / 0.55, 0, 1));
+
+                ctx.globalAlpha = clamp(lt / 0.3, 0, 1);
+                ctx.font = `700 ${Math.round(24 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = '#38bdf8';
+                ctx.textAlign = 'center';
+                ctx.fillText('// NEXT-GEN INTELLIGENCE BLOG', 0, -165 * baseScale);
+
+                ctx.save();
+                ctx.translate(0, (1 - p1) * -80 * baseScale);
+                ctx.scale(0.6 + 0.4 * p1, 0.6 + 0.4 * p1);
+                ctx.font = `900 ${Math.round(115 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+                ctx.shadowBlur = 30;
+                ctx.fillText(config.s1Main, 0, -35 * baseScale);
+                ctx.restore();
+
+                if (lt > 0.85) {
+                    ctx.save();
+                    const boxW = 680 * baseScale * p2;
+                    const boxH = 96 * baseScale;
+                    ctx.fillStyle = '#38bdf8';
+                    roundRect(ctx, -boxW / 2, 18 * baseScale, boxW, boxH, 16 * baseScale);
+                    ctx.fill();
+
+                    ctx.globalAlpha = p2;
+                    ctx.font = `900 ${Math.round(64 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                    ctx.fillStyle = '#020617';
+                    ctx.fillText(config.s1Sub, 0, 86 * baseScale);
+                    ctx.restore();
+                }
+
+                if (lt > 1.85) {
+                    const p3 = easeOutBack(clamp((lt - 1.85) / 0.4, 0, 1));
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(2, 6, 23, 0.86)';
+                    ctx.fillRect(-W, -H, W * 2, H * 2);
+
+                    ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 * p3})`;
+                    ctx.lineWidth = 3 * baseScale;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 260 * baseScale * p3, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.scale(2.2 - 1.2 * p3, 2.2 - 1.2 * p3);
+                    ctx.font = `900 ${Math.round(160 * baseScale)}px 'Black Han Sans', 'Noto Sans KR', sans-serif`;
+                    const gradText = ctx.createLinearGradient(-250 * baseScale, 0, 250 * baseScale, 0);
+                    gradText.addColorStop(0, '#38bdf8');
+                    gradText.addColorStop(0.5, '#ffffff');
+                    gradText.addColorStop(1, '#a855f7');
+                    ctx.fillStyle = gradText;
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 45;
+                    ctx.fillText('AI INSIGHT', 0, 50 * baseScale);
+
+                    ctx.font = `700 ${Math.round(32 * baseScale)}px 'JetBrains Mono', monospace`;
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.shadowBlur = 0;
+                    ctx.fillText('ai.jinheestate.blog', 0, 130 * baseScale);
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+
+            // Scene 2: 3~6s
+            function renderScene2(W, H, t, isPortrait) {
+                const lt = t - 3.0;
+                drawCyberBackground(W, H, t, 265, 1.1);
+                const baseScale = isPortrait ? W / 950 : W / 1600;
+                const enterP = easeOutExpo(clamp(lt / 0.6, 0, 1));
+                const subP = easeOutBack(clamp((lt - 0.55) / 0.55, 0, 1));
+
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+
+                ctx.save();
+                ctx.rotate(-0.06);
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.14)';
+                ctx.fillRect(-W, -190 * baseScale, W * 2 * enterP, 130 * baseScale);
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+                ctx.fillRect(-W + (1 - enterP) * W, 60 * baseScale, W * 2, 110 * baseScale);
+                ctx.restore();
+
+                ctx.save();
+                ctx.globalAlpha = enterP;
+                ctx.translate(0, -175 * baseScale);
+                const pillW = 420 * baseScale;
+                const pillH = 50 * baseScale;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.strokeStyle = '#a855f7';
+                ctx.lineWidth = 2 * baseScale;
+                roundRect(ctx, -pillW / 2, -pillH / 2, pillW, pillH, 999);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.font = `700 ${Math.round(24 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = '#e9d5ff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('SMART DATA & REAL ESTATE AI', 0, 2 * baseScale);
+                ctx.restore();
+
+                ctx.save();
+                const slideX = (1 - enterP) * -W * 0.6;
+                ctx.translate(slideX, -35 * baseScale);
+                ctx.font = `900 ${Math.round(105 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#a855f7';
+                ctx.fillText(config.s2Main, 6 * baseScale * (1 - enterP * 0.5), 6 * baseScale);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(config.s2Main, 0, 0);
+                ctx.restore();
+
+                if (lt > 0.45) {
+                    ctx.save();
+                    const slideRight = (1 - subP) * W * 0.5;
+                    ctx.translate(slideRight, 95 * baseScale);
+                    const barW = 820 * baseScale;
+                    const barH = 84 * baseScale;
+                    const grad = ctx.createLinearGradient(-barW / 2, 0, barW / 2, 0);
+                    grad.addColorStop(0, '#38bdf8');
+                    grad.addColorStop(1, '#818cf8');
+                    ctx.fillStyle = grad;
+                    roundRect(ctx, -barW / 2, -barH / 2, barW, barH, 18 * baseScale);
+                    ctx.fill();
+
+                    ctx.font = `900 ${Math.round(44 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                    ctx.fillStyle = '#020617';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(config.s2Sub, 0, 2 * baseScale);
+                    ctx.restore();
+                }
+
+                if (lt > 1.1) {
+                    const waveP = clamp((lt - 1.1) / 1.5, 0, 1);
+                    ctx.save();
+                    ctx.translate(0, 215 * baseScale);
+                    const bars = 24;
+                    const spacing = 28 * baseScale;
+                    const totalW = bars * spacing;
+                    for (let i = 0; i < bars; i++) {
+                        const bx = -totalW / 2 + i * spacing;
+                        const bh = (12 + Math.sin(lt * 8 + i * 0.6) * 22) * baseScale * waveP;
+                        ctx.fillStyle = i % 2 === 0 ? '#38bdf8' : '#a855f7';
+                        roundRect(ctx, bx, -bh / 2, 10 * baseScale, bh, 4 * baseScale);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+
+            // Scene 3: 6~9s
+            function renderScene3(W, H, t, isPortrait) {
+                const lt = t - 6.0;
+                const words = config.s3Words;
+                const stepDuration = 0.72;
+                const activeIdx = clamp(Math.floor(lt / stepDuration), 0, 3);
+                const localStepT = (lt - activeIdx * stepDuration) / stepDuration;
+
+                const themes = [
+                    { bgHue: 195, accent: '#38bdf8', badge: 'KEYWORD 01 // TREND' },
+                    { bgHue: 270, accent: '#c084fc', badge: 'KEYWORD 02 // ANALYSIS' },
+                    { bgHue: 155, accent: '#34d399', badge: 'KEYWORD 03 // VALUE' },
+                    { bgHue: 340, accent: '#fb7185', badge: 'KEYWORD 04 // VISION' }
+                ];
+                const theme = themes[activeIdx];
+                drawCyberBackground(W, H, t, theme.bgHue, 1.3);
+                const baseScale = isPortrait ? W / 900 : W / 1550;
+
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+
+                const pop = easeOutBack(clamp(localStepT / 0.45, 0, 1));
+                ctx.save();
+                ctx.font = `900 ${Math.round(380 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`0${activeIdx + 1}`, 0, 0);
+                ctx.restore();
+
+                const gridW = isPortrait ? 360 * baseScale : 480 * baseScale;
+                const gridH = 125 * baseScale;
+                const gapX = isPortrait ? 200 * baseScale : 275 * baseScale;
+                const gapY = 85 * baseScale;
+
+                const positions = [
+                    { x: -gapX, y: -gapY },
+                    { x: gapX, y: -gapY },
+                    { x: -gapX, y: gapY },
+                    { x: gapX, y: gapY }
+                ];
+
+                positions.forEach((pos, idx) => {
+                    if (idx > activeIdx) return;
+                    const isCurrent = idx === activeIdx;
+                    const itemScale = isCurrent ? (0.85 + 0.18 * pop) : 0.92;
+
+                    ctx.save();
+                    ctx.translate(pos.x, pos.y);
+                    ctx.scale(itemScale, itemScale);
+                    ctx.fillStyle = isCurrent ? themes[idx].accent : 'rgba(15, 23, 42, 0.85)';
+                    ctx.strokeStyle = themes[idx].accent;
+                    ctx.lineWidth = 3 * baseScale;
+                    roundRect(ctx, -gridW / 2, -gridH / 2, gridW, gridH, 20 * baseScale);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.font = `900 ${Math.round(52 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                    ctx.fillStyle = isCurrent ? '#020617' : '#f8fafc';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(words[idx] || '', 0, 4 * baseScale);
+                    ctx.restore();
+                });
+
+                ctx.font = `800 ${Math.round(24 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = theme.accent;
+                ctx.textAlign = 'center';
+                ctx.fillText(theme.badge, 0, -210 * baseScale);
+
+                ctx.font = `700 ${Math.round(28 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(`>>> ${config.domain} <<<`, 0, 215 * baseScale);
+
+                ctx.restore();
+            }
+
+            // Scene 4: 9~12s
+            function renderScene4(W, H, t, isPortrait) {
+                const lt = t - 9.0;
+                drawCyberBackground(W, H, t, 205, 1.2);
+                const baseScale = isPortrait ? W / 920 : W / 1600;
+                const cardPop = easeOutBack(clamp(lt / 0.5, 0, 1));
+
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+                ctx.scale(0.8 + 0.2 * cardPop, 0.8 + 0.2 * cardPop);
+
+                ctx.font = `700 ${Math.round(38 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                ctx.fillStyle = '#bae6fd';
+                ctx.textAlign = 'center';
+                ctx.fillText('기회를 선점하는 가장 스마트한 주소', 0, -145 * baseScale);
+
+                const barW = (isPortrait ? 820 : 1080) * baseScale;
+                const barH = 140 * baseScale;
+
+                ctx.save();
+                ctx.shadowColor = 'rgba(56, 189, 248, 0.65)';
+                ctx.shadowBlur = 45;
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 4 * baseScale;
+                roundRect(ctx, -barW / 2, -barH / 2, barW, barH, 999);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+                roundRect(ctx, -barW / 2 + 24 * baseScale, -barH / 2 + 22 * baseScale, 150 * baseScale, barH - 44 * baseScale, 999);
+                ctx.fill();
+                ctx.font = `700 ${Math.round(28 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = '#38bdf8';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('https://', -barW / 2 + 99 * baseScale, 0);
+                ctx.restore();
+
+                const typeProgress = clamp((lt - 0.3) / 1.75, 0, 1);
+                const charCount = Math.floor(typeProgress * config.domain.length);
+                const typedStr = config.domain.substring(0, charCount);
+
+                ctx.font = `800 ${Math.round(62 * baseScale)}px 'JetBrains Mono', monospace`;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+
+                const textStartX = -barW / 2 + 205 * baseScale;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(typedStr, textStartX, 2 * baseScale);
+
+                const textWidth = ctx.measureText(typedStr).width;
+                if (Math.floor(lt * 8) % 2 === 0 || typeProgress < 1) {
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(textStartX + textWidth + 8 * baseScale, -32 * baseScale, 6 * baseScale, 64 * baseScale);
+                }
+
+                if (lt > 2.2) {
+                    const clickP = easeOutExpo(clamp((lt - 2.2) / 0.65, 0, 1));
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(56, 189, 248, ${1 - clickP})`;
+                    ctx.lineWidth = 5 * baseScale;
+                    roundRect(
+                        ctx,
+                        -barW / 2 - clickP * 40 * baseScale,
+                        -barH / 2 - clickP * 25 * baseScale,
+                        barW + clickP * 80 * baseScale,
+                        barH + clickP * 50 * baseScale,
+                        999
+                    );
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#10b981';
+                    roundRect(ctx, -160 * baseScale, 115 * baseScale, 320 * baseScale, 52 * baseScale, 999);
+                    ctx.fill();
+                    ctx.font = `800 ${Math.round(24 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                    ctx.fillStyle = '#022c22';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('✓ CONNECTING TO BLOG', 0, 142 * baseScale);
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+
+            // Scene 5: 12~15s
+            function renderScene5(W, H, t, isPortrait) {
+                const lt = t - 12.0;
+                drawCyberBackground(W, H, t, 198, 1.4);
+                const baseScale = isPortrait ? W / 920 : W / 1600;
+                const heroP = easeOutBack(clamp(lt / 0.65, 0, 1));
+                const pulse = 1 + Math.sin(lt * 5) * 0.022;
+
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+
+                ctx.save();
+                ctx.rotate(lt * 0.15);
+                const rays = 16;
+                for (let i = 0; i < rays; i++) {
+                    ctx.rotate((Math.PI * 2) / rays);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+                    ctx.lineWidth = 2 * baseScale;
+                    ctx.beginPath();
+                    ctx.moveTo(160 * baseScale, 0);
+                    ctx.lineTo(650 * baseScale * heroP, 0);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                ctx.save();
+                ctx.globalAlpha = clamp(lt / 0.4, 0, 1);
+                ctx.font = `700 ${Math.round(30 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.fillText('AI · 테크 · 미래 전략 인사이트', 0, -155 * baseScale);
+                ctx.restore();
+
+                ctx.save();
+                ctx.scale(heroP * pulse, heroP * pulse);
+                const domainFontSize = Math.round((isPortrait ? 78 : 108) * baseScale);
+                ctx.font = `800 ${domainFontSize}px 'JetBrains Mono', monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                const dGrad = ctx.createLinearGradient(-450 * baseScale, -40 * baseScale, 450 * baseScale, 40 * baseScale);
+                dGrad.addColorStop(0, '#38bdf8');
+                dGrad.addColorStop(0.5, '#ffffff');
+                dGrad.addColorStop(1, '#c084fc');
+                ctx.shadowColor = 'rgba(56, 189, 248, 0.7)';
+                ctx.shadowBlur = 40;
+                ctx.fillStyle = dGrad;
+                ctx.fillText(config.domain, 0, -35 * baseScale);
+                ctx.restore();
+
+                if (lt > 0.35) {
+                    const ctaP = easeOutBack(clamp((lt - 0.35) / 0.55, 0, 1));
+                    ctx.save();
+                    ctx.translate(0, 105 * baseScale);
+                    ctx.scale(ctaP, ctaP);
+                    const btnW = 560 * baseScale;
+                    const btnH = 82 * baseScale;
+                    const btnGrad = ctx.createLinearGradient(-btnW / 2, 0, btnW / 2, 0);
+                    btnGrad.addColorStop(0, '#0284c7');
+                    btnGrad.addColorStop(1, '#4f46e5');
+                    ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+                    ctx.shadowBlur = 25;
+                    ctx.fillStyle = btnGrad;
+                    roundRect(ctx, -btnW / 2, -btnH / 2, btnW, btnH, 999);
+                    ctx.fill();
+
+                    ctx.shadowBlur = 0;
+                    ctx.font = `900 ${Math.round(34 * baseScale)}px 'Noto Sans KR', sans-serif`;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${config.s5Cta} →`, 0, 2 * baseScale);
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+
+            function renderFrame(t) {
+                const W = canvas.width;
+                const H = canvas.height;
+                const isPortrait = H > W;
+
+                ctx.clearRect(0, 0, W, H);
+
+                if (t < 3.0) {
+                    renderScene1(W, H, t, isPortrait);
+                    sceneBadgeText.textContent = 'SCENE 01 // INTRO HOOK';
+                    badgeDot.style.background = '#38bdf8';
+                } else if (t < 6.0) {
+                    renderScene2(W, H, t, isPortrait);
+                    sceneBadgeText.textContent = 'SCENE 02 // AI DATA INSIGHT';
+                    badgeDot.style.background = '#a855f7';
+                } else if (t < 9.0) {
+                    renderScene3(W, H, t, isPortrait);
+                    sceneBadgeText.textContent = 'SCENE 03 // 4 KEYWORDS';
+                    badgeDot.style.background = '#34d399';
+                } else if (t < 12.0) {
+                    renderScene4(W, H, t, isPortrait);
+                    sceneBadgeText.textContent = 'SCENE 04 // DOMAIN CONNECT';
+                    badgeDot.style.background = '#f59e0b';
+                } else {
+                    renderScene5(W, H, t, isPortrait);
+                    sceneBadgeText.textContent = 'SCENE 05 // FINALE & CTA';
+                    badgeDot.style.background = '#fb7185';
+                }
+
+                // Laser progress bar at bottom of canvas
+                const progW = (t / DURATION) * W;
+                const baseScale = isPortrait ? W / 950 : W / 1600;
+                const lineGrad = ctx.createLinearGradient(0, 0, W, 0);
+                lineGrad.addColorStop(0, '#38bdf8');
+                lineGrad.addColorStop(0.5, '#a855f7');
+                lineGrad.addColorStop(1, '#f43f5e');
+                ctx.fillStyle = lineGrad;
+                ctx.fillRect(0, H - 7 * baseScale, progW, 7 * baseScale);
+            }
+
+            // Animation Loop
+            function tick(now) {
+                const dt = (now - lastFrameTime) / 1000;
+                lastFrameTime = now;
+
+                if (isPlaying) {
+                    const prevTime = currentTime;
+                    currentTime += dt;
+
+                    if (currentTime >= DURATION) {
+                        currentTime = currentTime % DURATION;
+                        triggeredCues.clear();
+                        triggeredBgmSteps.clear();
+                    }
+
+                    checkAudioCues(prevTime, currentTime);
+                }
+
+                renderFrame(currentTime);
+                requestAnimationFrame(tick);
+            }
+
+            // Aspect Ratio Switcher
+            function setAspectRatio(mode) {
+                aspectMode = mode;
+                if (mode === '16:9') {
+                    canvas.width = 1920;
+                    canvas.height = 1080;
+                    btnRatio169.classList.add('active');
+                    btnRatio916.classList.remove('active');
+                } else {
+                    canvas.width = 1080;
+                    canvas.height = 1920;
+                    btnRatio916.classList.add('active');
+                    btnRatio169.classList.remove('active');
+                }
+                renderFrame(currentTime);
+            }
+
+            btnRatio169.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setAspectRatio('16:9');
+            });
+            btnRatio916.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setAspectRatio('9:16');
+            });
+
+            // Audio & Play Interaction
+            soundPill.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setMute(!isMuted);
+            });
+
+            // Hover / mouseenter to unmute gracefully
+            playerRoot.addEventListener('mouseenter', () => {
+                if (isMuted) {
+                    setMute(false);
+                }
+            });
+
+            // Click canvas or overlay to play/pause or unmute
+            stageContainer.addEventListener('click', () => {
+                if (isMuted) {
+                    setMute(false);
+                } else {
+                    togglePlay();
+                }
+            });
+
+            stageContainer.addEventListener('touchstart', () => {
+                if (isMuted) {
+                    setMute(false);
+                }
+            }, { passive: true });
+
+            centerOverlay.addEventListener('click', () => {
+                togglePlay();
+            });
+
+            function togglePlay() {
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    lastFrameTime = performance.now();
+                    playIcon.className = 'fa-solid fa-pause';
+                    centerOverlay.classList.add('hidden');
+                } else {
+                    playIcon.className = 'fa-solid fa-play';
+                    centerOverlay.classList.remove('hidden');
+                }
+            }
+
+            btnPlayPause.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePlay();
+            });
+
+            btnRestart.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentTime = 0;
+                triggeredCues.clear();
+                triggeredBgmSteps.clear();
+                if (!isPlaying) togglePlay();
+            });
+
+            // Start animation loop once ready
+            window.onload = () => {
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => {
+                        lastFrameTime = performance.now();
+                        requestAnimationFrame(tick);
+                    });
+                } else {
+                    lastFrameTime = performance.now();
+                    requestAnimationFrame(tick);
+                }
+            };
+        })();
+    </script>
+</body>
+</html>

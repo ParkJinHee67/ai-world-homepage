@@ -591,10 +591,22 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
             </div>
           </div>
 
-          {/* Right Column: Dynamic Neural Gear Constellation Canvas */}
+          {/* Right Column: Cyberpunk Kinetic Typography Hero Video Player */}
           <div style={styles.heroRight}>
             <div className="canvas-container" style={styles.canvasContainer}>
-              <CloudWordCanvas />
+              <iframe
+                src="/hero-player/index.html"
+                title="ai.jinheestate.blog Hero Video Player"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  borderRadius: '24px',
+                  display: 'block',
+                  background: '#030408'
+                }}
+                allow="autoplay"
+              />
             </div>
           </div>
         </div>
@@ -926,9 +938,9 @@ const styles = {
     height: '460px',
     background: 'radial-gradient(circle at center, rgba(14, 12, 25, 0.45) 0%, rgba(3, 2, 7, 0) 70%)',
     borderRadius: '24px',
-    border: '1px solid rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(56, 189, 248, 0.25)',
     overflow: 'hidden',
-    boxShadow: 'inset 0 0 40px rgba(99, 102, 241, 0.04)',
+    boxShadow: '0 8px 32px -8px rgba(0, 0, 0, 0.6), 0 0 25px -5px rgba(56, 189, 248, 0.15)',
   },
   gridSection: {
     marginTop: '20px',
