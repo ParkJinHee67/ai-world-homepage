@@ -4,6 +4,7 @@ import { db, mapPortfolioItem, mapNewsItem, formatKSTDate } from '../supabaseCli
 import { 
   Plus, Pen, Trash2, GripVertical, ShieldAlert, LogOut, Check, Terminal, FileText, Image as ImageIcon, Sparkles, AlertCircle, Copy, Link, Monitor, Database, Loader2
 } from 'lucide-react';
+import RoutinesClient from '../routines/RoutinesClient';
 
 // Client side image compression using Canvas
 const compressImage = (base64Str, maxWidth = 480) => {
@@ -1142,6 +1143,15 @@ def register_ai_news(title, summary_points, article_url):
                   >
                     ✨ 메인 팝업 관리
                   </button>
+                  <button 
+                    onClick={() => setCurrentTab('routines')}
+                    style={{
+                      ...styles.tabBtn,
+                      ...(currentTab === 'routines' ? styles.tabBtnActiveRoutines : {})
+                    }}
+                  >
+                    🤖 에이전트 루틴 시간표
+                  </button>
                 </div>
 
                 <button onClick={handleLogout} style={styles.logoutBtn}>
@@ -2270,6 +2280,11 @@ def register_ai_news(title, summary_points, article_url):
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* Tab 8: Automation Agent Routines Dashboard */}
+                {currentTab === 'routines' && (
+                  <RoutinesClient embedded={true} />
                 )}
               </div>
             )}
@@ -3468,6 +3483,12 @@ const styles = {
     background: 'var(--accent-teal)',
     color: 'white',
     boxShadow: '0 4px 12px rgba(20, 184, 166, 0.15)',
+  },
+  tabBtnActiveRoutines: {
+    background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+    color: '#020617',
+    fontWeight: 800,
+    boxShadow: '0 4px 14px rgba(0, 242, 254, 0.35)',
   },
   leadsContainer: {
     marginTop: '20px',
