@@ -1,15 +1,14 @@
 "use client";
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 /**
  * CosmicMathCanvas
- * 우주 형태의 공간(Starfield + Nebula Glow) 속에서
- * 4D 테서랙트(Hypercube), 토러스 매듭(Torus Knot), 별모양 정이십면체(Stellated Icosahedron) 등
- * 신비로운 수학적 3D 기하학 도형이 시간에 따라 부드럽게 모핑(Morphing) 변형되는 인터랙티브 캔버스
+ * 우주 형태의 공간(Starfield 3D 별무리 + Cosmic Nebula Glow) 속에서
+ * 피타고라스의 정리, 원/원기둥/원뿔, 구체, 토러스, 뫼비우스의 띠, 4D 테서랙트 등
+ * 8가지 수학적 3D 기하학 도형이 연속적으로 부드럽게 모핑(Morphing) 변형되는 인터랙티브 캔버스
  */
 export default function CosmicMathCanvas() {
   const canvasRef = useRef(null);
-  // Reference for shape transition trigger from external button if needed
   const nextShapeTriggerRef = useRef(null);
 
   useEffect(() => {
@@ -39,8 +38,8 @@ export default function CosmicMathCanvas() {
     }
     resize();
 
-    // 1. Cosmic Deep Space: Starfield
-    const numStars = 140;
+    // 1. Cosmic Deep Space: 3D Starfield
+    const numStars = 150;
     const stars = Array.from({ length: numStars }, () => ({
       x: (Math.random() - 0.5) * 1200,
       y: (Math.random() - 0.5) * 1200,
@@ -51,19 +50,242 @@ export default function CosmicMathCanvas() {
       twinklePhase: Math.random() * Math.PI * 2,
     }));
 
-    // 2. Mathematical Shapes Definitions
-    // We define target vertex coordinates (32 vertices normalized) and edges
-    // Shape 0: 4D Tesseract (16 vertices duplicated to 32 for smooth morphing)
-    function generateTesseract4D(angle4D) {
+    // 2. 8 Mathematical 3D Geometries (Normalized to exactly 36 vertices each)
+    const NUM_VERTS = 36;
+
+    // --- Shape 0: Pythagoras Theorem 3D (피타고라스의 정리 3차원 기하학 a^2 + b^2 = c^2) ---
+    function genPythagoras(pulse) {
+      const verts = [];
+      const scale = 0.38 + Math.sin(pulse * 2) * 0.02;
+      // Right triangle at center: legA=3, legB=4, hypotenuse C=5
+      // Base A square (3x3): 8 vertices (front & back)
+      for (let z of [-0.6, 0.6]) {
+        verts.push({ x: 0 * scale, y: 0 * scale, z });
+        verts.push({ x: 3 * scale, y: 0 * scale, z });
+        verts.push({ x: 3 * scale, y: -3 * scale, z });
+        verts.push({ x: 0 * scale, y: -3 * scale, z });
+      } // 8
+      // Base B square (4x4): 8 vertices
+      for (let z of [-0.6, 0.6]) {
+        verts.push({ x: 0 * scale, y: 0 * scale, z });
+        verts.push({ x: -4 * scale, y: 0 * scale, z });
+        verts.push({ x: -4 * scale, y: 4 * scale, z });
+        verts.push({ x: 0 * scale, y: 4 * scale, z });
+      } // 8
+      // Hypotenuse C square (5x5): 8 vertices tilted along hypotenuse
+      const angleC = Math.atan2(4, 3);
+      for (let z of [-0.6, 0.6]) {
+        verts.push({ x: 3 * scale, y: 0 * scale, z });
+        verts.push({ x: 0 * scale, y: 4 * scale, z });
+        verts.push({
+          x: (0 + 5 * Math.sin(angleC)) * scale,
+          y: (4 + 5 * Math.cos(angleC)) * scale,
+          z
+        });
+        verts.push({
+          x: (3 + 5 * Math.sin(angleC)) * scale,
+          y: (0 + 5 * Math.cos(angleC)) * scale,
+          z
+        });
+      } // 8
+      // Triangle center & division markers: 12 vertices
+      for (let i = 0; i < 12; i++) {
+        const u = i / 12;
+        const tx = (1 - u) * 3 * scale + u * 0;
+        const ty = (1 - u) * 0 + u * 4 * scale;
+        verts.push({
+          x: tx,
+          y: ty,
+          z: Math.sin(u * Math.PI * 2) * 0.7
+        });
+      }
+      // Centering offset
+      return verts.map(v => ({ x: v.x - 0.5 * scale, y: v.y - 0.5 * scale, z: v.z * 0.8 }));
+    }
+
+    const pythagorasEdges = [
+      // Square A edges
+      [0,1],[1,2],[2,3],[3,0], [4,5],[5,6],[6,7],[7,4], [0,4],[1,5],[2,6],[3,7],
+      // Square B edges
+      [8,9],[9,10],[10,11],[11,8], [12,13],[13,14],[14,15],[15,12], [8,12],[9,13],[10,14],[11,15],
+      // Square C edges
+      [16,17],[17,18],[18,19],[19,16], [20,21],[21,22],[22,23],[23,20], [16,20],[17,21],[18,22],[19,23],
+      // Triangle connect
+      [0,1],[0,8],[1,16],[8,17],
+      // Hypotenuse spine
+      [24,26],[26,28],[28,30],[30,32],[32,34],[34,24]
+    ];
+
+    // --- Shape 1: Cylinder & Dual Cone 3D (원, 원기둥 및 원뿔 결합체) ---
+    function genCylinderCone(pulse) {
+      const verts = [];
+      const r = 1.05 + Math.sin(pulse) * 0.05;
+      const h = 0.95;
+      // Top circle (12 vertices, y = +h)
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * r, y: h, z: Math.sin(a) * r });
+      }
+      // Bottom circle (12 vertices, y = -h)
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * r, y: -h, z: Math.sin(a) * r });
+      }
+      // Mid ring (10 vertices, y = 0)
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * r * 1.15, y: 0, z: Math.sin(a) * r * 1.15 });
+      }
+      // Top apex cone & Bottom apex cone (2 vertices)
+      verts.push({ x: 0, y: h * 1.85, z: 0 }); // index 34
+      verts.push({ x: 0, y: -h * 1.85, z: 0 }); // index 35
+      return verts;
+    }
+
+    const cylinderEdges = [];
+    // Top circle rim
+    for (let i = 0; i < 12; i++) cylinderEdges.push([i, (i + 1) % 12]);
+    // Bottom circle rim
+    for (let i = 0; i < 12; i++) cylinderEdges.push([12 + i, 12 + (i + 1) % 12]);
+    // Vertical column struts
+    for (let i = 0; i < 12; i++) cylinderEdges.push([i, 12 + i]);
+    // Mid ring
+    for (let i = 0; i < 10; i++) cylinderEdges.push([24 + i, 24 + (i + 1) % 10]);
+    // Cone apex edges
+    for (let i = 0; i < 12; i += 2) {
+      cylinderEdges.push([34, i]); // to top cone apex
+      cylinderEdges.push([35, 12 + i]); // to bottom cone apex
+    }
+
+    // --- Shape 2: Celestial Sphere & Latitude Rings (우주 구체 / 위도·경도선) ---
+    function genSphere(pulse) {
+      const verts = [];
+      const R = 1.35;
+      // North pole (1)
+      verts.push({ x: 0, y: R, z: 0 }); // 0
+      // Lat +50 deg (8)
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * R * 0.65, y: R * 0.76, z: Math.sin(a) * R * 0.65 });
+      } // 1~8
+      // Equator 0 deg (14)
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2 + pulse * 0.2;
+        verts.push({ x: Math.cos(a) * R, y: 0, z: Math.sin(a) * R });
+      } // 9~22
+      // Lat -50 deg (8)
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * R * 0.65, y: -R * 0.76, z: Math.sin(a) * R * 0.65 });
+      } // 23~30
+      // South pole (1)
+      verts.push({ x: 0, y: -R, z: 0 }); // 31
+      // Inner orbital gyro ring (4)
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 - pulse * 0.5;
+        verts.push({ x: Math.cos(a) * R * 0.45, y: Math.sin(a) * R * 0.45, z: 0 });
+      } // 32~35
+      return verts;
+    }
+
+    const sphereEdges = [];
+    // North pole connects
+    for (let i = 1; i <= 8; i++) sphereEdges.push([0, i]);
+    // Lat +50 ring
+    for (let i = 1; i <= 8; i++) sphereEdges.push([i, i === 8 ? 1 : i + 1]);
+    // Equator ring
+    for (let i = 9; i <= 22; i++) sphereEdges.push([i, i === 22 ? 9 : i + 1]);
+    // Connect Lat+50 to equator
+    for (let i = 1; i <= 8; i++) sphereEdges.push([i, 9 + Math.floor((i - 1) * (14 / 8))]);
+    // Lat -50 ring
+    for (let i = 23; i <= 30; i++) sphereEdges.push([i, i === 30 ? 23 : i + 1]);
+    // Connect Lat-50 to equator
+    for (let i = 23; i <= 30; i++) sphereEdges.push([i, 9 + Math.floor((i - 23) * (14 / 8))]);
+    // South pole connects
+    for (let i = 23; i <= 30; i++) sphereEdges.push([31, i]);
+    // Inner gyro
+    for (let i = 32; i <= 35; i++) sphereEdges.push([i, i === 35 ? 32 : i + 1]);
+
+    // --- Shape 3: Torus Ring (3D 원환체 도넛 링) ---
+    function genTorusRing(pulse) {
+      const verts = [];
+      const R = 1.15; // Major radius
+      const r = 0.48; // Minor tube radius
+      // 6 cross-sections with 6 vertices each = 36 vertices
+      for (let i = 0; i < 6; i++) {
+        const u = (i / 6) * Math.PI * 2;
+        for (let j = 0; j < 6; j++) {
+          const v = (j / 6) * Math.PI * 2 + pulse;
+          const x = (R + r * Math.cos(v)) * Math.cos(u);
+          const y = r * Math.sin(v);
+          const z = (R + r * Math.cos(v)) * Math.sin(u);
+          verts.push({ x, y, z });
+        }
+      }
+      return verts;
+    }
+
+    const torusRingEdges = [];
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 6; j++) {
+        const curr = i * 6 + j;
+        const nextTube = i * 6 + ((j + 1) % 6);
+        const nextRing = ((i + 1) % 6) * 6 + j;
+        torusRingEdges.push([curr, nextTube]);
+        torusRingEdges.push([curr, nextRing]);
+      }
+    }
+
+    // --- Shape 4: Möbius Ribbon & Golden Spiral (위상수학 뫼비우스의 띠) ---
+    function genMobius(pulse) {
+      const verts = [];
+      // 18 cross-points along the strip with 2 edges each = 36 vertices
+      const stripWidth = 0.45;
+      for (let i = 0; i < 18; i++) {
+        const u = (i / 18) * Math.PI * 2 + pulse * 0.4;
+        // Edge 1 (v = -stripWidth)
+        const v1 = -stripWidth;
+        const x1 = (1.2 + v1 * Math.cos(u / 2)) * Math.cos(u);
+        const y1 = v1 * Math.sin(u / 2) * 1.25;
+        const z1 = (1.2 + v1 * Math.cos(u / 2)) * Math.sin(u);
+        verts.push({ x: x1, y: y1, z: z1 });
+
+        // Edge 2 (v = +stripWidth)
+        const v2 = stripWidth;
+        const x2 = (1.2 + v2 * Math.cos(u / 2)) * Math.cos(u);
+        const y2 = v2 * Math.sin(u / 2) * 1.25;
+        const z2 = (1.2 + v2 * Math.cos(u / 2)) * Math.sin(u);
+        verts.push({ x: x2, y: y2, z: z2 });
+      }
+      return verts;
+    }
+
+    const mobiusEdges = [];
+    for (let i = 0; i < 18; i++) {
+      const i1 = i * 2;
+      const i2 = i * 2 + 1;
+      const next1 = ((i + 1) % 18) * 2;
+      const next2 = ((i + 1) % 18) * 2 + 1;
+      // Cross rung
+      mobiusEdges.push([i1, i2]);
+      // Longitudinal ribbons
+      mobiusEdges.push([i1, next1]);
+      mobiusEdges.push([i2, next2]);
+      // Diagonal lattice
+      mobiusEdges.push([i1, next2]);
+    }
+
+    // --- Shape 5: 4D Tesseract (4차원 초입방체 테서랙트) ---
+    function genTesseract4D(angle4D) {
       const verts = [];
       const d = 2.2;
+      // 16 4D cube vertices
       for (let i = 0; i < 16; i++) {
         let x = (i & 1) ? 1 : -1;
         let y = (i & 2) ? 1 : -1;
         let z = (i & 4) ? 1 : -1;
         let w = (i & 8) ? 1 : -1;
 
-        // 4D Rotation in XW and ZW planes
         const a1 = angle4D;
         const x1 = x * Math.cos(a1) - w * Math.sin(a1);
         const w1 = x * Math.sin(a1) + w * Math.cos(a1);
@@ -72,67 +294,62 @@ export default function CosmicMathCanvas() {
         const z1 = z * Math.cos(a2) - w1 * Math.sin(a2);
         const w2 = z * Math.sin(a2) + w1 * Math.cos(a2);
 
-        // Perspective projection 4D -> 3D
         const fov4D = d / (d - w2 * 0.45);
-        verts.push({
-          x: x1 * fov4D * 0.8,
-          y: y * fov4D * 0.8,
-          z: z1 * fov4D * 0.8,
-        });
+        verts.push({ x: x1 * fov4D * 0.85, y: y * fov4D * 0.85, z: z1 * fov4D * 0.85 });
       }
-      // Duplicate to 32 vertices with subtle inner pulse
+      // 16 inner sub-cube vertices
       for (let i = 0; i < 16; i++) {
-        verts.push({
-          x: verts[i].x * 0.52,
-          y: verts[i].y * 0.52,
-          z: verts[i].z * 0.52,
-        });
+        verts.push({ x: verts[i].x * 0.52, y: verts[i].y * 0.52, z: verts[i].z * 0.52 });
+      }
+      // 4 central hyper-axis anchors
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * 0.25, y: Math.sin(a) * 0.25, z: 0 });
       }
       return verts;
     }
 
-    // Tesseract Edges (32 main edges)
     const tesseractEdges = [];
     for (let i = 0; i < 16; i++) {
       for (let bit = 0; bit < 4; bit++) {
         const neighbor = i ^ (1 << bit);
-        if (neighbor > i) {
-          tesseractEdges.push([i, neighbor]);
-        }
+        if (neighbor > i) tesseractEdges.push([i, neighbor]);
       }
-    }
-    // Connect outer to inner duplicate
-    for (let i = 0; i < 16; i += 2) {
       tesseractEdges.push([i, 16 + i]);
     }
+    for (let i = 0; i < 16; i++) {
+      for (let bit = 0; bit < 4; bit++) {
+        const neighbor = 16 + (i ^ (1 << bit));
+        if (neighbor > 16 + i) tesseractEdges.push([16 + i, neighbor]);
+      }
+    }
 
-    // Shape 1: 3D Torus Knot (p=2, q=3 Trefoil) with 32 sample points
-    function generateTorusKnot3D(angle) {
+    // --- Shape 6: 3D Torus Knot (p=2, q=3 수학적 매듭 곡선) ---
+    function genTorusKnot(angle) {
       const verts = [];
-      const count = 32;
       const p = 2;
       const q = 3;
-      for (let i = 0; i < count; i++) {
-        const theta = (i / count) * Math.PI * 2 + angle * 0.2;
-        const r = (Math.cos(q * theta) * 0.5 + 1.25) * 0.78;
+      for (let i = 0; i < 36; i++) {
+        const theta = (i / 36) * Math.PI * 2 + angle * 0.25;
+        const r = (Math.cos(q * theta) * 0.48 + 1.25) * 0.82;
         const x = r * Math.cos(p * theta);
         const y = r * Math.sin(p * theta);
-        const z = -Math.sin(q * theta) * 0.85;
+        const z = -Math.sin(q * theta) * 0.88;
         verts.push({ x, y, z });
       }
       return verts;
     }
 
-    const torusEdges = [];
-    for (let i = 0; i < 32; i++) {
-      torusEdges.push([i, (i + 1) % 32]);
-      if (i % 4 === 0) {
-        torusEdges.push([i, (i + 16) % 32]); // Cross ribs
+    const torusKnotEdges = [];
+    for (let i = 0; i < 36; i++) {
+      torusKnotEdges.push([i, (i + 1) % 36]);
+      if (i % 3 === 0) {
+        torusKnotEdges.push([i, (i + 18) % 36]); // Internal cross ties
       }
     }
 
-    // Shape 2: Stellated Icosahedron (황금비 12 정점 + 20 면 스파이크 정점 = 32 정점)
-    function generateStellatedIcosahedron(pulse) {
+    // --- Shape 7: Stellated Icosahedron (별모양 정이십면체 신성기하학) ---
+    function genStellated(pulse) {
       const phi = (1 + Math.sqrt(5)) / 2; // Golden ratio 1.618
       const raw12 = [
         [-1,  phi,  0], [ 1,  phi,  0], [-1, -phi,  0], [ 1, -phi,  0],
@@ -143,14 +360,14 @@ export default function CosmicMathCanvas() {
       const verts = raw12.map(v => {
         const len = Math.hypot(v[0], v[1], v[2]);
         return {
-          x: (v[0] / len) * 1.05,
-          y: (v[1] / len) * 1.05,
-          z: (v[2] / len) * 1.05
+          x: (v[0] / len) * 1.1,
+          y: (v[1] / len) * 1.1,
+          z: (v[2] / len) * 1.1
         };
       });
 
-      // 20 Stellate spikes
-      const spikeScale = 1.35 + Math.sin(pulse) * 0.12;
+      // 20 Stellated spikes
+      const spikeScale = 1.38 + Math.sin(pulse) * 0.12;
       for (let i = 0; i < 20; i++) {
         const theta = (i / 20) * Math.PI * 2;
         const phiAngle = ((i % 5) / 5) * Math.PI - Math.PI / 2;
@@ -160,65 +377,50 @@ export default function CosmicMathCanvas() {
           z: Math.cos(phiAngle) * Math.sin(theta) * spikeScale
         });
       }
+
+      // 4 Core axis vertices
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        verts.push({ x: Math.cos(a) * 0.35, y: Math.sin(a) * 0.35, z: 0 });
+      }
+
       return verts;
     }
 
-    const icosaEdges = [];
+    const stellatedEdges = [];
     for (let i = 0; i < 12; i++) {
       for (let j = i + 1; j < 12; j++) {
-        icosaEdges.push([i, j]);
+        stellatedEdges.push([i, j]);
       }
     }
-    // Connect spikes
     for (let i = 0; i < 20; i++) {
-      icosaEdges.push([12 + i, i % 12]);
-      icosaEdges.push([12 + i, (i + 1) % 12]);
+      stellatedEdges.push([12 + i, i % 12]);
+      stellatedEdges.push([12 + i, (i + 1) % 12]);
     }
 
-    // Shape 3: Metatron's Cosmic Hyper-Cube (신성기하학 32 노드 매트릭스)
-    function generateMetatronMatrix(angle) {
-      const verts = [];
-      // 8 cube inner
-      for (let i = 0; i < 8; i++) {
-        const x = (i & 1) ? 0.65 : -0.65;
-        const y = (i & 2) ? 0.65 : -0.65;
-        const z = (i & 4) ? 0.65 : -0.65;
-        verts.push({ x, y, z });
-      }
-      // 12 outer dodeca points
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2 + angle * 0.3;
-        verts.push({
-          x: Math.cos(a) * 1.35,
-          y: Math.sin(a) * 1.35,
-          z: Math.sin(i * 1.5) * 0.55
-        });
-      }
-      // 12 axis poles
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2 - angle * 0.3;
-        verts.push({
-          x: Math.cos(a) * 0.9,
-          y: Math.sin(i * 2) * 1.25,
-          z: Math.sin(a) * 0.9
-        });
-      }
-      return verts;
-    }
+    // Geometry registry
+    const NUM_SHAPES = 8;
+    const geometryGenerators = [
+      genPythagoras,   // 0: 피타고라스 정리 3D
+      genCylinderCone, // 1: 원기둥 & 원뿔 3D
+      genSphere,       // 2: 우주 구체 & 위도/경도
+      genTorusRing,    // 3: 3D 원환체 도넛
+      genMobius,       // 4: 뫼비우스의 띠 & 황금나선
+      genTesseract4D,  // 5: 4D 초입방체 테서랙트
+      genTorusKnot,    // 6: 토러스 매듭 3D
+      genStellated     // 7: 별모양 정이십면체
+    ];
 
-    const metatronEdges = [];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (i !== j && (i ^ j) === 1 || (i ^ j) === 2 || (i ^ j) === 4) {
-          metatronEdges.push([i, j]);
-        }
-      }
-      metatronEdges.push([i, 8 + (i % 12)]);
-    }
-    for (let i = 0; i < 12; i++) {
-      metatronEdges.push([8 + i, 8 + (i + 1) % 12]);
-      metatronEdges.push([8 + i, 20 + i]);
-    }
+    const geometryEdges = [
+      pythagorasEdges,
+      cylinderEdges,
+      sphereEdges,
+      torusRingEdges,
+      mobiusEdges,
+      tesseractEdges,
+      torusKnotEdges,
+      stellatedEdges
+    ];
 
     let currentShapeIndex = 0;
     let targetShapeIndex = 1;
@@ -226,7 +428,7 @@ export default function CosmicMathCanvas() {
     let shapeTimer = 0;
 
     nextShapeTriggerRef.current = () => {
-      targetShapeIndex = (currentShapeIndex + 1) % 4;
+      targetShapeIndex = (currentShapeIndex + 1) % NUM_SHAPES;
       morphProgress = 0;
     };
 
@@ -272,16 +474,16 @@ export default function CosmicMathCanvas() {
       rotY += 0.01 + mouse.x * 0.02;
       rotZ += 0.004;
 
-      // Shape Morphing Clock (Auto switch every 7.5 seconds)
+      // Auto Morphing Clock (Switch shape every 5.5s)
       shapeTimer += 0.016;
-      if (shapeTimer > 7.5) {
+      if (shapeTimer > 5.5) {
         shapeTimer = 0;
-        targetShapeIndex = (currentShapeIndex + 1) % 4;
+        targetShapeIndex = (currentShapeIndex + 1) % NUM_SHAPES;
         morphProgress = 0;
       }
 
       if (morphProgress < 1) {
-        morphProgress += 0.018; // smooth morph speed
+        morphProgress += 0.016; // Smooth 1-second morph transition
         if (morphProgress >= 1) {
           morphProgress = 1;
           currentShapeIndex = targetShapeIndex;
@@ -311,7 +513,7 @@ export default function CosmicMathCanvas() {
       ctx.fillStyle = nGrad1;
       ctx.fillRect(0, 0, width, height);
 
-      // Nebula layer 2: Cosmic Purple/Magenta accent
+      // Nebula layer 2: Cosmic Purple/Magenta
       const rad2 = Math.min(width, height) * 0.52;
       const nGrad2 = ctx.createRadialGradient(
         cx - Math.cos(time * 0.5) * 50,
@@ -350,25 +552,16 @@ export default function CosmicMathCanvas() {
         }
       });
 
-      // C. Get Geometry Vertices & Morphing
-      const getShapeVerts = (idx, tVal) => {
-        if (idx === 0) return generateTesseract4D(tVal * 1.5);
-        if (idx === 1) return generateTorusKnot3D(tVal * 2);
-        if (idx === 2) return generateStellatedIcosahedron(tVal * 3);
-        return generateMetatronMatrix(tVal * 1.8);
-      };
+      // C. Morph Vertices Interpolation
+      const vertsA = geometryGenerators[currentShapeIndex](time);
+      const vertsB = geometryGenerators[targetShapeIndex](time);
 
-      const vertsA = getShapeVerts(currentShapeIndex, time);
-      const vertsB = getShapeVerts(targetShapeIndex, time);
-
-      // Ease out cubic for morph
       const easeMorph = morphProgress < 1 
-        ? (1 - Math.pow(1 - morphProgress, 3))
+        ? (1 - Math.pow(1 - morphProgress, 3)) // Smooth cubic ease out
         : 1;
 
-      // Intermediate morphed 3D vertices
       const morphed3D = [];
-      for (let i = 0; i < 32; i++) {
+      for (let i = 0; i < NUM_VERTS; i++) {
         const vA = vertsA[i] || { x: 0, y: 0, z: 0 };
         const vB = vertsB[i] || { x: 0, y: 0, z: 0 };
         morphed3D.push({
@@ -378,14 +571,10 @@ export default function CosmicMathCanvas() {
         });
       }
 
-      // Edges selection: interpolate between edge systems
-      const edgesA = currentShapeIndex === 0 ? tesseractEdges 
-        : (currentShapeIndex === 1 ? torusEdges 
-        : (currentShapeIndex === 2 ? icosaEdges : metatronEdges));
-
-      const edgesB = targetShapeIndex === 0 ? tesseractEdges 
-        : (targetShapeIndex === 1 ? torusEdges 
-        : (targetShapeIndex === 2 ? icosaEdges : metatronEdges));
+      // Edges selection based on morph progress
+      const edgesA = geometryEdges[currentShapeIndex];
+      const edgesB = geometryEdges[targetShapeIndex];
+      const activeEdges = easeMorph < 0.5 ? edgesA : edgesB;
 
       // 3D Rotation Matrix Calculation
       const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
@@ -426,7 +615,6 @@ export default function CosmicMathCanvas() {
       });
 
       // D. Draw Edges with Glowing Luminescence
-      const activeEdges = easeMorph < 0.5 ? edgesA : edgesB;
       const edgeAlpha = Math.sin(time * 2) * 0.15 + 0.65;
 
       ctx.save();
