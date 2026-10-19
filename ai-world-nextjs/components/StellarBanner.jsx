@@ -1,97 +1,280 @@
 "use client";
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
 
-// 스텔라사주 하우스 배너 — 모든 페이지 푸터 바로 위(본문 아래)에 노출.
-// 관리자/개인정보처리방침에서는 숨김. 상품·판매 페이지에서는 작은(compact) 배너로 노출해 전환 방해 최소화.
+// 운영자의 다른 서비스 배너 (스텔라사주 + TimeBox Planner + 토스증권 AutoTrader Pro)
 const HIDDEN_PREFIXES = ['/admin', '/privacy'];
 const COMPACT_PREFIXES = ['/homepage', '/ai-recommend', '/cardnews'];
 const match = (pathname, prefixes) =>
   prefixes.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
-const HREF =
-  'https://www.stellarsaju.com/saju?utm_source=aiworld&utm_medium=banner&utm_campaign=stellarsaju_banner';
+const SERVICES = [
+  {
+    id: 'stellarsaju',
+    badge: 'AI 사주·운세',
+    title: '스텔라사주 - AI 사주풀이',
+    description: '오늘의 운세, 띠별 운세, 무료 사주, 타로를 무료로 먼저 보고, 중요한 순간에는 상황별 리포트로 더 깊게 확인해 보세요.',
+    buttonText: '무료 운세 보러가기 ➔',
+    link: 'https://www.stellarsaju.com/saju?utm_source=aiworld&utm_medium=banner&utm_campaign=stellarsaju_banner',
+  },
+  {
+    id: 'timebox',
+    badge: '생산성·플래너',
+    title: 'TimeBox Planner - 5분 타임박싱 플래너',
+    description: '오늘 가장 중요한 3가지(Top 3), 머릿속 생각 비우기(Brain Dump), 타임라인 계획, 구글 캘린더 연동. 핵심 기능은 무료입니다.',
+    buttonText: '플래너 써보기 ➔',
+    link: 'https://my-timebox-planner.vercel.app/?intro=true',
+  },
+  {
+    id: 'autotrader',
+    badge: '토스증권 OpenAPI',
+    title: '토스증권 AutoTrader Pro',
+    description: '토스증권 OpenAPI 기반 자동매매/신호 스캔 서비스입니다. 7일 무료 모의투자로 먼저 체험해 보세요.',
+    disclaimer: '모의투자 먼저 이용을 권장합니다. 투자에는 원금 손실 위험이 있으며 수익을 보장하지 않습니다. 토스증권 공식 서비스가 아닙니다.',
+    buttonText: '모의투자로 체험하기 ➔',
+    link: 'http://158.101.145.224:5000/',
+  },
+];
 
 export default function StellarBanner() {
   const pathname = usePathname() || '/';
   if (match(pathname, HIDDEN_PREFIXES)) return null;
 
+  // 상품/체크아웃 페이지를 위한 컴팩트 모드
   if (match(pathname, COMPACT_PREFIXES)) {
     return (
-      <aside aria-label="스텔라사주 광고" className="container-max" style={compact.wrap}>
-        <a href={HREF} target="_blank" rel="noopener" style={compact.card}>
-          <span aria-hidden="true" style={compact.moon} />
+      <aside aria-label="운영자의 다른 서비스" className="container-max" style={compact.wrap}>
+        <div style={compact.card}>
+          <span style={compact.badge}>운영자 서비스</span>
           <span style={compact.text}>
-            <span style={{ ...styles.brand, display: 'inline', marginRight: 6 }}>스텔라사주</span>
-            내 사주 흐름, <span style={styles.hl}>무료로</span> 확인해 보세요
+            <span style={{ fontWeight: 700, color: '#f8fafc', marginRight: 6 }}>스텔라사주 · 타임박스 플래너 · 토스증권 AutoTrader</span>
+            무료로 먼저 체험해 보세요
           </span>
-          <span style={compact.cta}>무료 사주 보기 →</span>
-        </a>
+          <a href={SERVICES[0].link} target="_blank" rel="noopener noreferrer" style={compact.cta}>
+            서비스 둘러보기 →
+          </a>
+        </div>
       </aside>
     );
   }
 
   return (
-    <aside aria-label="스텔라사주 광고" className="container-max" style={styles.wrap}>
-      <a href={HREF} target="_blank" rel="noopener" style={styles.card}>
-        <span aria-hidden="true" style={styles.moon} />
-        <span style={styles.text}>
-          <span style={styles.brand}>
-            스텔라사주 <span style={styles.brandEn}>STELLAR SAJU</span>
-          </span>
-          <span style={styles.title}>
-            내 사주 흐름, <span style={styles.hl}>무료로</span> 확인해 보세요
-          </span>
-          <span style={styles.sub}>전통 명리학 × AI · 로그인 없이 바로</span>
-        </span>
-        <span style={styles.cta}>무료 사주 보기 →</span>
-      </a>
+    <aside aria-label="운영자의 다른 서비스" className="container-max" style={styles.sectionWrap}>
+      {/* Section Header */}
+      <div style={styles.header}>
+        <h2 style={styles.sectionTitle}>운영자의 다른 서비스</h2>
+        <span style={styles.headerBadge}>무료로 먼저 써보세요</span>
+      </div>
+
+      {/* 3-Column Services Grid */}
+      <div className="services-grid" style={styles.grid}>
+        {SERVICES.map((item) => (
+          <div key={item.id} className="operator-service-card" style={styles.card}>
+            {/* Top Row: Badge & External Icon */}
+            <div style={styles.topRow}>
+              <span style={styles.badge}>{item.badge}</span>
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`${item.title} 새 창 열기`}
+                style={styles.iconLink}
+              >
+                <ExternalLink size={16} color="#71717a" />
+              </a>
+            </div>
+
+            {/* Title & Description */}
+            <h3 style={styles.title}>{item.title}</h3>
+            <p style={styles.desc}>{item.description}</p>
+
+            {/* Disclaimer box for Financial/API trading service */}
+            {item.disclaimer && (
+              <div style={styles.disclaimerBox}>
+                {item.disclaimer}
+              </div>
+            )}
+
+            {/* Bottom Actions & Footnote (aligned to bottom) */}
+            <div style={styles.footerWrap}>
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="service-action-btn"
+                style={styles.actionBtn}
+              >
+                {item.buttonText}
+              </a>
+              <span style={styles.footnote}>운영자가 직접 운영하는 서비스입니다</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </aside>
   );
 }
 
 const styles = {
-  wrap: { width: '100%', maxWidth: 760, margin: '40px auto 24px', padding: '0 16px' },
+  sectionWrap: {
+    width: '100%',
+    maxWidth: '1200px',
+    margin: '60px auto 40px',
+    padding: '0 20px',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+    marginBottom: '32px',
+    flexWrap: 'wrap',
+  },
+  sectionTitle: {
+    fontSize: '1.45rem',
+    fontWeight: 800,
+    color: '#ffffff',
+    margin: 0,
+    letterSpacing: '-0.02em',
+    fontFamily: 'var(--font-title, sans-serif)',
+  },
+  headerBadge: {
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    color: '#f59e0b',
+    background: 'rgba(245, 158, 11, 0.12)',
+    border: '1px solid rgba(245, 158, 11, 0.28)',
+    padding: '3px 10px',
+    borderRadius: '999px',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '24px',
+    alignItems: 'stretch',
+  },
   card: {
-    display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 16px',
-    padding: '14px 18px', borderRadius: 14, border: '1px solid rgba(252,187,0,.35)',
-    background: 'linear-gradient(120deg,#1c1f4a 0%,#0d0f2b 55%,#09090b 100%)',
-    textDecoration: 'none', color: '#fafafa', lineHeight: 1.35,
-    boxShadow: '0 4px 18px rgba(0,0,0,.25)',
+    background: '#0d0f17',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '20px',
+    padding: '24px 22px',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+    transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
   },
-  moon: {
-    flex: 'none', display: 'inline-block', width: 44, height: 44, borderRadius: '50%',
-    background: '#14173d', boxShadow: 'inset 9px -3px 0 0 #e8b64a, 0 0 12px rgba(252,187,0,.25)',
+  topRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
   },
-  text: { flex: '1 1 220px', minWidth: 0 },
-  brand: { display: 'block', fontSize: 12, fontWeight: 700, color: '#fcbb00', letterSpacing: '.05em' },
-  brandEn: { fontWeight: 400, color: '#e8c56a', letterSpacing: '.15em', fontSize: 10 },
-  title: { display: 'block', fontSize: 18, fontWeight: 700, wordBreak: 'keep-all', marginTop: 2 },
-  hl: { color: '#ffd236' },
-  sub: { display: 'block', fontSize: 12, color: '#a1a1aa', marginTop: 3 },
-  cta: {
-    flex: 'none', display: 'inline-block', padding: '10px 18px', borderRadius: 999,
-    background: 'linear-gradient(180deg,#ffd236,#f99c00)', color: '#1a1200',
-    fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap',
+  badge: {
+    fontSize: '0.74rem',
+    fontWeight: 700,
+    color: '#6ee7b7',
+    background: 'rgba(16, 185, 129, 0.12)',
+    border: '1px solid rgba(16, 185, 129, 0.28)',
+    padding: '4px 10px',
+    borderRadius: '999px',
+  },
+  iconLink: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '4px',
+    borderRadius: '6px',
+    transition: 'color 0.15s ease',
+  },
+  title: {
+    fontSize: '1.15rem',
+    fontWeight: 800,
+    color: '#ffffff',
+    lineHeight: 1.35,
+    margin: '0 0 12px 0',
+    letterSpacing: '-0.02em',
+  },
+  desc: {
+    fontSize: '0.88rem',
+    color: '#94a3b8',
+    lineHeight: 1.6,
+    margin: '0 0 16px 0',
+    wordBreak: 'keep-all',
+  },
+  disclaimerBox: {
+    background: 'rgba(255, 255, 255, 0.025)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: '10px',
+    padding: '10px 12px',
+    fontSize: '0.74rem',
+    color: '#71717a',
+    lineHeight: 1.5,
+    marginBottom: '16px',
+  },
+  footerWrap: {
+    marginTop: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%',
+    paddingTop: '8px',
+  },
+  actionBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    background: '#9fe3cb',
+    color: '#08231a',
+    fontSize: '0.92rem',
+    fontWeight: 800,
+    padding: '13px 20px',
+    borderRadius: '12px',
+    textDecoration: 'none',
+    boxShadow: '0 4px 14px rgba(159, 227, 203, 0.25)',
+    transition: 'transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease',
+  },
+  footnote: {
+    fontSize: '0.72rem',
+    color: '#71717a',
+    marginTop: '12px',
+    textAlign: 'center',
   },
 };
 
 const compact = {
-  wrap: { width: '100%', maxWidth: 600, margin: '24px auto 16px', padding: '0 16px' },
+  wrap: { width: '100%', maxWidth: 720, margin: '24px auto 16px', padding: '0 16px' },
   card: {
-    display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10,
-    border: '1px solid rgba(252,187,0,.25)',
-    background: 'linear-gradient(120deg,#1c1f4a 0%,#0d0f2b 60%,#09090b 100%)',
-    textDecoration: 'none', color: '#e4e4e7', lineHeight: 1.3,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '10px 14px',
+    borderRadius: 12,
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: '#0d0f17',
+    color: '#e4e4e7',
+    lineHeight: 1.3,
+    flexWrap: 'wrap',
   },
-  moon: {
-    flex: 'none', display: 'inline-block', width: 22, height: 22, borderRadius: '50%',
-    background: '#14173d', boxShadow: 'inset 5px -2px 0 0 #e8b64a',
+  badge: {
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#6ee7b7',
+    background: 'rgba(16, 185, 129, 0.12)',
+    padding: '3px 8px',
+    borderRadius: 999,
   },
-  text: { flex: '1 1 auto', minWidth: 0, fontSize: 13, wordBreak: 'keep-all' },
+  text: { flex: '1 1 auto', minWidth: 200, fontSize: 13, wordBreak: 'keep-all' },
   cta: {
-    flex: 'none', padding: '5px 10px', borderRadius: 999,
-    background: 'linear-gradient(180deg,#ffd236,#f99c00)', color: '#1a1200',
-    fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+    flex: 'none',
+    padding: '6px 12px',
+    borderRadius: 999,
+    background: '#9fe3cb',
+    color: '#08231a',
+    fontSize: 12,
+    fontWeight: 700,
+    textDecoration: 'none',
   },
 };
