@@ -535,23 +535,6 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
       <section style={styles.heroSection}>
         <div style={styles.glowBlob} />
         <div className="container-max" style={styles.heroWrapper}>
-          {/* Top Brand Header */}
-          <div className="hero-header" style={styles.heroHeader}>
-            <div style={styles.heroBadge}>
-              <Sparkles size={14} color="var(--accent-indigo)" />
-              <span>{t('hero.badge', 'PORTFOLIO & INSIGHTS')}</span>
-            </div>
-            <h1 className="hero-title" style={styles.heroTitle}>
-              {t('hero.title_pre', '톱니바꿈')}<span style={styles.heroGradient}>{t('hero.title_post', 'AI월드')}</span>
-            </h1>
-            <p style={{ margin: '4px 0 0', fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent-indigo)', letterSpacing: '-0.02em' }}>
-              {t('hero.tagline', '쓰는 AI, 파는 AI')}
-            </p>
-            <p className="hero-desc" style={styles.heroDesc}>
-              {t('hero.desc', '쓰는 AI, 파는 AI. 실무에서 검증된 AI 자동화·어플리케이션·외주 솔루션으로 업무의 한계를 넓혀보세요.')}
-            </p>
-          </div>
-
           {/* Visual Dual Stage: Left Motion Graphic & Right Cosmic Math Dynamic Canvas */}
           <div className="hero-inner" style={styles.heroInner}>
             {/* Left Column: Cyberpunk Kinetic Typography Hero Video Player (with Edit Text feature) */}
@@ -841,7 +824,7 @@ const styles = {
     position: 'relative',
     width: '100%',
     overflow: 'hidden',
-    padding: '100px 0 60px 0',
+    padding: '40px 0 50px 0',
     display: 'flex',
     alignItems: 'center',
   },

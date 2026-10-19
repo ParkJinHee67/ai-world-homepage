@@ -455,14 +455,6 @@
                 <button id="btnEditText" class="edit-text-btn" title="모션그래픽 문구 수정">
                     <i class="fa-solid fa-pen-to-square"></i> 문구 수정
                 </button>
-                <div class="ratio-switch">
-                    <button id="btnRatio169" class="ratio-btn active" title="16:9 가로형 와이드 비율">
-                        <i class="fa-solid fa-tv"></i> 16:9
-                    </button>
-                    <button id="btnRatio916" class="ratio-btn" title="9:16 모바일 릴스/쇼츠 비율">
-                        <i class="fa-solid fa-mobile-screen"></i> 9:16
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -579,8 +571,6 @@
             const playerRoot = document.getElementById('playerRoot');
             const stageContainer = document.getElementById('stageContainer');
             const centerOverlay = document.getElementById('centerOverlay');
-            const btnRatio169 = document.getElementById('btnRatio169');
-            const btnRatio916 = document.getElementById('btnRatio916');
             const soundPill = document.getElementById('soundPill');
             const soundLabel = document.getElementById('soundLabel');
             const eq1 = document.getElementById('eq1');
@@ -1595,31 +1585,18 @@
                 requestAnimationFrame(tick);
             }
 
-            // Aspect Ratio Switcher
+            // Aspect Ratio Handler
             function setAspectRatio(mode) {
                 aspectMode = mode;
                 if (mode === '16:9') {
                     canvas.width = 1920;
                     canvas.height = 1080;
-                    btnRatio169.classList.add('active');
-                    btnRatio916.classList.remove('active');
                 } else {
                     canvas.width = 1080;
                     canvas.height = 1920;
-                    btnRatio916.classList.add('active');
-                    btnRatio169.classList.remove('active');
                 }
                 renderFrame(currentTime);
             }
-
-            btnRatio169.addEventListener('click', (e) => {
-                e.stopPropagation();
-                setAspectRatio('16:9');
-            });
-            btnRatio916.addEventListener('click', (e) => {
-                e.stopPropagation();
-                setAspectRatio('9:16');
-            });
 
             // Audio & Play Interaction
             soundPill.addEventListener('click', (e) => {

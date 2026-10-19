@@ -9,8 +9,6 @@ import React, { useRef, useEffect, useState } from 'react';
  */
 export default function CosmicMathCanvas() {
   const canvasRef = useRef(null);
-  const [currentShapeName, setCurrentShapeName] = useState('4D Tesseract (초입방체)');
-
   // Reference for shape transition trigger from external button if needed
   const nextShapeTriggerRef = useRef(null);
 
@@ -222,13 +220,6 @@ export default function CosmicMathCanvas() {
       metatronEdges.push([8 + i, 20 + i]);
     }
 
-    const shapeNames = [
-      '4D Tesseract (4차원 초입방체)',
-      'Torus Knot 3D (수학적 토러스 매듭)',
-      'Stellated Polyhedron (별모양 신성다면체)',
-      'Metatron Matrix (메타트론 차원 매트릭스)'
-    ];
-
     let currentShapeIndex = 0;
     let targetShapeIndex = 1;
     let morphProgress = 0; // 0 to 1
@@ -237,7 +228,6 @@ export default function CosmicMathCanvas() {
     nextShapeTriggerRef.current = () => {
       targetShapeIndex = (currentShapeIndex + 1) % 4;
       morphProgress = 0;
-      setCurrentShapeName(shapeNames[targetShapeIndex]);
     };
 
     // Mouse tilt interaction
@@ -288,7 +278,6 @@ export default function CosmicMathCanvas() {
         shapeTimer = 0;
         targetShapeIndex = (currentShapeIndex + 1) % 4;
         morphProgress = 0;
-        setCurrentShapeName(shapeNames[targetShapeIndex]);
       }
 
       if (morphProgress < 1) {
@@ -520,12 +509,6 @@ export default function CosmicMathCanvas() {
     <div style={containerStyle}>
       <canvas ref={canvasRef} style={canvasStyle} />
 
-      {/* Top HUD Badge */}
-      <div style={hudTopStyle}>
-        <div style={hudDotStyle} />
-        <span style={hudTextStyle}>COSMIC GEOMETRY // 3D HYPER-SPACE</span>
-      </div>
-
       {/* Bottom Shape Toggle Pill */}
       <div 
         style={hudBottomStyle}
@@ -534,7 +517,6 @@ export default function CosmicMathCanvas() {
         }}
         title="클릭하여 다음 수학적 기하학 도형으로 변형"
       >
-        <span style={shapeNameStyle}>{currentShapeName}</span>
         <span style={morphIconStyle}>↻ 모핑 전환</span>
       </div>
     </div>
@@ -563,47 +545,13 @@ const canvasStyle = {
   display: 'block',
 };
 
-const hudTopStyle = {
-  position: 'absolute',
-  top: '14px',
-  left: '16px',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '7px',
-  padding: '5px 12px',
-  borderRadius: '999px',
-  background: 'rgba(15, 23, 42, 0.82)',
-  backdropFilter: 'blur(10px)',
-  border: '1px solid rgba(56, 189, 248, 0.28)',
-  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
-  pointerEvents: 'none',
-  zIndex: 10,
-};
-
-const hudDotStyle = {
-  width: '6px',
-  height: '6px',
-  borderRadius: '50%',
-  background: '#38bdf8',
-  boxShadow: '0 0 8px #38bdf8',
-};
-
-const hudTextStyle = {
-  fontFamily: 'JetBrains Mono, monospace',
-  fontSize: '10px',
-  fontWeight: 700,
-  color: '#38bdf8',
-  letterSpacing: '0.06em',
-};
-
 const hudBottomStyle = {
   position: 'absolute',
   bottom: '14px',
   right: '14px',
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '8px',
-  padding: '6px 14px',
+  padding: '5px 12px',
   borderRadius: '999px',
   background: 'rgba(15, 23, 42, 0.85)',
   backdropFilter: 'blur(10px)',
@@ -612,13 +560,6 @@ const hudBottomStyle = {
   cursor: 'pointer',
   transition: 'transform 0.2s ease, border-color 0.2s ease',
   zIndex: 10,
-};
-
-const shapeNameStyle = {
-  fontFamily: 'var(--font-title, sans-serif)',
-  fontSize: '11px',
-  fontWeight: 700,
-  color: '#e2e8f0',
 };
 
 const morphIconStyle = {
