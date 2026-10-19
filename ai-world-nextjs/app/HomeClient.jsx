@@ -6,6 +6,7 @@ import PortfolioCard from '../components/PortfolioCard';
 import { MessageSquare, Star, Sparkles } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { mergeMediaInsights, MEDIA_HUB_IT_AI_URL } from '../config/mediaInsights';
+import CosmicMathCanvas from '../components/CosmicMathCanvas';
 
 function CloudWordCanvas() {
   const canvasRef = useRef(null);
@@ -533,9 +534,9 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
       {/* Hero Section */}
       <section style={styles.heroSection}>
         <div style={styles.glowBlob} />
-        <div className="container-max hero-inner" style={styles.heroInner}>
-          {/* Left Column: Brand Text & Actions */}
-          <div className="hero-left" style={styles.heroLeft}>
+        <div className="container-max" style={styles.heroWrapper}>
+          {/* Top Brand Header */}
+          <div className="hero-header" style={styles.heroHeader}>
             <div style={styles.heroBadge}>
               <Sparkles size={14} color="var(--accent-indigo)" />
               <span>{t('hero.badge', 'PORTFOLIO & INSIGHTS')}</span>
@@ -543,13 +544,45 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
             <h1 className="hero-title" style={styles.heroTitle}>
               {t('hero.title_pre', '톱니바꿈')}<span style={styles.heroGradient}>{t('hero.title_post', 'AI월드')}</span>
             </h1>
-            <p style={{ margin: '8px 0 0', fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent-indigo)', letterSpacing: '-0.02em' }}>
+            <p style={{ margin: '4px 0 0', fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent-indigo)', letterSpacing: '-0.02em' }}>
               {t('hero.tagline', '쓰는 AI, 파는 AI')}
             </p>
             <p className="hero-desc" style={styles.heroDesc}>
               {t('hero.desc', '쓰는 AI, 파는 AI. 실무에서 검증된 AI 자동화·어플리케이션·외주 솔루션으로 업무의 한계를 넓혀보세요.')}
             </p>
+          </div>
 
+          {/* Visual Dual Stage: Left Motion Graphic & Right Cosmic Math Dynamic Canvas */}
+          <div className="hero-inner" style={styles.heroInner}>
+            {/* Left Column: Cyberpunk Kinetic Typography Hero Video Player (with Edit Text feature) */}
+            <div className="hero-left-col" style={styles.heroCol}>
+              <div className="canvas-container" style={styles.canvasContainer}>
+                <iframe
+                  src="/hero-player/index.html"
+                  title="톱니바꿈 AI월드 모션그래픽 플레이어"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: '24px',
+                    display: 'block',
+                    background: '#030408'
+                  }}
+                  allow="autoplay"
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Cosmic Space & Mathematical Geometric Morphing Canvas */}
+            <div className="hero-right-col" style={styles.heroCol}>
+              <div className="canvas-container" style={styles.canvasContainer}>
+                <CosmicMathCanvas />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Real-time Stats & Primary Navigation */}
+          <div className="hero-bottom-bar" style={styles.heroBottomBar}>
             {/* Real-time Stats Widget */}
             <div style={styles.statsContainer}>
               <div style={styles.statBox}>
@@ -588,25 +621,6 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
               >
                 <span>{t('hero.action.inquire', '프로그램 문의')}</span>
               </a>
-            </div>
-          </div>
-
-          {/* Right Column: Cyberpunk Kinetic Typography Hero Video Player */}
-          <div style={styles.heroRight}>
-            <div className="canvas-container" style={styles.canvasContainer}>
-              <iframe
-                src="/hero-player/index.html"
-                title="ai.jinheestate.blog Hero Video Player"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  borderRadius: '24px',
-                  display: 'block',
-                  background: '#030408'
-                }}
-                allow="autoplay"
-              />
             </div>
           </div>
         </div>
@@ -843,19 +857,44 @@ const styles = {
     pointerEvents: 'none',
     zIndex: 1,
   },
+  heroWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%',
+    zIndex: 10,
+    gap: '24px',
+  },
+  heroHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    maxWidth: '780px',
+    marginBottom: '8px',
+  },
   heroInner: {
     display: 'grid',
-    gridTemplateColumns: '1.15fr 0.85fr',
+    gridTemplateColumns: '1fr 1fr',
     alignItems: 'center',
-    gap: '48px',
+    gap: '28px',
     zIndex: 10,
     width: '100%',
   },
-  heroLeft: {
+  heroCol: {
     display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    textAlign: 'left',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  heroBottomBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '20px',
+    width: '100%',
+    marginTop: '6px',
   },
   heroBadge: {
     display: 'inline-flex',
@@ -870,15 +909,15 @@ const styles = {
     fontWeight: 700,
     fontFamily: 'var(--font-title)',
     letterSpacing: '0.1em',
-    marginBottom: '24px',
+    marginBottom: '16px',
   },
   heroTitle: {
-    fontSize: '4.2rem',
+    fontSize: '3.6rem',
     fontWeight: 900,
     color: 'var(--text-primary)',
-    lineHeight: 1.1,
+    lineHeight: 1.15,
     letterSpacing: '-0.04em',
-    marginBottom: '24px',
+    marginBottom: '14px',
   },
   heroGradient: {
     background: 'linear-gradient(135deg, var(--accent-indigo) 0%, var(--accent-purple) 100%)',
@@ -887,16 +926,16 @@ const styles = {
     marginLeft: '12px',
   },
   heroDesc: {
-    fontSize: '1.1rem',
+    fontSize: '1.05rem',
     color: 'var(--text-secondary)',
-    lineHeight: 1.7,
-    maxWidth: '650px',
-    marginBottom: '36px',
+    lineHeight: 1.6,
+    maxWidth: '680px',
+    margin: '12px 0 0',
     fontWeight: 400,
   },
   heroActions: {
     display: 'flex',
-    gap: '16px',
+    gap: '14px',
     alignItems: 'center',
     flexWrap: 'wrap',
   },
@@ -904,7 +943,7 @@ const styles = {
     background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-purple))',
     color: '#ffffff',
     border: 'none',
-    padding: '14px 28px',
+    padding: '13px 26px',
     borderRadius: '12px',
     fontSize: '0.9rem',
     fontWeight: 700,
@@ -916,7 +955,7 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.03)',
     color: 'var(--text-primary)',
     border: '1px solid rgba(255, 255, 255, 0.08)',
-    padding: '13px 28px',
+    padding: '12px 26px',
     borderRadius: '12px',
     fontSize: '0.9rem',
     fontWeight: 600,

@@ -579,28 +579,29 @@ button, input, select, textarea {
 @media (max-width: 992px) {
   .hero-inner {
     grid-template-columns: 1fr !important;
-    gap: 40px !important;
-    text-align: center !important;
+    gap: 28px !important;
   }
-  .hero-left {
+  .hero-bottom-bar {
+    flex-direction: column !important;
     align-items: center !important;
-    text-align: center !important;
+    justify-content: center !important;
+    gap: 18px !important;
   }
   .hero-actions {
     justify-content: center !important;
   }
   .canvas-container {
-    height: 380px !important;
+    height: 360px !important;
   }
 }
 @media (max-width: 768px) {
   .desktop-br { display: none !important; }
   .hero-title {
-    font-size: 2.8rem !important;
+    font-size: 2.5rem !important;
   }
   .hero-desc {
-    font-size: 0.95rem !important;
-    margin-bottom: 24px !important;
+    font-size: 0.92rem !important;
+    margin-bottom: 8px !important;
   }
   .grid-header {
     flex-direction: column !important;
@@ -611,10 +612,13 @@ button, input, select, textarea {
     justify-content: space-between !important;
   }
   .canvas-container {
-    height: 300px !important;
+    height: 290px !important;
   }
 }
 @media (max-width: 480px) {
+  .hero-title {
+    font-size: 2.1rem !important;
+  }
   .canvas-container {
     height: 240px !important;
   }

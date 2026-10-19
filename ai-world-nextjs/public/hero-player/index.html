@@ -252,6 +252,182 @@
             .sound-trigger-pill { font-size: 10px; padding: 4px 10px; }
             .btn-icon-pill { width: 26px; height: 26px; font-size: 10px; }
         }
+
+        /* Edit Text Button */
+        .edit-text-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #38bdf8;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        }
+        .edit-text-btn:hover {
+            background: #38bdf8;
+            color: #030712;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 18px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Text Edit Modal */
+        .text-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 4, 8, 0.88);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+            user-select: auto;
+        }
+        .text-modal-overlay.hidden {
+            display: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .text-modal-content {
+            width: 92%;
+            max-width: 500px;
+            max-height: 88vh;
+            background: #070a14;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 18px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Noto Sans KR', sans-serif;
+            animation: modal-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modal-pop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .text-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 18px;
+            background: rgba(15, 23, 42, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .text-modal-header h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+        }
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: color 0.15s ease;
+        }
+        .btn-close-modal:hover {
+            color: #ffffff;
+        }
+        .text-modal-body {
+            padding: 14px 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            max-height: calc(88vh - 110px);
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-group.flex-1 {
+            flex: 1;
+            min-width: 0;
+        }
+        .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .modal-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 7px 11px;
+            color: #f8fafc;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+        .modal-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+        .text-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 18px;
+            background: rgba(15, 23, 42, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .modal-btn {
+            padding: 6px 13px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .modal-btn.primary {
+            background: #38bdf8;
+            color: #020617;
+            box-shadow: 0 2px 10px rgba(56, 189, 248, 0.4);
+        }
+        .modal-btn.primary:hover {
+            background: #7dd3fc;
+            transform: translateY(-1px);
+        }
+        .modal-btn.secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+        }
+        .modal-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .modal-btn.outline {
+            background: transparent;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: #fda4af;
+        }
+        .modal-btn.outline:hover {
+            background: rgba(244, 63, 94, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -275,13 +451,71 @@
                 <span id="sceneBadgeText">AI KINETIC // 15S PROMO</span>
             </div>
 
-            <div class="ratio-switch interactive">
-                <button id="btnRatio169" class="ratio-btn active" title="16:9 가로형 와이드 비율">
-                    <i class="fa-solid fa-tv"></i> 16:9
+            <div style="display: flex; gap: 8px; align-items: center;" class="interactive">
+                <button id="btnEditText" class="edit-text-btn" title="모션그래픽 문구 수정">
+                    <i class="fa-solid fa-pen-to-square"></i> 문구 수정
                 </button>
-                <button id="btnRatio916" class="ratio-btn" title="9:16 모바일 릴스/쇼츠 비율">
-                    <i class="fa-solid fa-mobile-screen"></i> 9:16
-                </button>
+                <div class="ratio-switch">
+                    <button id="btnRatio169" class="ratio-btn active" title="16:9 가로형 와이드 비율">
+                        <i class="fa-solid fa-tv"></i> 16:9
+                    </button>
+                    <button id="btnRatio916" class="ratio-btn" title="9:16 모바일 릴스/쇼츠 비율">
+                        <i class="fa-solid fa-mobile-screen"></i> 9:16
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Edit Modal -->
+        <div id="textEditModal" class="text-modal-overlay hidden">
+            <div class="text-modal-content">
+                <div class="text-modal-header">
+                    <h3><i class="fa-solid fa-pen-to-square" style="color: #38bdf8; margin-right: 8px;"></i>모션그래픽 문구 수정</h3>
+                    <button id="btnCloseModal" class="btn-close-modal" title="닫기">&times;</button>
+                </div>
+                <div class="text-modal-body">
+                    <div class="form-group">
+                        <label>도메인 / 브랜드 웹 주소</label>
+                        <input type="text" id="inputDomain" class="modal-input" placeholder="ai.jinheestate.blog">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>씬 1 메인 타이틀</label>
+                            <input type="text" id="inputS1Main" class="modal-input" placeholder="톱니바꿈">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>씬 1 서브 타이틀</label>
+                            <input type="text" id="inputS1Sub" class="modal-input" placeholder="AI월드">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>씬 2 메인 문구</label>
+                            <input type="text" id="inputS2Main" class="modal-input" placeholder="쓰는 AI, 파는 AI">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>씬 2 서브 설명</label>
+                            <input type="text" id="inputS2Sub" class="modal-input" placeholder="실무 검증 AI 자동화 · 솔루션">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>씬 3 키워드 4개 (쉼표로 구분)</label>
+                        <input type="text" id="inputS3Words" class="modal-input" placeholder="AI 자동화, 실무 솔루션, 인사이트, 혁신">
+                    </div>
+                    <div class="form-group">
+                        <label>씬 5 엔딩 CTA 문구</label>
+                        <input type="text" id="inputS5Cta" class="modal-input" placeholder="업무의 한계를 넓혀보세요">
+                    </div>
+                </div>
+                <div class="text-modal-footer">
+                    <button id="btnResetDefault" class="modal-btn outline">기본값 복원</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btnCancelModal" class="modal-btn secondary">취소</button>
+                        <button id="btnSaveText" class="modal-btn primary">
+                            <i class="fa-solid fa-check"></i> 저장 및 즉시 적용
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -311,15 +545,33 @@
         (function() {
             // Configuration & Text State
             const DURATION = 15.0;
-            const config = {
+            const DEFAULT_CONFIG = {
                 domain: "ai.jinheestate.blog",
-                s1Main: "급변하는 세상",
-                s1Sub: "기준을 바꾸는 힘",
-                s2Main: "AI 데이터 인사이트",
-                s2Sub: "부동산 · 테크 · 미래전략의 결합",
-                s3Words: ["AI 트렌드", "스마트 분석", "미래 가치", "인사이트"],
-                s5Cta: "지금 바로 미래를 만나보세요"
+                s1Tag: "// PORTFOLIO & INSIGHTS",
+                s1Main: "톱니바꿈",
+                s1Sub: "AI월드",
+                s1Highlight: "톱니바꿈 AI",
+                s2Tag: "AI AUTOMATION & SOLUTIONS",
+                s2Main: "쓰는 AI, 파는 AI",
+                s2Sub: "실무 검증 AI 자동화 · 솔루션",
+                s3Words: ["AI 자동화", "실무 솔루션", "인사이트", "업무 혁신"],
+                s4Title: "업무의 한계를 넓히는 스마트한 선택",
+                s5Tag: "실무에서 검증된 AI 솔루션 포트폴리오",
+                s5Cta: "업무의 한계를 넓혀보세요"
             };
+
+            let config = { ...DEFAULT_CONFIG };
+
+            // Load saved custom text from localStorage
+            try {
+                const saved = localStorage.getItem('hero_player_custom_text');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    config = { ...DEFAULT_CONFIG, ...parsed };
+                }
+            } catch (e) {
+                console.warn('Failed to load custom text:', e);
+            }
 
             // DOM
             const canvas = document.getElementById('motionCanvas');
@@ -339,6 +591,22 @@
             const btnRestart = document.getElementById('btnRestart');
             const sceneBadgeText = document.getElementById('sceneBadgeText');
             const badgeDot = document.getElementById('badgeDot');
+
+            // Modal DOM
+            const btnEditText = document.getElementById('btnEditText');
+            const textEditModal = document.getElementById('textEditModal');
+            const btnCloseModal = document.getElementById('btnCloseModal');
+            const btnCancelModal = document.getElementById('btnCancelModal');
+            const btnSaveText = document.getElementById('btnSaveText');
+            const btnResetDefault = document.getElementById('btnResetDefault');
+
+            const inputDomain = document.getElementById('inputDomain');
+            const inputS1Main = document.getElementById('inputS1Main');
+            const inputS1Sub = document.getElementById('inputS1Sub');
+            const inputS2Main = document.getElementById('inputS2Main');
+            const inputS2Sub = document.getElementById('inputS2Sub');
+            const inputS3Words = document.getElementById('inputS3Words');
+            const inputS5Cta = document.getElementById('inputS5Cta');
 
             // Playback State
             let isPlaying = true;
@@ -872,7 +1140,7 @@
                 ctx.font = `700 ${Math.round(24 * baseScale)}px 'JetBrains Mono', monospace`;
                 ctx.fillStyle = '#38bdf8';
                 ctx.textAlign = 'center';
-                ctx.fillText('// NEXT-GEN INTELLIGENCE BLOG', 0, -165 * baseScale);
+                ctx.fillText(config.s1Tag || '// PORTFOLIO & INSIGHTS', 0, -165 * baseScale);
 
                 ctx.save();
                 ctx.translate(0, (1 - p1) * -80 * baseScale);
@@ -920,12 +1188,12 @@
                     ctx.fillStyle = gradText;
                     ctx.shadowColor = '#38bdf8';
                     ctx.shadowBlur = 45;
-                    ctx.fillText('AI INSIGHT', 0, 50 * baseScale);
+                    ctx.fillText(config.s1Highlight || '톱니바꿈 AI', 0, 50 * baseScale);
 
                     ctx.font = `700 ${Math.round(32 * baseScale)}px 'JetBrains Mono', monospace`;
                     ctx.fillStyle = '#94a3b8';
                     ctx.shadowBlur = 0;
-                    ctx.fillText('ai.jinheestate.blog', 0, 130 * baseScale);
+                    ctx.fillText(config.domain, 0, 130 * baseScale);
                     ctx.restore();
                 }
 
@@ -967,7 +1235,7 @@
                 ctx.fillStyle = '#e9d5ff';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('SMART DATA & REAL ESTATE AI', 0, 2 * baseScale);
+                ctx.fillText(config.s2Tag || 'AI AUTOMATION & SOLUTIONS', 0, 2 * baseScale);
                 ctx.restore();
 
                 ctx.save();
@@ -1114,7 +1382,7 @@
                 ctx.font = `700 ${Math.round(38 * baseScale)}px 'Noto Sans KR', sans-serif`;
                 ctx.fillStyle = '#bae6fd';
                 ctx.textAlign = 'center';
-                ctx.fillText('기회를 선점하는 가장 스마트한 주소', 0, -145 * baseScale);
+                ctx.fillText(config.s4Title || '업무의 한계를 넓히는 스마트한 선택', 0, -145 * baseScale);
 
                 const barW = (isPortrait ? 820 : 1080) * baseScale;
                 const barH = 140 * baseScale;
@@ -1180,7 +1448,7 @@
                     ctx.font = `800 ${Math.round(24 * baseScale)}px 'Noto Sans KR', sans-serif`;
                     ctx.fillStyle = '#022c22';
                     ctx.textAlign = 'center';
-                    ctx.fillText('✓ CONNECTING TO BLOG', 0, 142 * baseScale);
+                    ctx.fillText('✓ CONNECTING TO AI WORLD', 0, 142 * baseScale);
                     ctx.restore();
                 }
 
@@ -1217,7 +1485,7 @@
                 ctx.font = `700 ${Math.round(30 * baseScale)}px 'Noto Sans KR', sans-serif`;
                 ctx.fillStyle = '#94a3b8';
                 ctx.textAlign = 'center';
-                ctx.fillText('AI · 테크 · 미래 전략 인사이트', 0, -155 * baseScale);
+                ctx.fillText(config.s5Tag || '실무에서 검증된 AI 솔루션 포트폴리오', 0, -155 * baseScale);
                 ctx.restore();
 
                 ctx.save();
@@ -1409,6 +1677,101 @@
                 triggeredBgmSteps.clear();
                 if (!isPlaying) togglePlay();
             });
+
+            // Modal Interactions & Text Customization Logic
+            function populateModalInputs() {
+                inputDomain.value = config.domain || '';
+                inputS1Main.value = config.s1Main || '';
+                inputS1Sub.value = config.s1Sub || '';
+                inputS2Main.value = config.s2Main || '';
+                inputS2Sub.value = config.s2Sub || '';
+                inputS3Words.value = Array.isArray(config.s3Words) ? config.s3Words.join(', ') : '';
+                inputS5Cta.value = config.s5Cta || '';
+            }
+
+            let wasPlayingBeforeModal = true;
+            function openModal() {
+                wasPlayingBeforeModal = isPlaying;
+                if (isPlaying) togglePlay();
+                populateModalInputs();
+                textEditModal.classList.remove('hidden');
+            }
+
+            function closeModal() {
+                textEditModal.classList.add('hidden');
+                if (wasPlayingBeforeModal && !isPlaying) {
+                    togglePlay();
+                }
+            }
+
+            if (btnEditText) {
+                btnEditText.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openModal();
+                });
+            }
+
+            if (btnCloseModal) {
+                btnCloseModal.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeModal();
+                });
+            }
+
+            if (btnCancelModal) {
+                btnCancelModal.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeModal();
+                });
+            }
+
+            if (textEditModal) {
+                textEditModal.addEventListener('click', (e) => {
+                    if (e.target === textEditModal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            if (btnSaveText) {
+                btnSaveText.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    config.domain = inputDomain.value.trim() || DEFAULT_CONFIG.domain;
+                    config.s1Main = inputS1Main.value.trim() || DEFAULT_CONFIG.s1Main;
+                    config.s1Sub = inputS1Sub.value.trim() || DEFAULT_CONFIG.s1Sub;
+                    config.s2Main = inputS2Main.value.trim() || DEFAULT_CONFIG.s2Main;
+                    config.s2Sub = inputS2Sub.value.trim() || DEFAULT_CONFIG.s2Sub;
+
+                    const wordsArr = inputS3Words.value.split(',').map(w => w.trim()).filter(Boolean);
+                    config.s3Words = wordsArr.length >= 4 ? wordsArr.slice(0, 4) : (wordsArr.length > 0 ? wordsArr : DEFAULT_CONFIG.s3Words);
+                    config.s5Cta = inputS5Cta.value.trim() || DEFAULT_CONFIG.s5Cta;
+
+                    try {
+                        localStorage.setItem('hero_player_custom_text', JSON.stringify(config));
+                    } catch (err) {
+                        console.warn(err);
+                    }
+
+                    closeModal();
+
+                    // Immediately restart playback from 0s so user can review changes
+                    currentTime = 0;
+                    triggeredCues.clear();
+                    triggeredBgmSteps.clear();
+                    if (!isPlaying) togglePlay();
+                });
+            }
+
+            if (btnResetDefault) {
+                btnResetDefault.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    try {
+                        localStorage.removeItem('hero_player_custom_text');
+                    } catch (err) {}
+                    config = { ...DEFAULT_CONFIG };
+                    populateModalInputs();
+                });
+            }
 
             // Start animation loop once ready
             window.onload = () => {
