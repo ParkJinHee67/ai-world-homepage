@@ -964,3 +964,17 @@ button[style*="copyBtn"]:hover {
     padding: 16px !important;
   }
 }
+
+
+/* Solar Time Interactive Responsive Styles */
+.solar-time-container {
+  height: 520px;
+}
+@media (max-width: 640px) {
+  .solar-time-container {
+    height: 440px !important;
+  }
+  .solar-hints-desktop {
+    display: none !important;
+  }
+}

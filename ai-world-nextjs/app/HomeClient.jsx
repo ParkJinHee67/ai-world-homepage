@@ -7,6 +7,7 @@ import { MessageSquare, Star, Sparkles } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { mergeMediaInsights, MEDIA_HUB_IT_AI_URL } from '../config/mediaInsights';
 import CosmicMathCanvas from '../components/CosmicMathCanvas';
+import SolarTimeCanvas from '../components/SolarTimeCanvas';
 
 function CloudWordCanvas() {
   const canvasRef = useRef(null);
@@ -339,6 +340,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
   const [stats, setStats] = useState(initialStats);
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   const [promoConfig, setPromoConfig] = useState(null);
+  const [heroStage, setHeroStage] = useState('solar-time'); // 'solar-time' | 'motion-dual'
 
   // Dynamic Promotion Popup logic
   useEffect(() => {
@@ -535,7 +537,38 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
       <section style={styles.heroSection}>
         <div style={styles.glowBlob} />
         <div className="container-max" style={styles.heroWrapper}>
-          {/* Visual Dual Stage: Left Motion Graphic & Right Cosmic Math Dynamic Canvas */}
+          {/* Hero Stage Mode Switcher */}
+          <div style={styles.heroStageTabs}>
+            <button
+              onClick={() => setHeroStage('solar-time')}
+              style={{
+                ...styles.heroTabBtn,
+                background: heroStage === 'solar-time' ? 'linear-gradient(135deg, #0ea5e9, #6366f1)' : 'transparent',
+                color: heroStage === 'solar-time' ? '#ffffff' : 'var(--text-secondary)',
+                boxShadow: heroStage === 'solar-time' ? '0 2px 12px rgba(14, 165, 233, 0.35)' : 'none',
+              }}
+            >
+              🪐 태양계 시계 (Solar Time)
+            </button>
+            <button
+              onClick={() => setHeroStage('motion-dual')}
+              style={{
+                ...styles.heroTabBtn,
+                background: heroStage === 'motion-dual' ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'transparent',
+                color: heroStage === 'motion-dual' ? '#ffffff' : 'var(--text-secondary)',
+                boxShadow: heroStage === 'motion-dual' ? '0 2px 12px rgba(99, 102, 241, 0.35)' : 'none',
+              }}
+            >
+              🎬 AI 모션그래픽 & 코스믹
+            </button>
+          </div>
+
+          {/* Main Visual Stage: Full-width Solar Time or Dual Motion Graphic */}
+          {heroStage === 'solar-time' ? (
+            <div style={{ width: '100%', zIndex: 10 }}>
+              <SolarTimeCanvas />
+            </div>
+          ) : (
           <div className="hero-inner" style={styles.heroInner}>
             {/* Left Column: Cyberpunk Kinetic Typography Hero Video Player (with Edit Text feature) */}
             <div className="hero-left-col" style={styles.heroCol}>
@@ -563,6 +596,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
               </div>
             </div>
           </div>
+          )}
 
           {/* Bottom Bar: Real-time Stats & Primary Navigation */}
           <div className="hero-bottom-bar" style={styles.heroBottomBar}>
@@ -781,6 +815,27 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
 }
 
 const styles = {
+  heroStageTabs: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'rgba(15, 23, 42, 0.75)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '100px',
+    padding: '4px',
+    backdropFilter: 'blur(12px)',
+    zIndex: 15,
+    marginBottom: '8px',
+  },
+  heroTabBtn: {
+    border: 'none',
+    padding: '7px 18px',
+    borderRadius: '100px',
+    fontSize: '0.82rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 0.25s ease',
+  },
   statsContainer: {
     display: 'flex',
     alignItems: 'center',
