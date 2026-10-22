@@ -8,6 +8,7 @@ import { useLanguage } from './LanguageContext';
 import { mergeMediaInsights, MEDIA_HUB_IT_AI_URL } from '../config/mediaInsights';
 import CosmicMathCanvas from '../components/CosmicMathCanvas';
 import SolarTimeCanvas from '../components/SolarTimeCanvas';
+import HeroBumperVideo from '../components/HeroBumperVideo';
 
 function CloudWordCanvas() {
   const canvasRef = useRef(null);
@@ -340,7 +341,7 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
   const [stats, setStats] = useState(initialStats);
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   const [promoConfig, setPromoConfig] = useState(null);
-  const [heroStage, setHeroStage] = useState('solar-time'); // 'solar-time' | 'motion-dual'
+  const [heroStage, setHeroStage] = useState('solar-time'); // 'solar-time' | 'motion-dual' | 'bumper-video'
 
   // Dynamic Promotion Popup logic
   useEffect(() => {
@@ -561,12 +562,27 @@ export default function HomeClient({ initialItems, initialStats, highlightId }) 
             >
               🎬 AI 모션그래픽 & 코스믹
             </button>
+            <button
+              onClick={() => setHeroStage('bumper-video')}
+              style={{
+                ...styles.heroTabBtn,
+                background: heroStage === 'bumper-video' ? 'linear-gradient(135deg, #f43f5e, #fb7185)' : 'transparent',
+                color: heroStage === 'bumper-video' ? '#ffffff' : 'var(--text-secondary)',
+                boxShadow: heroStage === 'bumper-video' ? '0 2px 12px rgba(244, 63, 94, 0.35)' : 'none',
+              }}
+            >
+              📺 톱니바꿈 범퍼 영상 (15s)
+            </button>
           </div>
 
-          {/* Main Visual Stage: Full-width Solar Time or Dual Motion Graphic */}
+          {/* Main Visual Stage: Full-width Solar Time, Bumper Video, or Dual Motion Graphic */}
           {heroStage === 'solar-time' ? (
             <div style={{ width: '100%', zIndex: 10 }}>
               <SolarTimeCanvas />
+            </div>
+          ) : heroStage === 'bumper-video' ? (
+            <div style={{ width: '100%', zIndex: 10 }}>
+              <HeroBumperVideo />
             </div>
           ) : (
           <div className="hero-inner" style={styles.heroInner}>
